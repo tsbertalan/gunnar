@@ -19,36 +19,39 @@ Adafruit_DCMotor* bothMtrs[] = {motor1, motor2};
 Adafruit_DCMotor* leftMtrs[] = {motor1};
 Adafruit_DCMotor* riteMtrs[] = {motor2};
 
-int encoder0PinA = 6;
-int encoder0PinB = 7;
+const int encoder0PinA = 6;
+const int encoder0PinB = 7;
 int encoder0Pos = 0;
 int encoder0PinALast = LOW;
 int nEnc = LOW;
 
+bool running = false;
+
+const int PIN_ACTIVITYSWITCH = 3;
+
 void setup() {
     visionSetup();
     
-
-
-pinMode(encoder0PinA, INPUT);
-pinMode(encoder0PinB, INPUT);
-
+    pinMode(encoder0PinA, INPUT);
+    pinMode(encoder0PinB, INPUT);
     
-Serial.begin(9600);           // set up Serial library at 9600 bps
-Serial.println("Adafruit Motorshield v2 - DC Motor test!");
+    pinMode(PIN_ACTIVITYSWITCH, INPUT);
+        
+    Serial.begin(9600);           // set up Serial library at 9600 bps
+    Serial.println("Adafruit Motorshield v2 - DC Motor test!");
 
-AFMS.begin(1600);
+    AFMS.begin(1600);
 
-// Set the speed to start, from 0 (off) to 255 (max speed)
+    // Set the speed to start, from 0 (off) to 255 (max speed)
 
-motor1->run(RELEASE);
-motor2->run(RELEASE);
+    motor1->run(RELEASE);
+    motor2->run(RELEASE);
 
-setupAccelerometer();
+    setupAccelerometer();
 
-//   delay(2000);
-//   go(32);
-//   stop();
+    //   delay(2000);
+    //   go(32);
+    //   stop();
 }
 
 void turn(int angle) {
@@ -70,8 +73,9 @@ go(dist, dirs, bothMtrs, 2);
 
 
 void stop() {
-int directions[] = {0, 0};
-go(0, directions, bothMtrs, 2);
+    running = false;
+    int directions[] = {0, 0};
+    go(0, directions, bothMtrs, 2);
 }
 
 
@@ -152,7 +156,6 @@ for(m=0; m<nMtrs; m++) {
     Serial.println(a);
     return a > 20;
 }
-
 
 const float DISTANCEMAGIC = 40.0;  // Make this larger to go farther.
 void go(int dist, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
@@ -326,28 +329,39 @@ bool treadBlocked(bool right)
 const int stepDelay = 10;
 void loop() {
 
-    float dist = getSonarDist(8);
-    Serial.print("sighted distance: "); Serial.println(dist);
-//     dist = 4; // prevents forward running.
-
-    if(dist < 60)
+    if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
     {
-        if(dist < 30)
+        float dist = getSonarDist(8);
+        Serial.print("sighted distance: "); Serial.println(dist);
+    //     dist = 4; // prevents forward running.
+
+        if(dist < 60)
         {
-            stop();
-            go(-30);
+            if(dist < 30)
+            {
+                stop();
+                go(-3);
+            }
+            else
+            {
+                Serial.println("Obstacle sighted. Turning.");
+                stop();
+                decideTurn();
+            }
         }
         else
         {
-            Serial.println("Obstacle sighted. Turning.");
-            stop();
-            decideTurn();
+            if(!running)
+            {
+                int directions[] = {1, 1};
+                run(maxSpeed, directions, bothMtrs, 2);
+                running = true;
+            }
         }
     }
     else
     {
-        int directions[] = {1, 1};
-        run(maxSpeed, directions, bothMtrs, 2);
+        stop();
     }
     encodedDelay(stepDelay);
 
