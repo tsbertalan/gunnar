@@ -19,8 +19,6 @@ Adafruit_DCMotor* bothMtrs[] = {motor1, motor2};
 Adafruit_DCMotor* leftMtrs[] = {motor1};
 Adafruit_DCMotor* riteMtrs[] = {motor2};
 
-const int sonarPin = 2;
-
 int encoder0PinA = 6;
 int encoder0PinB = 7;
 int encoder0Pos = 0;
@@ -30,71 +28,50 @@ int nEnc = LOW;
 void setup() {
     visionSetup();
     
-  pinMode(sonarPin, INPUT);
-  
-  pinMode(encoder0PinA, INPUT);
-  pinMode(encoder0PinB, INPUT);
-  
+
+
+pinMode(encoder0PinA, INPUT);
+pinMode(encoder0PinB, INPUT);
+
     
-  Serial.begin(9600);           // set up Serial library at 9600 bps
-  Serial.println("Adafruit Motorshield v2 - DC Motor test!");
+Serial.begin(9600);           // set up Serial library at 9600 bps
+Serial.println("Adafruit Motorshield v2 - DC Motor test!");
 
-  AFMS.begin(1600);
-  
-  // Set the speed to start, from 0 (off) to 255 (max speed)
+AFMS.begin(1600);
 
-  motor1->run(RELEASE);
-  motor2->run(RELEASE);
-  
-  setupAccelerometer();
-  
+// Set the speed to start, from 0 (off) to 255 (max speed)
+
+motor1->run(RELEASE);
+motor2->run(RELEASE);
+
+setupAccelerometer();
+
 //   delay(2000);
 //   go(32);
 //   stop();
 }
 
-float getSonarDist()
-{
-    return getSonarDist(4);
-}
-
-
-float getSonarDist(int nSonarReadings)
-{
-//     Serial.print("measuring distance ... ");
-    float dist = 0;
-    for(uint8_t i=0; i<nSonarReadings; i++) {
-//         Serial.print(i % 10);
-//         Serial.print(' ');
-        dist += pulseIn(sonarPin, HIGH) / 10.0;
-    }
-    dist /= nSonarReadings;
-//     Serial.println(dist);
-    return dist;
-}
-
-
 void turn(int angle) {
-  int dirs[2];
-  if(angle < 0) { // Right turn
+int dirs[2];
+if(angle < 0) { // Right turn
     dirs[0] = 1;
     dirs[1] = -1;
-  } else {
+} else {
     dirs[0] = -1;
     dirs[1] = 1;
-  }
-  
-  int dist = (int) ( (float)(abs(angle)) * 0.38);
-  Serial.print("Turn: 'dist'=");
-  Serial.print(dist);
-  Serial.print(" --> ");
-  go(dist, dirs, bothMtrs, 2);
+}
+
+int dist = (int) ( (float)(abs(angle)) * 0.38);
+Serial.print("Turn: 'dist'=");
+Serial.print(dist);
+Serial.print(" --> ");
+go(dist, dirs, bothMtrs, 2);
 }
 
 
 void stop() {
-  int directions[] = {0, 0};
-  go(0, directions, bothMtrs, 2);
+int directions[] = {0, 0};
+go(0, directions, bothMtrs, 2);
 }
 
 
@@ -144,31 +121,31 @@ bool run(int speed, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
     uint8_t i;
     uint8_t m;
 
-  // Set directions, or stop motors.
-  int stops = 0;
-  for(m=0; m<nMtrs; m++) {
+// Set directions, or stop motors.
+int stops = 0;
+for(m=0; m<nMtrs; m++) {
     Adafruit_DCMotor* motor = mtrs[m];
     int dir = directions[m];
     if(dir == 0) {
-      motor->run(RELEASE);
-      stops++;
+    motor->run(RELEASE);
+    stops++;
     } else {
-      if(dir > 0) {
+    if(dir > 0) {
         motor->run(FORWARD);
-      } else {
+    } else {
         motor->run(BACKWARD);
-      }
     }
-  }
-  
+    }
+}
+
     // Ramp up.
     for (i=0; i<speed; i++) {
-      for(m=0; m<nMtrs; m++) {
+    for(m=0; m<nMtrs; m++) {
         Adafruit_DCMotor* motor = mtrs[m];
         motor->setSpeed(i);
         updateEncoderPositions();
-      }
-      encodedDelay(rampDelay);
+    }
+    encodedDelay(rampDelay);
     }
     float a = get2DAccelMag(4);
     Serial.print("Forward running accelaration: ");
@@ -179,34 +156,34 @@ bool run(int speed, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
 
 const float DISTANCEMAGIC = 40.0;  // Make this larger to go farther.
 void go(int dist, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
-  // dist: how long to run the motor(s).
-  // directions: array of length nMtrs of directions to go.
-  // mtrs: array of length nMtrs of which motors on which to operate.
- 
-  uint8_t i;
-  uint8_t m;
+// dist: how long to run the motor(s).
+// directions: array of length nMtrs of directions to go.
+// mtrs: array of length nMtrs of which motors on which to operate.
 
-  // Set directions, or stop motors.
-  int stops = 0;
-  for(m=0; m<nMtrs; m++) {
+uint8_t i;
+uint8_t m;
+
+// Set directions, or stop motors.
+int stops = 0;
+for(m=0; m<nMtrs; m++) {
     Adafruit_DCMotor* motor = mtrs[m];
     int dir = directions[m];
     if(dir == 0) {
-      motor->run(RELEASE);
-      stops++;
+    motor->run(RELEASE);
+    stops++;
     } else {
-      if(dir > 0) {
+    if(dir > 0) {
         motor->run(FORWARD);
-      } else {
+    } else {
         motor->run(BACKWARD);
-      }
     }
-  }
-  
-  if(stops == nMtrs) {
+    }
+}
+
+if(stops == nMtrs) {
     // If all motors are stopping, return here.
     return;
-  } else {
+} else {
     // Otherwise, ramp up to speed.
     run(maxSpeed, directions, mtrs, nMtrs);
     
@@ -219,32 +196,32 @@ void go(int dist, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
     
     // Ramp back down to zero.
     for (i=maxSpeed; i!=0; i--) {
-      for(m=0; m<nMtrs; m++) {
+    for(m=0; m<nMtrs; m++) {
         Adafruit_DCMotor* motor = mtrs[m];
         motor->setSpeed(i);  
-      }
-      encodedDelay(rampDelay);
     }
-  }
+    encodedDelay(rampDelay);
+    }
+}
 }
 
 void go(int dist) {
-  setPosition(0);
-  int dir;
-  if(dist == 0) {
+setPosition(0);
+int dir;
+if(dist == 0) {
     dir = 0;
-  } else {
+} else {
     if(dist > 0) {
-      dir = 1;
+    dir = 1;
     } else {
-      dir = -1;
+    dir = -1;
     }
-  }
- int dirs[] = {dir, dir};
- go(dist, dirs, bothMtrs, 2);
- Serial.print("traveled ");
- Serial.print(getPosition());
- Serial.println("cm according to optical encoder.");
+}
+int dirs[] = {dir, dir};
+go(dist, dirs, bothMtrs, 2);
+Serial.print("traveled ");
+Serial.print(getPosition());
+Serial.println("cm according to optical encoder.");
 }
 
 void decideTurn()
@@ -285,7 +262,6 @@ void decideTurn(int absAngle)
     if( absAngle == -1)
     {
         float C = sqrt(ldist*ldist + rdist*rdist);
-        Serial.print("C = "); Serial.println(C);
         absAngle = 180.0 / 3.14159 * asin(min(ldist, rdist) / C);
     }
     absAngle = abs(absAngle);
@@ -307,9 +283,9 @@ void decideTurn(int absAngle)
     Serial.print("angle=");
     Serial.println(angle);
     
-    encodedDelay(4000);
+//     encodedDelay(500);
     
-//     turn(angle);
+    turn(angle);
 }
 
 bool leftTreadBlocked()
@@ -350,39 +326,35 @@ bool treadBlocked(bool right)
 const int stepDelay = 10;
 bool running = false;
 void loop() {
-  
-//   float dist = getSonarDist();
-// //   Serial.print("sighted distance: "); Serial.println(dist);
-//   dist = 4; // prevents forward running.
-// 
-//   if(dist < 60) {
-//     Serial.println("Obstacle sighted. Turning.");
-//     stop();
-//     decideTurn();
-//     running = false;
-//   } else {
-//       if(!running) {
-//         int directions[] = {1, 1};
-//         if(!run(maxSpeed, directions, bothMtrs, 2))
-//         {
-//             // Running forward does not accelerate us.
-//             Serial.println("Stuck? Turning.");
-//             stop();
-//             turn(45);
-//             running = false;
-//         }
-//         else
-//         {
-//             Serial.println("Not stuck. Continuing forward.");
-//             running = true;
-//         }
-//       }
-//   }
-  encodedDelay(10);
-  
-//     leftTreadBlocked();
-//     encodedDelay(400);
-//     rightTreadBlocked();
-//     encodedDelay(400);
-}
 
+    float dist = getSonarDist(8);
+    Serial.print("sighted distance: "); Serial.println(dist);
+//     dist = 4; // prevents forward running.
+
+    if(dist < 60) {
+        Serial.println("Obstacle sighted. Turning.");
+        stop();
+        decideTurn();
+        running = false;
+    } else {
+        if(!running) {
+            int directions[] = {1, 1};
+            if(!run(maxSpeed, directions, bothMtrs, 2))
+            {
+                // Running forward does not accelerate us.
+                Serial.println("Stuck? Turning.");
+                stop();
+                turn(45);
+                running = false;
+            }
+            else
+            {
+                Serial.println("Not stuck. Continuing forward.");
+                running = true;
+            }
+        }
+    }
+    encodedDelay(stepDelay);
+
+//     sonarTest();
+}
