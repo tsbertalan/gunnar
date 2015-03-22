@@ -29,6 +29,8 @@ bool running = false;
 
 const int PIN_ACTIVITYSWITCH = 3;
 
+const int minimumSensableDistance = 30; // [cm]
+
 void setup() {
     visionSetup();
     
@@ -270,20 +272,28 @@ void decideTurn(int absAngle)
     }
     absAngle = abs(absAngle);
     
-    if( rdist < ldist )
+    if(max(rdist, ldist) < minimumSensableDistance)
     {
-        
-        sprintf(msg, "rdist=%s < ldist=%s -- ", rtmp, ltmp);
-        Serial.print(msg);
-        angle = absAngle;
+        Serial.println("Too close to wall to decide which way to turn.");
+        angle = 180;
     }
     else
     {
-        sprintf(msg, "rdist=%s >= ldist=%s -- ", rtmp, ltmp);
-        Serial.print(msg);
-        angle = -absAngle;
+        if( rdist < ldist )
+        {
+            
+            sprintf(msg, "rdist=%s < ldist=%s -- ", rtmp, ltmp);
+            Serial.print(msg);
+            angle = absAngle;
+        }
+        else
+        {
+            sprintf(msg, "rdist=%s >= ldist=%s -- ", rtmp, ltmp);
+            Serial.print(msg);
+            angle = -absAngle;
+        }
     }
-    
+        
     Serial.print("angle=");
     Serial.println(angle);
     
@@ -338,7 +348,7 @@ void loop() {
 
         if(dist < 60)
         {
-            if(dist < 30)
+            if(dist < minimumSensableDistance)
             {
                 stop();
                 go(-3);
