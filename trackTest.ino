@@ -351,7 +351,7 @@ void loop() {
             if(dist < minimumSensableDistance)
             {
                 stop();
-                go(-3);
+                go(-7);
             }
             else
             {
