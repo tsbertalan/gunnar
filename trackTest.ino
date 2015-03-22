@@ -55,20 +55,20 @@ void setup() {
 }
 
 void turn(int angle) {
-int dirs[2];
-if(angle < 0) { // Right turn
-    dirs[0] = 1;
-    dirs[1] = -1;
-} else {
-    dirs[0] = -1;
-    dirs[1] = 1;
-}
+    int dirs[2];
+    if(angle < 0) { // Right turn
+        dirs[0] = 1;
+        dirs[1] = -1;
+    } else {
+        dirs[0] = -1;
+        dirs[1] = 1;
+    }
 
-int dist = (int) ( (float)(abs(angle)) * 0.38);
-Serial.print("Turn: 'dist'=");
-Serial.print(dist);
-Serial.print(" --> ");
-go(dist, dirs, bothMtrs, 2);
+    int dist = (int) ( (float)(abs(angle)) * 0.38);
+    Serial.print("Turn: 'dist'=");
+    Serial.print(dist);
+    Serial.print(" --> ");
+    go(dist, dirs, bothMtrs, 2);
 }
 
 
@@ -125,22 +125,22 @@ bool run(int speed, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
     uint8_t i;
     uint8_t m;
 
-// Set directions, or stop motors.
-int stops = 0;
-for(m=0; m<nMtrs; m++) {
-    Adafruit_DCMotor* motor = mtrs[m];
-    int dir = directions[m];
-    if(dir == 0) {
-    motor->run(RELEASE);
-    stops++;
-    } else {
-    if(dir > 0) {
-        motor->run(FORWARD);
-    } else {
-        motor->run(BACKWARD);
+    // Set directions, or stop motors.
+    int stops = 0;
+    for(m=0; m<nMtrs; m++) {
+        Adafruit_DCMotor* motor = mtrs[m];
+        int dir = directions[m];
+        if(dir == 0) {
+            motor->run(RELEASE);
+            stops++;
+        } else {
+            if(dir > 0) {
+                motor->run(FORWARD);
+            } else {
+                motor->run(BACKWARD);
+            }
+        }
     }
-    }
-}
 
     // Ramp up.
     for (i=0; i<speed; i++) {
@@ -159,72 +159,72 @@ for(m=0; m<nMtrs; m++) {
 
 const float DISTANCEMAGIC = 40.0;  // Make this larger to go farther.
 void go(int dist, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
-// dist: how long to run the motor(s).
-// directions: array of length nMtrs of directions to go.
-// mtrs: array of length nMtrs of which motors on which to operate.
+    // dist: how long to run the motor(s).
+    // directions: array of length nMtrs of directions to go.
+    // mtrs: array of length nMtrs of which motors on which to operate.
 
-uint8_t i;
-uint8_t m;
+    uint8_t i;
+    uint8_t m;
 
-// Set directions, or stop motors.
-int stops = 0;
-for(m=0; m<nMtrs; m++) {
-    Adafruit_DCMotor* motor = mtrs[m];
-    int dir = directions[m];
-    if(dir == 0) {
-    motor->run(RELEASE);
-    stops++;
-    } else {
-    if(dir > 0) {
-        motor->run(FORWARD);
-    } else {
-        motor->run(BACKWARD);
-    }
-    }
-}
-
-if(stops == nMtrs) {
-    // If all motors are stopping, return here.
-    return;
-} else {
-    // Otherwise, ramp up to speed.
-    run(maxSpeed, directions, mtrs, nMtrs);
-    
-    // Run for a time at this speed.
-    float driveTime = DISTANCEMAGIC * dist;
-    Serial.print("Go: delaying ");
-    Serial.print(driveTime);
-    Serial.println(" ms");
-    encodedDelay(driveTime);
-    
-    // Ramp back down to zero.
-    for (i=maxSpeed; i!=0; i--) {
+    // Set directions, or stop motors.
+    int stops = 0;
     for(m=0; m<nMtrs; m++) {
         Adafruit_DCMotor* motor = mtrs[m];
-        motor->setSpeed(i);  
+        int dir = directions[m];
+        if(dir == 0) {
+        motor->run(RELEASE);
+        stops++;
+        } else {
+        if(dir > 0) {
+            motor->run(FORWARD);
+        } else {
+            motor->run(BACKWARD);
+        }
+        }
     }
-    encodedDelay(rampDelay);
+
+    if(stops == nMtrs) {
+        // If all motors are stopping, return here.
+        return;
+    } else {
+        // Otherwise, ramp up to speed.
+        run(maxSpeed, directions, mtrs, nMtrs);
+        
+        // Run for a time at this speed.
+        float driveTime = DISTANCEMAGIC * dist;
+        Serial.print("Go: delaying ");
+        Serial.print(driveTime);
+        Serial.println(" ms");
+        encodedDelay(driveTime);
+        
+        // Ramp back down to zero.
+        for (i=maxSpeed; i!=0; i--) {
+        for(m=0; m<nMtrs; m++) {
+            Adafruit_DCMotor* motor = mtrs[m];
+            motor->setSpeed(i);  
+        }
+        encodedDelay(rampDelay);
+        }
     }
-}
 }
 
 void go(int dist) {
-setPosition(0);
-int dir;
-if(dist == 0) {
-    dir = 0;
-} else {
-    if(dist > 0) {
-    dir = 1;
+    setPosition(0);
+    int dir;
+    if(dist == 0) {
+        dir = 0;
     } else {
-    dir = -1;
+        if(dist > 0) {
+        dir = 1;
+        } else {
+        dir = -1;
+        }
     }
-}
-int dirs[] = {dir, dir};
-go(dist, dirs, bothMtrs, 2);
-Serial.print("traveled ");
-Serial.print(getPosition());
-Serial.println("cm according to optical encoder.");
+    int dirs[] = {dir, dir};
+    go(dist, dirs, bothMtrs, 2);
+    Serial.print("traveled ");
+    Serial.print(getPosition());
+    Serial.println("cm according to optical encoder.");
 }
 
 void decideTurn()
