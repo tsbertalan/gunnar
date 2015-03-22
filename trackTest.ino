@@ -215,9 +215,10 @@ void go(int dist) {
         dir = 0;
     } else {
         if(dist > 0) {
-        dir = 1;
+            dir = 1;
         } else {
-        dir = -1;
+            dir = -1;
+            dist *= -1;
         }
     }
     int dirs[] = {dir, dir};
