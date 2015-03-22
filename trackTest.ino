@@ -33,6 +33,15 @@ const int minimumSensableDistance = 30; // [cm]
 
 unsigned long lastTurn = 0;
 
+const int SONARPIN = 2;
+
+const int TILTSERVOPIN = 9;
+const int PANSERVOPIN = 10;
+const int PANOFFSET = 5; // Larger is further to the left.
+const int TILTOFFSET = 8; // Larger is further down.
+const int NEUTRALPAN = -PANOFFSET;
+const int NEUTRALTILT = -TILTOFFSET;
+
 void setup() {
     visionSetup();
     
@@ -243,7 +252,7 @@ void decideTurn(int absAngle)
 {
     const int delayBeforeMeasurement = 16;
     const int nMeasurements = 8;
-    setTilt(-20); // Look down slightly.
+    setTilt(10); // Look up slightly.
     
     setPan(-45);
     encodedDelay(delayBeforeMeasurement);
@@ -339,16 +348,17 @@ bool treadBlocked(bool right)
     return (dist < 50);
 }
     
-
-
 const int stepDelay = 10;
 int nTurns = 0;
 void loop() {
     
     if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
     {
+        setPan(0);
+        setTilt(0);
+        
         unsigned long now = millis();
-        if( running && (now - lastTurn > 5000) )
+        if( running && (now - lastTurn > 16000) )
         {
             // If it's been a while since the last turn, just turn now anyway.
             running = false; // We'll do the decision while moving. Possibly bad.
@@ -399,6 +409,7 @@ void loop() {
     else
     {
         stop();
+        disableServos();
     }
     encodedDelay(stepDelay);
 
