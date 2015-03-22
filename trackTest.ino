@@ -31,6 +31,8 @@ const int PIN_ACTIVITYSWITCH = 3;
 
 const int minimumSensableDistance = 30; // [cm]
 
+unsigned long lastTurn = 0;
+
 void setup() {
     visionSetup();
     
@@ -71,6 +73,8 @@ void turn(int angle) {
     Serial.print(dist);
     Serial.print(" --> ");
     go(dist, dirs, bothMtrs, 2);
+    
+    lastTurn = millis();
 }
 
 
@@ -338,35 +342,57 @@ bool treadBlocked(bool right)
 
 
 const int stepDelay = 10;
+int nTurns = 0;
 void loop() {
-
+    
     if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
     {
-        float dist = getSonarDist(8);
-        Serial.print("sighted distance: "); Serial.println(dist);
-    //     dist = 4; // prevents forward running.
-
-        if(dist < 60)
+        unsigned long now = millis();
+        if( running && (now - lastTurn > 5000) )
         {
-            if(dist < minimumSensableDistance)
-            {
-                stop();
-                go(-7);
-            }
-            else
-            {
-                Serial.println("Obstacle sighted. Turning.");
-                stop();
-                decideTurn();
-            }
+            // If it's been a while since the last turn, just turn now anyway.
+            running = false; // We'll do the decision while moving. Possibly bad.
+            decideTurn();
         }
         else
         {
-            if(!running)
+            float dist = getSonarDist(8);
+            Serial.print("sighted distance: "); Serial.println(dist);
+        //     dist = 4; // prevents forward running.
+
+            if(dist < 60)
             {
-                int directions[] = {1, 1};
-                run(maxSpeed, directions, bothMtrs, 2);
-                running = true;
+                if(dist < minimumSensableDistance)
+                {
+                    stop();
+                    go(-7);
+                }
+                else // We're not *super* close.
+                {
+                    if(nTurns > 4)
+                    {
+                        nTurns = 0;
+                        stop();
+                        go(-7);
+                    }
+                    else // We haven't turned very many times.
+                    {
+                        Serial.println("Obstacle sighted. Turning.");
+                        stop();
+                        decideTurn();
+                        nTurns++;
+                    }
+                }
+            }
+            else // dist >= 60
+            {
+                if(!running)
+                {
+                    nTurns = 0;
+                    int directions[] = {1, 1};
+                    run(maxSpeed, directions, bothMtrs, 2);
+                    running = true;
+                }
             }
         }
     }
