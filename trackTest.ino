@@ -324,35 +324,30 @@ bool treadBlocked(bool right)
 
 
 const int stepDelay = 10;
-bool running = false;
 void loop() {
 
     float dist = getSonarDist(8);
     Serial.print("sighted distance: "); Serial.println(dist);
 //     dist = 4; // prevents forward running.
 
-    if(dist < 60) {
-        Serial.println("Obstacle sighted. Turning.");
-        stop();
-        decideTurn();
-        running = false;
-    } else {
-        if(!running) {
-            int directions[] = {1, 1};
-            if(!run(maxSpeed, directions, bothMtrs, 2))
-            {
-                // Running forward does not accelerate us.
-                Serial.println("Stuck? Turning.");
-                stop();
-                turn(45);
-                running = false;
-            }
-            else
-            {
-                Serial.println("Not stuck. Continuing forward.");
-                running = true;
-            }
+    if(dist < 60)
+    {
+        if(dist < 30)
+        {
+            stop();
+            go(-30);
         }
+        else
+        {
+            Serial.println("Obstacle sighted. Turning.");
+            stop();
+            decideTurn();
+        }
+    }
+    else
+    {
+        int directions[] = {1, 1};
+        run(maxSpeed, directions, bothMtrs, 2);
     }
     encodedDelay(stepDelay);
 
