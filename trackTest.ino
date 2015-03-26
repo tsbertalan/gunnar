@@ -1,13 +1,10 @@
-/* 
-This is a test sketch for the Adafruit assembled Motor Shield for Arduino v2
-It won't work with v1.x motor shields! Only for the v2's with built in PWM
-control
-
-For use with the Adafruit Motor Shield v2 
----->	http://www.adafruit.com/products/1438
-*/
-
+#define TOM_DEBUG // Uncomment to enable debugging serial prints.
 #include <Adafruit_MotorShield.h>
+#include "pinDefinitions.h"
+#include "encoders.h"
+
+Encoder encoder0(encoder0PinA, encoder0PinB);
+Encoder encoder1(encoder1PinA, encoder1PinB);
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
@@ -19,24 +16,17 @@ Adafruit_DCMotor* bothMtrs[] = {motor1, motor2};
 Adafruit_DCMotor* leftMtrs[] = {motor1};
 Adafruit_DCMotor* riteMtrs[] = {motor2};
 
-const int encoder0PinA = 6;
-const int encoder0PinB = 7;
-int encoder0Pos = 0;
-int encoder0PinALast = LOW;
-int nEnc = LOW;
 
 bool running = false;
 
-const int PIN_ACTIVITYSWITCH = 3;
+
 
 const int minimumSensableDistance = 30; // [cm]
 
 unsigned long lastTurn = 0;
 
-const int SONARPIN = 2;
 
-const int TILTSERVOPIN = 9;
-const int PANSERVOPIN = 10;
+ 
 const int PANOFFSET = 5; // Larger is further to the left.
 const int TILTOFFSET = 8; // Larger is further down.
 const int NEUTRALPAN = -PANOFFSET;
@@ -44,6 +34,7 @@ const int NEUTRALTILT = -TILTOFFSET;
 
 void setup() {
     visionSetup();
+    encodersSetup();
     
     pinMode(encoder0PinA, INPUT);
     pinMode(encoder0PinB, INPUT);
@@ -94,46 +85,6 @@ void stop() {
 }
 
 
-void updateEncoderPositions() {
-    nEnc = digitalRead(encoder0PinA);
-    if ((encoder0PinALast == LOW) && (nEnc == HIGH)) {
-        if(digitalRead(encoder0PinB) == LOW) {
-        encoder0Pos--;
-        } else {
-        encoder0Pos++;
-        }
-    } 
-    encoder0PinALast = nEnc;
-}
-
-const float encRate = 32.0 / 129.0;  // cm per encoder tick
-float getPosition() {
-    return encRate * encoder0Pos;
-}
-
-void setPosition(float x) {
-    encoder0Pos = x / encRate;
-}
-
-void encodedDelay(float ms) {
-    delay(ms);
-//     float encRepeatRate = 10.0;
-//     if(ms >= encRepeatRate) {
-//         Serial.print("delaying ");
-//         Serial.print(ms);
-//         Serial.print(" ms ... ");
-//     }
-//     float rem = fmod(ms, encRepeatRate);
-//     int reps = (ms - rem) / encRepeatRate;
-//     uint8_t i;
-//     for(i=0; i<reps; i++) {
-//         delay(encRepeatRate);
-//         updateEncoderPositions();
-//     }
-//     if(ms > encRepeatRate)
-//         Serial.println("done");
-}
-
 const int maxSpeed = 200;  // At 128, we cover 61 cm in 3200 ms
 const int rampDelay = 2;  // ms
 bool run(int speed, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
@@ -162,9 +113,8 @@ bool run(int speed, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
     for(m=0; m<nMtrs; m++) {
         Adafruit_DCMotor* motor = mtrs[m];
         motor->setSpeed(i);
-        updateEncoderPositions();
     }
-    encodedDelay(rampDelay);
+    interruptibleDelay(rampDelay);
     }
     float a = get2DAccelMag(4);
     Serial.print("Forward running accelaration: ");
@@ -210,7 +160,7 @@ void go(int dist, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
         Serial.print("Go: delaying ");
         Serial.print(driveTime);
         Serial.println(" ms");
-        encodedDelay(driveTime);
+        interruptibleDelay(driveTime);
         
         // Ramp back down to zero.
         for (i=maxSpeed; i!=0; i--) {
@@ -218,13 +168,13 @@ void go(int dist, int directions[], Adafruit_DCMotor* mtrs[], int nMtrs) {
             Adafruit_DCMotor* motor = mtrs[m];
             motor->setSpeed(i);  
         }
-        encodedDelay(rampDelay);
+        interruptibleDelay(rampDelay);
         }
     }
 }
 
 void go(int dist) {
-    setPosition(0);
+    encoder0.setPosition(0);
     int dir;
     if(dist == 0) {
         dir = 0;
@@ -239,7 +189,7 @@ void go(int dist) {
     int dirs[] = {dir, dir};
     go(dist, dirs, bothMtrs, 2);
     Serial.print("traveled ");
-    Serial.print(getPosition());
+    Serial.print(encoder0.getPosition());
     Serial.println("cm according to optical encoder.");
 }
 
@@ -255,13 +205,13 @@ void decideTurn(int absAngle)
     setTilt(10); // Look up slightly.
     
     setPan(-45);
-    encodedDelay(delayBeforeMeasurement);
+    interruptibleDelay(delayBeforeMeasurement);
     float rdist = getSonarDist(nMeasurements);
 //     Serial.print("rdist: ");
 //     Serial.println(rdist);
     
     setPan(45);
-    encodedDelay(delayBeforeMeasurement);
+    interruptibleDelay(delayBeforeMeasurement);
     float ldist = getSonarDist(nMeasurements);
 //     Serial.print("ldist: ");
 //     Serial.println(ldist);
@@ -310,7 +260,7 @@ void decideTurn(int absAngle)
     Serial.print("angle=");
     Serial.println(angle);
     
-//     encodedDelay(500);
+//     interruptibleDelay(500);
     
     turn(angle);
 }
@@ -339,7 +289,7 @@ bool treadBlocked(bool right)
         
     setPan(blockagePanAngle);
     setTilt(blockageTiltAngle);
-    encodedDelay(4000);
+    interruptibleDelay(4000);
     float dist = getSonarDist();
     Serial.print("ground distance: ");
     Serial.println(dist);
@@ -377,7 +327,7 @@ void loop() {
                     stop();
                     go(-7);
                 }
-                else // We're not *super* close.
+                else // We're not *super* close.githuy
                 {
                     if(nTurns > 4)
                     {
@@ -411,7 +361,14 @@ void loop() {
         stop();
         disableServos();
     }
-    encodedDelay(stepDelay);
+    interruptibleDelay(stepDelay);
 
 //     sonarTest();
+    
+    #ifdef TOM_DEBUG
+        Serial.print("v0 = ");
+        Serial.println(encoder0.getSpeed());
+//         Serial.print("v1 = ");
+//         Serial.println(encoder1.getSpeed());
+    #endif
 }
