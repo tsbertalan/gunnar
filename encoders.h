@@ -29,10 +29,6 @@ public:
          // These might not be necessary:
         lastPosition = 0;
         lastPositionMillis = 0;
-        for(uint8_t i=0; i<nspeeds; i++)
-        {
-            speeds[i] = 0;
-        }
     };
 
     
@@ -49,8 +45,8 @@ public:
             position++;
         
         float nowPositionMillis = micros() / 1000.0; // Use micros to not mess up the interrupts.
-        float speedNow = (float)(position - lastPosition) * 1000.0  / (nowPositionMillis - lastPositionMillis);
-        updateSpeeds(speedNow);
+        const int SPEEDSCALE = 256; // We need to keep the numerator and denominator similarly scaled.
+        speedNow = (float)(position - lastPosition) * SPEEDSCALE  / (nowPositionMillis - lastPositionMillis);
                
         lastPosition = position;
         lastPositionMillis = nowPositionMillis;
@@ -70,23 +66,9 @@ public:
     
     float getSpeed()
     {
-        float out = 0.0;
-        for(uint8_t i=0; i<nspeeds; i++)
-        {
-            out += speeds[i];
-        }
-        return out / (float) nspeeds;
+        return speedNow;
     }
     
-    void updateSpeeds(float speedNow)
-    {
-        for(uint8_t i=0; i<nspeeds-1; i++)
-        {
-            speeds[i] = speeds[i+1];
-        }
-        speeds[nspeeds-1] = speedNow;
-    }
-            
 
 private:
     long int position;
@@ -96,7 +78,7 @@ private:
     unsigned long lastPositionMillis; // micros() overflows after 70 minutes.
     // I don't think our quiescences will last that long, and certainly
     // not our quiescences.
-    int speeds[nspeeds];
+    float speedNow;
 };
 
 #endif
