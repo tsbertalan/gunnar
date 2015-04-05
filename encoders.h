@@ -4,7 +4,9 @@
 int encoder0Pos; // Standard should ensure this is initialized to 0.
 int encoder0PinALast = LOW;
 int n = LOW;
-const int nspeeds = 5; // number of previous speeds to average
+const int nspeeds = 4; // number of previous speeds to average
+const long SPEEDSCALE = 256000L; // We need to keep the numerator and denominator similarly scaled.
+const int NONINTERRUPTDELAY = 30000; // [us]
 
 class Encoder
 {
@@ -28,11 +30,22 @@ public:
         
          // These might not be necessary:
         lastPosition = 0;
-        lastPositionMillis = 0;
+        lastPositionMicros = 0;
     };
 
     
-    // call this from your interrupt function
+    // Call this from other code, or with a timer/internal interrupt.
+    void nonInterruptUpdate()
+    {
+//         setSpeed(SPEEDSCALE / (micros() - lastPositionMicros));
+        if(micros() - lastPositionMicros > NONINTERRUPTDELAY)
+        {
+            // Conclude that nothing's moving.
+            setSpeed(0);
+        }
+    }
+    
+    // Call this from your interrupt function.
     void update()
     {
         if(
@@ -44,18 +57,31 @@ public:
         else
             position++;
         
-        float nowPositionMillis = micros() / 1000.0; // Use micros to not mess up the interrupts.
-        const int SPEEDSCALE = 256; // We need to keep the numerator and denominator similarly scaled.
-        speedNow = (float)(position - lastPosition) * SPEEDSCALE  / (nowPositionMillis - lastPositionMillis);
-               
+        unsigned long long nowPositionMicros = micros(); // Use micros to not mess up the interrupts.
+        float speed = (float)(position - lastPosition) * SPEEDSCALE  / (nowPositionMicros - lastPositionMicros);
+        if(abs(speed) < 50) // outlier rejection
+            setSpeed(speed);
         lastPosition = position;
-        lastPositionMillis = nowPositionMillis;
+        lastPositionMicros = nowPositionMicros;
     };
 
-    
-    long int getPosition()
+    void setSpeed(float speed)
     {
-        return position;
+        speedNow = speed;
+        dspeedNow = (double) speedNow;
+        for(uint8_t i=0; i<nspeeds-1; i++)
+        {
+            speedHist[i] = speedHist[i+1];
+        }
+        speedHist[nspeeds-1] = speedNow;
+        
+        speedNowAvg = average(speedHist, nspeeds);
+        dspeedNowAvg = (double) speedNowAvg;
+    }
+    
+    long getPosition()
+    {
+        return (long) position;
     };
 
     
@@ -66,19 +92,30 @@ public:
     
     float getSpeed()
     {
-        return speedNow;
+        return speedNowAvg;
     }
     
+//     double getSpeed()
+//     {
+//         return dspeedNowAvg;
+//     }
+    
+    
+    float speedNow;
+    double dspeedNow;
+    
+    float speedNowAvg;
+    double dspeedNowAvg;
 
 private:
-    long int position;
+    float speedHist[nspeeds];
+    long long position;
     int8_t pin_a;
     int8_t pin_b;
-    int lastPosition;
-    unsigned long lastPositionMillis; // micros() overflows after 70 minutes.
-    // I don't think our quiescences will last that long, and certainly
+    long long lastPosition;
+    unsigned long long lastPositionMicros; // micros() overflows after 70 minutes.
+    // I don't think our batteries will last that long, and certainly
     // not our quiescences.
-    float speedNow;
 };
 
 #endif

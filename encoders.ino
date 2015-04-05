@@ -1,4 +1,5 @@
-#include "Encoder.h"
+#include "encoders.h"
+#include "stats.h"
 /* Read Quadrature Encoder
   * Connect Encoder to Pins encoder0PinA, encoder0PinB, and +5V.
   *
@@ -12,6 +13,8 @@
  {
     attachInterrupt(0, doEncoder0, CHANGE); // interrupt 0 is pin 2.
     attachInterrupt(1, doEncoder1, CHANGE); // interrupt 1 is pin 3.
+    pinMode(encoder0PinA, INPUT);
+    pinMode(encoder0PinB, INPUT);
  } 
 
 float _leftMotorSpeed;
