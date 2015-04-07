@@ -1,30 +1,7 @@
 #include "encoders.h"
 #include "stats.h"
-/* Read Quadrature Encoder
-  * Connect Encoder to Pins encoder0PinA, encoder0PinB, and +5V.
-  *
-  * Sketch by max wolf / www.meso.net
-  * v. 0.1 - very basic functions - mw 20061220
-  *
-  */  
-
-
-// void doNothing()
-// {
-//     ;
-// }
-
 void encodersSetup()
 {
-//     enableInterrupt(encoder0PinA, doEncoder0, CHANGE);
-//     enableInterrupt(encoder0PinB, doEncoder0, CHANGE);
-//     enableInterrupt(encoder1PinA, doEncoder1, CHANGE);
-//     enableInterrupt(encoder1PinB, doEncoder1, CHANGE);
-//     enableInterrupt(6, doNothing, CHANGE);
-//     for(uint8_t i=6; i<14; i++)
-//     {
-//         disableInterrupt(i);
-//     }
     attachInterrupt(0, doEncoder0, RISING);
     attachInterrupt(1, doEncoder1, RISING);
     pinMode(encoder0PinA, INPUT);
