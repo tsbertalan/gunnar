@@ -7,9 +7,9 @@ const int SONARPIN = 8;
 const int TILTSERVOPIN = 9;
 const int PANSERVOPIN = 10;
 
-const int encoder0PinA = 2; // interrupt pin
+const int encoder0PinA = 2; // interrupt pin 0
 const int encoder0PinB = 4;
-const int encoder1PinA = 3; // interrupt pin
+const int encoder1PinA = 3; // interrupt pin 1
 const int encoder1PinB = 5;
 
 // Servo one uses pin 10.

@@ -9,13 +9,27 @@
   */  
 
 
- void encodersSetup()
- {
-    attachInterrupt(0, doEncoder0, CHANGE); // interrupt 0 is pin 2.
-    attachInterrupt(1, doEncoder1, CHANGE); // interrupt 1 is pin 3.
+// void doNothing()
+// {
+//     ;
+// }
+
+void encodersSetup()
+{
+//     enableInterrupt(encoder0PinA, doEncoder0, CHANGE);
+//     enableInterrupt(encoder0PinB, doEncoder0, CHANGE);
+//     enableInterrupt(encoder1PinA, doEncoder1, CHANGE);
+//     enableInterrupt(encoder1PinB, doEncoder1, CHANGE);
+//     enableInterrupt(6, doNothing, CHANGE);
+//     for(uint8_t i=6; i<14; i++)
+//     {
+//         disableInterrupt(i);
+//     }
+    attachInterrupt(0, doEncoder0, RISING);
+    attachInterrupt(1, doEncoder1, RISING);
     pinMode(encoder0PinA, INPUT);
     pinMode(encoder0PinB, INPUT);
- } 
+} 
 
 float _leftMotorSpeed;
 float _rightMotorSpeed;
