@@ -4,7 +4,8 @@
 #include "pinDefinitions.h"
 #include "encoders.h"
 #include "Arduino.h"
-
+#include "Adafruit_MotorShield_modified.h"
+#include "encoders.h"
 
 const double KP = 2.0;
 const double KI = 1.5;
@@ -17,6 +18,9 @@ double rightMotorControlledSpeed;
 double rightMotorSetPoint;
 
 void controlMotorSpeeds(double left, double right);
+
+const int MAXPWMSPEED = 255;
+
 
 class ControlledMotors
 {
@@ -61,7 +65,7 @@ public:
         Serial.print(angle);
         Serial.println(" ticks)");
     //     long delay = 9.0*(double) angle/120.0 * 1000000L; // us
-        long delay = 3L * 1000000L;
+        unsigned long delay = 3L * 1000000L;
         uint8_t sgn;
         if(angle>0)
         {
@@ -91,7 +95,6 @@ public:
         
     void stop()
     {
-        int directions[] = {0, 0};
         for(uint8_t i=0; i<2; i++)
         {
             bothMtrs[i]->run(RELEASE);
@@ -165,7 +168,7 @@ public:
         Serial.print(dist);
         Serial.println(" ticks)");
     //     long delay = 5.0*(double) dist/100.0 * 1000000L; // us
-        long delay = 5L * 1000000L;
+        unsigned long delay = 5L * 1000000L;
         if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
         {
             long startTime = micros();
@@ -194,7 +197,6 @@ private:
         encoders[1]->position = 0;
         interrupts();
     }
-    int MAXPWMSPEED = 255;
     double monitoredLeft;
     double monitoredRight;
     Encoder* encoders[2];
@@ -207,5 +209,7 @@ private:
     PID* rightPID;
 };
 ControlledMotors* controlledMotors;
-    
+
+void motorPIDcontrolSetup();
+
 #endif

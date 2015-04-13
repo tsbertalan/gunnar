@@ -1,5 +1,14 @@
 #include "encoders.h"
 #include "stats.h"
+
+void doEncoder0(){
+    encoder0.update();
+}
+
+void doEncoder1(){
+    encoder1.update();
+}
+
 void encodersSetup()
 {
     attachInterrupt(0, doEncoder0, RISING);
@@ -25,12 +34,4 @@ void interruptibleDelay(float ms) {
     {
         delayMicroseconds(maxDelay);
     }    
-}
-
-void doEncoder0(){
-    encoder0.update();
-}
-
-void doEncoder1(){
-    encoder1.update();
 }

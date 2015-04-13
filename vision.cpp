@@ -1,11 +1,12 @@
 #include "vision.h"
+#include "Arduino.h"
 
 void visionSetup()
 {
     pinMode(SONARPIN, INPUT);
     
-    servoTilt.attach(TILTSERVOPIN);
-    servoPan.attach(PANSERVOPIN);
+    servoTilt->attach(TILTSERVOPIN);
+    servoPan->attach(PANSERVOPIN);
     
     setPan(0);
     setTilt(0);
@@ -14,35 +15,35 @@ void visionSetup()
 void setPan(int pos)
 {
     // -90 <= pos < 90
-    if(!servoPan.attached())
+    if(!servoPan->attached())
     {
-        servoPan.attach(PANSERVOPIN);
+        servoPan->attach(PANSERVOPIN);
     }
-    servoPan.write(pos+90+PANOFFSET);
+    servoPan->write(pos+90+PANOFFSET);
 }
 
 void setTilt(int pos)
 {
     // -90 <= pos < 90
-    if(!servoTilt.attached())
+    if(!servoTilt->attached())
     {
-        servoTilt.attach(TILTSERVOPIN);
+        servoTilt->attach(TILTSERVOPIN);
     }
-    servoTilt.write(-pos+90+TILTOFFSET);
+    servoTilt->write(-pos+90+TILTOFFSET);
 }
 
 void disablePan()
 {
     setPan(0);
-    if(servoPan.attached())
-        servoPan.detach();
+    if(servoPan->attached())
+        servoPan->detach();
 }
 
 void disableTilt()
 {
     setTilt(0);
-    if(servoTilt.attached())
-        servoTilt.detach();
+    if(servoTilt->attached())
+        servoTilt->detach();
 }
 
 void disableServos()
@@ -90,4 +91,37 @@ void sonarTest()
         Serial.println(getSonarDist(32));
         delay(1);
     }
+}
+
+bool treadBlocked(bool right)
+{
+    int blockagePanAngle = 50;
+    const int blockageTiltAngle = -60;
+    if(right)
+    {
+        Serial.print("right ");
+        blockagePanAngle *= -1;
+    }
+    else
+    {
+        Serial.print("left ");
+    }
+        
+    setPan(blockagePanAngle);
+    setTilt(blockageTiltAngle);
+    interruptibleDelay(4000);
+    float dist = getSonarDist();
+    Serial.print("ground distance: ");
+    Serial.println(dist);
+    setPan(0); setTilt(0);
+    
+    return (dist < 50);
+}
+bool leftTreadBlocked()
+{
+    return treadBlocked(false);
+}
+bool rightTreadBlocked()
+{
+    return treadBlocked(true);
 }

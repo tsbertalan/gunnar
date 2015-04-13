@@ -68,8 +68,7 @@ void decideTurn(int absAngle)
 //     interruptibleDelay(500);
     
     interruptibleDelay(150);
-    servoPan.detach();
-    servoTilt.detach();
+    disableServos();
     
     controlledMotors->turn(angle);
 }
@@ -114,7 +113,6 @@ void checkSonar()
     else // dist >= 60
     {
         nTurns = 0;
-        int directions[] = {1, 1};
         controlledMotors->go(dist/4);
     }
 }

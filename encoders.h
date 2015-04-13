@@ -1,6 +1,8 @@
 #ifndef ENCODER_H
 #define ENCODER_H
 #include "Adafruit_MotorShield_modified.h"
+#include "pinDefinitions.h"
+
 
 const long SPEEDSCALE = 256000L; // We need to keep the numerator and denominator similarly scaled.
 
@@ -99,6 +101,7 @@ private:
     int8_t pin_b;
 };
 
-void interruptibleDelay(float ms);
 
+void interruptibleDelay(float ms);
+void encodersSetup();
 #endif
