@@ -18,5 +18,6 @@ const int encoder1PinB = 5;
 // The Adafruit motor shield uses these pins
 // A4 and A5; still usable for i2c.
 
+const int minimumSensableDistance = 30; // [cm]
 
 #endif

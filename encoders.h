@@ -99,4 +99,6 @@ private:
     int8_t pin_b;
 };
 
+void interruptibleDelay(float ms);
+
 #endif

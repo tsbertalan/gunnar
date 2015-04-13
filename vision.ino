@@ -1,7 +1,4 @@
-#include <Servo.h>
-
-Servo servoTilt;
-Servo servoPan;
+#include "vision.h"
 
 void visionSetup()
 {
@@ -22,8 +19,6 @@ void setPan(int pos)
         servoPan.attach(PANSERVOPIN);
     }
     servoPan.write(pos+90+PANOFFSET);
-//     Serial.print("setting pan servo to ");
-//     Serial.println(pos+90);
 }
 
 void setTilt(int pos)
@@ -34,20 +29,20 @@ void setTilt(int pos)
         servoTilt.attach(TILTSERVOPIN);
     }
     servoTilt.write(-pos+90+TILTOFFSET);
-//     Serial.print("setting tilt servo to ");
-//     Serial.println(-pos+90);
 }
 
 void disablePan()
 {
     setPan(0);
-    servoPan.detach();
+    if(servoPan.attached())
+        servoPan.detach();
 }
 
 void disableTilt()
 {
     setTilt(0);
-    servoTilt.detach();
+    if(servoTilt.attached())
+        servoTilt.detach();
 }
 
 void disableServos()
