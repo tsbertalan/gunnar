@@ -110,20 +110,20 @@ public:
         const int nMeasurements = 8;
         sensors.setTilt(10); // Look up slightly.
         
-        sensors.setTilt(-45);
+        sensors.setPan(-45);
         interruptibleDelay(delayBeforeMeasurement);
         float rdist = sensors.getSonarDist(nMeasurements);
     //     Serial.print("rdist: ");
     //     Serial.println(rdist);
         
-        sensors.setTilt(45);
+        sensors.setPan(45);
         interruptibleDelay(delayBeforeMeasurement);
         float ldist = sensors.getSonarDist(nMeasurements);
     //     Serial.print("ldist: ");
     //     Serial.println(ldist);
         int angle;
         
-        sensors.setTilt(0);
+        sensors.setPan(0);
         sensors.setTilt(0);
         
         // Arduino's sprintf doesn't have %f.
