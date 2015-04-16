@@ -1,26 +1,10 @@
-#include "encoders.h"
-#include "stats.h"
+#ifndef UITLS_H
+#define UTILS_H
+#include <math.h>
+#include <Arduino.h>
 
-void doEncoder0(){
-    encoder0.update();
-}
-
-void doEncoder1(){
-    encoder1.update();
-}
-
-void encodersSetup()
+void interruptibleDelay(float ms)
 {
-    attachInterrupt(0, doEncoder0, RISING);
-    attachInterrupt(1, doEncoder1, RISING);
-    pinMode(encoder0PinA, INPUT);
-    pinMode(encoder0PinB, INPUT);
-} 
-
-float _leftMotorSpeed;
-float _rightMotorSpeed;
-
-void interruptibleDelay(float ms) {
     // Replace delay(ms) with multiple delayMicroseconds(...), so interrupts still work.
     const int maxDelay = 16383; // delayMicroseconds is only accurate up to this long (and down to ~3 uS).
     
@@ -35,3 +19,16 @@ void interruptibleDelay(float ms) {
         delayMicroseconds(maxDelay);
     }    
 }
+
+float average(float* values, int N)
+{
+    float val = 0;
+    for(int i=0; i<N; i++)
+    {
+        val += values[i];
+    }
+    val /= (float) N;
+    return val;
+}
+
+#endif

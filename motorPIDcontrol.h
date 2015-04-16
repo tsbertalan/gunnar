@@ -1,36 +1,23 @@
 #ifndef MOTORPIDCONTROL_H
 #define MOTORPIDCONTROL_H
 #include <PID_v1.h>
-#include "pinDefinitions.h"
+#include "constants.h"
 #include "encoders.h"
 #include "Arduino.h"
 #include "Adafruit_MotorShield_modified.h"
-#include "encoders.h"
-
-const double KP = 2.0;
-const double KI = 1.5;
-const double KD = .1;
-
-double leftMotorControlledSpeed;
-double leftMotorSetPoint;
-
-double rightMotorControlledSpeed;
-double rightMotorSetPoint;
-
-void controlMotorSpeeds(double left, double right);
-
-const int MAXPWMSPEED = 255;
-
 
 class ControlledMotors
 {
 public:
-    ControlledMotors(Adafruit_DCMotor* leftMotor,
-                     Adafruit_DCMotor* rightMotor,
-                     Encoder encoder0,
-                     Encoder encoder1)
+    ControlledMotors()
+    {}
+        
+    void init(Adafruit_DCMotor* leftMotor,
+              Adafruit_DCMotor* rightMotor,
+              Encoder encoder0,
+              Encoder encoder1)
     {
-        // Setup stuff should go here also, if possible
+        Serial.println("initializing motors");
         *leftPID = PID(&monitoredLeft,  &leftMotorControlledSpeed,  &leftMotorSetPoint,
                     KP, KI, KD, DIRECT);
         *rightPID = PID(&monitoredRight, &rightMotorControlledSpeed, &rightMotorSetPoint,
@@ -53,6 +40,12 @@ public:
         bothMtrs[0] = leftMotor;
         bothMtrs[1] = rightMotor;
     }
+    
+    void setup()
+    {
+        pinMode(encoder0PinA, INPUT);
+        pinMode(encoder0PinB, INPUT);
+    } 
     
     void turn(int angle)
     {
@@ -184,12 +177,19 @@ public:
             stop();
         }
     }
+    
+    double leftMotorControlledSpeed;
+    double rightMotorControlledSpeed;
+    
+    double leftMotorSetPoint;
+    double rightMotorSetPoint;
 private:
     void controlMotorPositions(long position0, long position1)
     {
         *setPoints[0] = (double) position0;
         *setPoints[1] = (double) position1;
     }
+    
     void resetEncoders()
     {
         noInterrupts();
@@ -197,6 +197,7 @@ private:
         encoders[1]->position = 0;
         interrupts();
     }
+   
     double monitoredLeft;
     double monitoredRight;
     Encoder* encoders[2];
@@ -208,8 +209,6 @@ private:
     PID* leftPID;
     PID* rightPID;
 };
-ControlledMotors* controlledMotors;
 
-void motorPIDcontrolSetup();
 
 #endif

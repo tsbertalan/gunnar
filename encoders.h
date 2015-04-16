@@ -1,18 +1,19 @@
 #ifndef ENCODER_H
 #define ENCODER_H
 #include "Adafruit_MotorShield_modified.h"
-#include "pinDefinitions.h"
+#include "constants.h"
 
-
-const long SPEEDSCALE = 256000L; // We need to keep the numerator and denominator similarly scaled.
 
 class Encoder
 {
 public:
 
-    // constructor : sets pins as inputs and turns on pullup resistors
-    Encoder( int8_t PinA, int8_t PinB, Adafruit_DCMotor* assocMotor) : pin_a ( PinA), pin_b( PinB )
+    // initializer : sets pins as inputs and turns on pullup resistors
+    void init( int8_t PinA, int8_t PinB, Adafruit_DCMotor* assocMotor)
     {
+        Serial.println("initializing encoder");
+        pin_a = PinA;
+        pin_b = PinB;
         motor = assocMotor;
        
         // set pin a and b to be input 
@@ -28,6 +29,7 @@ public:
     // Call this from your interrupt function.
     void update()
     {
+        // TODO: This is probably too long for an ISR.
         noInterrupts();
         
         long now = micros();
@@ -101,7 +103,4 @@ private:
     int8_t pin_b;
 };
 
-
-void interruptibleDelay(float ms);
-void encodersSetup();
 #endif
