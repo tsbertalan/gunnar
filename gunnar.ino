@@ -18,7 +18,7 @@ void doEncoder1()
 
 void setup()
 {
-    Serial.begin(19200);
+    Serial.begin(9600);
     Serial.println("setup()");
     gunnar = Gunnar();
     gunnar.init();

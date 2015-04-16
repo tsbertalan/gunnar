@@ -9,61 +9,7 @@
 #include "vision.h"
 
 
-class Task
-{
-public:
-    void init(void (*action)(), int frequency)
-    {
-        freq = frequency;
-        _action = action;
-        lastExecution = micros() * 1000L;
-        Serial.println("initializing task");
-    };
-    
-    void execute()
-    { 
-        _action();
-        lastExecution = micros() * 1000L;
-    }
-    
-    long lastExecution;
-    
-    int freq;
-private:
-    void (* _action)();
-};
 
-
-class TaskDriver
-{
-public:
-    void init(const int ntasks, Task *taskArr[])
-    {
-        Serial.println("initializing taskDriver");   
-        _tasks = taskArr;
-        _ntasks = ntasks;
-    };
-    
-    void run()
-    {
-        Serial.println("running taskDriver");
-        while(1)
-        {
-            for(int i=0; i<_ntasks; i++)
-            {
-                long now = micros()*1000L;
-                Task t = *_tasks[i];
-                if(now - t.lastExecution >= (long) t.freq)
-                    t.execute();
-            }
-            Serial.println("taskDriver.loop");
-        }
-    }
-    
-private:
-    Task** _tasks;
-    int _ntasks;
-};
 
 // Consolidate as many globals as possible in a singleton robot.
 
@@ -88,8 +34,9 @@ public:
         controlledMotors = ControlledMotors();
         controlledMotors.init(motor1, motor2, encoder0, encoder1);
         
-        sonarTask.init(static_cast<void (*)()> (this->checkSonar), 100);
-        motorPIDsTask.init(static_cast<void (*)()> (this->updatePIDs), 32);
+        // True black magic:
+        sonarTask.init(this, &Gunnar::checkSonar, 100);
+        motorPIDsTask.init(this, &Gunnar::updatePIDs, 100);
         
         tasks[0] = &sonarTask;
         tasks[1] = &motorPIDsTask;
@@ -236,17 +183,77 @@ public:
     Encoder encoder1;
     
 private:
-    TaskDriver taskDriver;
     Sensors sensors;
     ControlledMotors controlledMotors;
-
-    Task sonarTask;
-    Task motorPIDsTask;
-    Task* tasks[ntasks];
 
     Adafruit_DCMotor* motor1;
     Adafruit_DCMotor* motor2;
     Adafruit_DCMotor* bothMtrs[2];
+    
+    typedef void (Gunnar::* GunnarMemFn) ();
+    
+    class Task
+    {
+    public:
+        void init(Gunnar* that, GunnarMemFn action, int frequency)
+        {
+            freq = frequency;
+            _action = action;
+            _that = that;
+            lastExecution = micros() * 1000L;
+            Serial.println("initializing task");
+        };
+        
+        void execute()
+        { 
+            (_that->*_action)();
+            lastExecution = micros() * 1000L;
+        }
+        
+        long lastExecution;
+        
+        int freq;
+    private:
+        Gunnar* _that;
+        GunnarMemFn _action;
+    };
+
+
+    class TaskDriver
+    {
+    public:
+        void init(const int ntasks, Task *taskArr[])
+        {
+            Serial.println("initializing taskDriver");   
+            _tasks = taskArr;
+            _ntasks = ntasks;
+        };
+        
+        void run()
+        {
+            Serial.println("running taskDriver");
+            while(1)
+            {
+                for(int i=0; i<_ntasks; i++)
+                {
+                    long now = micros()*1000L;
+                    Task t = *_tasks[i];
+                    if(now - t.lastExecution >= (long) t.freq)
+                        t.execute();
+                }
+            }
+        }
+        
+    private:
+        Task** _tasks;
+        int _ntasks;
+    };
+
+    TaskDriver taskDriver;
+    Task sonarTask;
+    Task motorPIDsTask;
+    Task* tasks[ntasks];
+    
 };
 
 Gunnar gunnar;
