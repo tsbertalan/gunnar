@@ -32,5 +32,19 @@ const double KD = 0.1;
 
 const int ntasks = 2;
 
+// Sparkfun motor shield pins:
+int motorPinStby = 25; //standby
+
+//Motor A
+const int motorPinPwmA = 22; // Speed control
+const int motorPinAin1 = 24; //Direction
+const int motorPinAin2 = 23; //Direction
+
+//Motor B
+const int motorPinPwmB = 28; //Speed control
+const int motorPinBin1 = 26; //Direction
+const int motorPinBin2 = 27; //Direction
+
+
 
 #endif
