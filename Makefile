@@ -14,10 +14,18 @@ include /usr/share/arduino/Arduino.mk
 ide:
 	arduino `pwd`/gunnar.ino &
 
+# The targets "go" and "stop" require a newer version of the Arduino IDE than is
+# available in the Ubuntu 14.04 repositories. Download 1.5.2 or later from
+# arduino.cc/download , put the arduino-1.*.* folder in /opt/ , and symlink
+# /opt/arduino-1.*.*/arduino to /usr/local/bin .
+#
+# After this, you may have to run `arduino` once, and, in the preferences,
+# change the "Sketchbook location" (presumably you can also do this in
+# ~/.arduino/preferences.txt).
+
 # .PHONY directives specify that this is an action to take,
 # not a real target to build (so make won't just claim the target
-# is up-to-date).
-
+# is up-to-date and then stop).
 .PHONY: go
 go:
 	${IDE_MAKE} --upload gunnar.ino
