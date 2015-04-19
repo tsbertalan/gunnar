@@ -1,6 +1,8 @@
 #ifndef PINDEFS_H
 #define PINDEFS_H
 
+const int BAUDRATE = 9600;
+
 // Pin definitions:
 const int PIN_ACTIVITYSWITCH = 6;
 const int SONARPIN = 8;
@@ -24,26 +26,27 @@ const int encoder1PinB = 5;
 const int minimumSensableDistance = 30; // [cm]
 
 const int MAXPWMSPEED = 255;
-const long SPEEDSCALE = 256000L; // We need to keep the numerator and denominator similarly scaled.
+const long SPEEDSCALE = 1024000L; // We need to keep the numerator and denominator similarly scaled.
     
 const double KP = 2.0;
 const double KI = 1.5;
 const double KD = 0.1;
+const long GOSECONDS = 32L; // Time to allow for a PID set-point search.
 
 const int ntasks = 2;
 
 // Sparkfun motor shield pins:
-int motorPinStby = 25; //standby
+int motorPinStby = 29; //standby
 
 //Motor A
-const int motorPinPwmA = 22; // Speed control
-const int motorPinAin1 = 24; //Direction
-const int motorPinAin2 = 23; //Direction
+const int motorPinPwmA = 11; // Speed control
+const int motorPinAin1 = 26; //Direction
+const int motorPinAin2 = 25; //Direction
 
 //Motor B
-const int motorPinPwmB = 28; //Speed control
-const int motorPinBin1 = 26; //Direction
-const int motorPinBin2 = 27; //Direction
+const int motorPinPwmB = 12; //Speed control
+const int motorPinBin1 = 30; //Direction
+const int motorPinBin2 = 33; //Direction
 
 
 

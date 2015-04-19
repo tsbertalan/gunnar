@@ -1,7 +1,7 @@
 #ifndef ENCODER_H
 #define ENCODER_H
-#include "Adafruit_MotorShield_modified.h"
 #include "constants.h"
+#include "motors.h"
 
 
 class Encoder
@@ -9,7 +9,7 @@ class Encoder
 public:
 
     // initializer : sets pins as inputs and turns on pullup resistors
-    void init( int8_t PinA, int8_t PinB, Adafruit_DCMotor* assocMotor)
+    void init( int8_t PinA, int8_t PinB, Motor* assocMotor)
     {
         Serial.println("Initializing encoder.");
         pin_a = PinA;
@@ -57,7 +57,7 @@ public:
     float getSpeed()
     {
         uint8_t motorStatus = motor->getStatus();
-        if(motorStatus==BRAKE || motorStatus==RELEASE)
+        if(motorStatus==MOTORRELEASE)
         {
             lastSpeedQueryResult = 0;
             return 0;
@@ -74,9 +74,9 @@ public:
 //             long here = position;
 //             long there = lastSpeedQueryPosition;
             
-            float speed = SPEEDSCALE * (float) (here - there) / (float) (now - lastSpeedQueryMicros);
+            float speed = abs(SPEEDSCALE * (float) (here - there) / (float) (now - lastSpeedQueryMicros));
             
-            if(motorStatus == BACKWARD)
+            if(motorStatus == MOTORBACKWARD)
                 speed *= -1;
             lastSpeedQueryTicks = here;
             
@@ -93,14 +93,14 @@ public:
     long volatile position;
     
 private:
-    Adafruit_DCMotor* motor;
+    long volatile ticks;
+    Motor* motor;
     volatile long updateDelay;
     volatile long lastUpdateTime;
     float lastSpeedQueryResult;
     long lastSpeedQueryMicros;
 //     long lastSpeedQueryPosition;
     long lastSpeedQueryTicks;
-    long volatile ticks;
     int8_t pin_a;
     int8_t pin_b;
 };

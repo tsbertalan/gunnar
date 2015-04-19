@@ -1,38 +1,37 @@
 #ifndef GUNNAR_H
 #define GUNNAR_H
+#include <MemoryFree.h>
 #include "Arduino.h"
 #include "motorPIDcontrol.h"
 #include "constants.h"
 #include "encoders.h"
-#include "motorPIDcontrol.h"
-#include "Adafruit_MotorShield_modified.h"
 #include "vision.h"
 
 
 
 
 // Consolidate as many globals as possible in a singleton robot.
-
-Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-
 class Gunnar
 {
 public:
     void init()
     {
-        Serial.println("initializing Gunnar");
-        motor1 = AFMS.getMotor(1);
-        motor2 = AFMS.getMotor(2);
-        bothMtrs[0] = motor1;
-        bothMtrs[1] = motor2;
+        Serial.print(F("Free RAM: "));
+        Serial.print(freeMemory());
+        Serial.println(F(" bytes"));
+        Serial.println(F("initializing Gunnar"));
+        motor1 = Motor();
+        motor1.init(MOTORLEFT);
+        motor2 = Motor();
+        motor2.init(MOTORRIGHT);
+        bothMtrs[0] = &motor1;
+        bothMtrs[1] = &motor2;
         
-        encoder0 = Encoder();
-        encoder0.init(encoder0PinA, encoder0PinB, motor1);
-        encoder1 = Encoder();
-        encoder1.init(encoder1PinA, encoder1PinB, motor2);
-        Serial.println("Done initializing  encoders.");
-        controlledMotors = ControlledMotors();
-        controlledMotors.init(motor1, motor2, encoder0, encoder1);
+        encoder0.init(encoder0PinA, encoder0PinB, NULL);
+        encoder1.init(encoder1PinA, encoder1PinB, NULL);
+        Serial.println(F("Done initializing  encoders."));
+        
+        controlledMotors.init(&motor1, &motor2, &encoder0, &encoder1);
         
         // True black magic:
         sonarTask.init(this, &Gunnar::checkSonar, 100);
@@ -43,31 +42,87 @@ public:
         
         taskDriver.init(ntasks, tasks);
         
-        sensors.init();
-    }
-    
-    void setup()
-    {
-        Serial.println("setup Gunnar");
+        Serial.println(F("setup Gunnar"));
         pinMode(PIN_ACTIVITYSWITCH, INPUT);
-        AFMS.begin(1600);
         
-        motor1->run(RELEASE);
-        motor2->run(RELEASE);
+        motor1.run(MOTORRELEASE);
+        motor2.run(MOTORRELEASE);
 
-        sensors.setup();
+        sensors.init();
     }
     
     void loop()
     {
-        taskDriver.run();
-    }
 
-    int nTurns;
+//         taskDriver.run();
+//         testSpeedSweep();
+        testBackForth();
+    }
+    
+    void testBackForth()
+    {
+        controlledMotors.go(10);
+        controlledMotors.stop();
+        controlledMotors.go(-10);
+        controlledMotors.go(256);
+        controlledMotors.go(-128);
+        controlledMotors.stop();
+        interruptibleDelay(1000);
+    }
+    
+    void ramp(int a, int b)
+    {
+        if(a < b)
+        {
+            for(int j=a; j<b; j++)
+            {
+                Serial.print("j=");
+                Serial.println(j);
+                for(boolean i=0; i<2; i++)
+                {
+                    bothMtrs[i]->setSpeed(j);
+                }
+                interruptibleDelay(10);
+            }
+        }
+        else
+        {
+            for(int j=a; j>b; j--)
+            {
+                Serial.print("j=");
+                Serial.println(j);
+                for(boolean i=0; i<2; i++)
+                {
+                    bothMtrs[i]->setSpeed(j);
+                }
+                interruptibleDelay(10);
+            }
+        }
+    }
+    
+    void testSpeedSweep()
+    {
+//         for(boolean i=0; i<2; i++)
+//         {
+//             if(forward==1)
+//             {
+//                 bothMtrs[i]->run(MOTORFORWARD);
+//             }
+//             else
+//             {
+//                 bothMtrs[i]->run(MOTORBACKWARD);
+//             }
+//         }
+        
+        ramp(0, 128);
+        ramp(128, -128);
+        ramp(-128, 0);
+    }
+    
     void checkSonar()
     {
         float dist = sensors.getSonarDist(8);
-        Serial.print("sighted distance: "); Serial.println(dist);
+        Serial.print(F("sighted distance: ")); Serial.println(dist);
         if(dist < 60)
         {
             if(dist < minimumSensableDistance)
@@ -77,9 +132,9 @@ public:
             }
             else // We're not *super* close.
             {
-                if(nTurns > 4)
+                if(_nTurns > 4)
                 {
-                    nTurns = 0;
+                    _nTurns = 0;
                     controlledMotors.stop();
                     controlledMotors.go(-7);
                 }
@@ -88,13 +143,13 @@ public:
                     Serial.println("Obstacle sighted. Turning.");
                     controlledMotors.stop();
                     decideTurn();
-                    nTurns++;
+                    _nTurns++;
                 }
             }
         }
         else // dist >= 60
         {
-            nTurns = 0;
+            _nTurns = 0;
             controlledMotors.go(dist/4);
         }
     }
@@ -183,12 +238,14 @@ public:
     Encoder encoder1;
     
 private:
+    int _nTurns;
+    
     Sensors sensors;
     ControlledMotors controlledMotors;
 
-    Adafruit_DCMotor* motor1;
-    Adafruit_DCMotor* motor2;
-    Adafruit_DCMotor* bothMtrs[2];
+    Motor motor1;
+    Motor motor2;
+    Motor* bothMtrs[2];
     
     typedef void (Gunnar::* GunnarMemFn) ();
     
@@ -218,7 +275,6 @@ private:
         GunnarMemFn _action;
     };
 
-
     class TaskDriver
     {
     public:
@@ -232,6 +288,10 @@ private:
         void run()
         {
             Serial.println("running taskDriver");
+            Serial.print("Free memory: ");
+            Serial.print(freeMemory());
+            Serial.println(" bytes");
+            
             while(1)
             {
                 for(int i=0; i<_ntasks; i++)
@@ -255,7 +315,5 @@ private:
     Task* tasks[ntasks];
     
 };
-
-Gunnar gunnar;
 
 #endif

@@ -1,9 +1,10 @@
-#include "Adafruit_MotorShield_modified.h"
-#include <PID_v1.h>
 #include <Servo.h>
+#include <MemoryFree.h>
 #include <Wire.h>
 #include "constants.h"
 #include "gunnar.h"
+
+Gunnar gunnar;
 
 // Interrupt Service Routines
 void doEncoder0()
@@ -17,12 +18,11 @@ void doEncoder1()
 }
 
 void setup()
-{
-    Serial.begin(9600);
+{  
+    Serial.begin(BAUDRATE);
     Serial.println("setup()");
     gunnar = Gunnar();
     gunnar.init();
-    gunnar.setup();
     
     attachInterrupt(0, doEncoder0, RISING);
     attachInterrupt(1, doEncoder1, RISING);
@@ -31,6 +31,4 @@ void setup()
 void loop()
 {
     gunnar.loop();
-//     Serial.println("loop");
-//     delay(100);
 }

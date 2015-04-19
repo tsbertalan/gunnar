@@ -1,36 +1,31 @@
 #ifndef MOTORPIDCONTROL_H
 #define MOTORPIDCONTROL_H
-#include <PID_v1.h>
+#include "pids.h"
 #include "constants.h"
 #include "encoders.h"
 #include "Arduino.h"
-#include "Adafruit_MotorShield_modified.h"
+#include "motors.h"
 
 class ControlledMotors
 {
 public:
-    ControlledMotors()
-    {}
-        
-    void init(Adafruit_DCMotor* leftMotor,
-              Adafruit_DCMotor* rightMotor,
-              Encoder encoder0,
-              Encoder encoder1)
+    void init(Motor* leftMotor,
+              Motor* rightMotor,
+              Encoder *encoder0,
+              Encoder *encoder1)
     {
         Serial.println("initializing motors");
-        *leftPID = PID(&monitoredLeft,  &leftMotorControlledSpeed,  &leftMotorSetPoint,
+        leftPID.init(&monitoredLeft,  &leftMotorControlledSpeed,  &leftMotorSetPoint,
                     KP, KI, KD, DIRECT);
-        *rightPID = PID(&monitoredRight, &rightMotorControlledSpeed, &rightMotorSetPoint,
+        rightPID.init(&monitoredRight, &rightMotorControlledSpeed, &rightMotorSetPoint,
                      KP, KI, KD, DIRECT);
-        leftPID->SetMode(AUTOMATIC);
-        rightPID->SetMode(AUTOMATIC);
+        leftPID.SetMode(AUTOMATIC);
+        rightPID.SetMode(AUTOMATIC);
         
-        setAccelLimit(MAXPWMSPEED);
-        
-        encoders[0] = &encoder0; // I don't know why an initializer list
-        encoders[1] = &encoder1; // wasn't ok.
-        pids[0] = leftPID;
-        pids[1] = rightPID;
+        encoders[0] = encoder0; // We don't use an initializer list
+        encoders[1] = encoder1; // because we can't control when global objects.
+        pids[0] = leftPID;      // are constructed, and controlledMotors is
+        pids[1] = rightPID;     // and its properties are owned by the global gunnar.
         setPoints[0] = &leftMotorSetPoint;
         setPoints[1] = &rightMotorSetPoint;
         ctrlVals[0] = &leftMotorControlledSpeed;
@@ -39,6 +34,8 @@ public:
         monVals[1] = &monitoredRight;
         bothMtrs[0] = leftMotor;
         bothMtrs[1] = rightMotor;
+        
+        setAccelLimit(MAXPWMSPEED);
     }
     
     void setup()
@@ -49,7 +46,7 @@ public:
     
     void turn(int angle)
     {
-        resetEncoders();
+        _resetEncoders();
         Serial.print("Turning ");
         Serial.print(angle);
         Serial.println(" degrees.");
@@ -75,7 +72,7 @@ public:
             long startTime = micros();
             while(1)
             {
-                controlMotorPositions(sgn*angle, -sgn*angle);
+                _controlMotorPositions(sgn*angle, -sgn*angle);
                 if(micros() - startTime > delay)
                     break;
             }
@@ -88,109 +85,115 @@ public:
         
     void stop()
     {
-        for(uint8_t i=0; i<2; i++)
-        {
-            bothMtrs[i]->run(RELEASE);
-            bothMtrs[i]->setSpeed(0);
-        }
+        motorStop();
     }
     
     void updatePIDs()
     {
         // Update the PIDs
-    //     Serial.println("micros  | m| setp  | monitr| ctrl| pos| updela");
-                    //16376732, 0, 100.00, 157.00, 0.00, 157, 117132
-                    //80056232, 1, 0.00, 158.00, 0.00, 168, 134332
         uint8_t i;
         for(i=0; i<2; i++)
         {
-            *monVals[i] = encoders[i]->position;
-            pids[i]->Compute();
+            *monVals[i] = (double) encoders[i]->position;
+            pids[i].Compute();
             
-            Serial.print(micros());
-            Serial.print(", ");
-            Serial.print(i);
-            Serial.print(", ");
-            Serial.print(*setPoints[i]);
-            Serial.print(", ");
-            Serial.print(*monVals[i]);
-            Serial.print(", ");
-            Serial.print(*ctrlVals[i]);
-            Serial.print(", ");
-            Serial.print(encoders[i]->position);
-            Serial.print(", ");
-            Serial.println(encoders[i]->trueUpdateDelay);
+//             if(i==0)
+//             {
+// Serial.println("micros  | m| setp  | monitr| ctrl   | pos| updela");
+              //25492644, 0, -43.00, 364.00, -255.00, 369, 8136
+                Serial.print(micros());
+                Serial.print(", ");
+                Serial.print(i);
+                Serial.print(", ");
+                Serial.print(*setPoints[i]);
+                Serial.print(", ");
+                Serial.print(*monVals[i]);
+                Serial.print(", ");
+                Serial.print(*ctrlVals[i]);
+                Serial.print(", ");
+                Serial.print(encoders[i]->position);
+                Serial.print(", ");
+                Serial.print(encoders[i]->getSpeed());
+                Serial.print(", ");
+//                 Serial.print(pids[i].outMax);
+//                 Serial.print(", ");
+                Serial.println(encoders[i]->trueUpdateDelay);
+//             }
 
             // Apply the PID output.
-            double ctrlVal =  *ctrlVals[i];
-            if(abs(ctrlVal) < 15)
-                ctrlVal = 0;
-            if(ctrlVal == 0)
-            {
-                bothMtrs[i]->run(RELEASE);
-            }
-            else
-            {
-                if(ctrlVal < 0)
-                {
-                    bothMtrs[i]->run(BACKWARD);
-                }
-                else
-                {
-                    bothMtrs[i]->run(FORWARD);
-                }
-            }
-            bothMtrs[i]->setSpeed(abs(ctrlVal));
+//             if(abs(*ctrlVals[i]) < 15 || *ctrlVals[i] == 0)
+//             {
+//                 bothMtrs[i]->run(MOTORRELEASE);
+//             }
+//             else
+//             {
+//                 if(*ctrlVals[i] < 0)
+//                 {
+//                     bothMtrs[i]->run(MOTORBACKWARD);
+//                 }
+//                 else
+//                 {
+//                     bothMtrs[i]->run(MOTORFORWARD);
+//                 }
+//             }
+//             else
+//             {
+                bothMtrs[i]->setSpeed(*ctrlVals[i]);
+//             }
         }
     }
     
     void setAccelLimit(int pwm)
     {
-        leftPID->SetOutputLimits(-pwm, pwm);
-        rightPID->SetOutputLimits(-pwm, pwm);
+        for(uint8_t i=0; i<2; i++)
+        {
+            pids[i].SetOutputLimits(-pwm, pwm);
+        }
     }
     
     void go(int dist)
     {
-        resetEncoders();
+        _resetEncoders();
         Serial.print("Going ");
         Serial.print(dist);
         Serial.println(" cm.");
-        dist = (double) dist * 100./23.; // 100 ticks/cm
+        dist = (double) dist * 100./23.; // 100 ticks / 23 cm
         Serial.print("(");
         Serial.print(dist);
         Serial.println(" ticks)");
     //     long delay = 5.0*(double) dist/100.0 * 1000000L; // us
-        unsigned long delay = 5L * 1000000L;
-        if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
+        long startTime = micros();
+        while(1)
         {
-            long startTime = micros();
-            while(1)
+            unsigned long delay = GOSECONDS * 1000000L;  // Arbitrary delay.
+            if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
             {
-                controlMotorPositions(dist, dist);
+                _controlMotorPositions(dist, dist);
                 if(micros() - startTime > delay)
                     break;
             }
-        }
-        else
-        {
-            stop();
+            else
+            {
+                stop();
+            }
         }
     }
     
+private:
     double leftMotorControlledSpeed;
     double rightMotorControlledSpeed;
     
     double leftMotorSetPoint;
     double rightMotorSetPoint;
-private:
-    void controlMotorPositions(long position0, long position1)
+    
+    void _controlMotorPositions(long position0, long position1)
     {
         *setPoints[0] = (double) position0;
         *setPoints[1] = (double) position1;
+        updatePIDs();  // TODO: Mabye updatePIDs() should be private?
     }
     
-    void resetEncoders()
+    void _resetEncoders()
     {
         noInterrupts();
         encoders[0]->position = 0;
@@ -198,16 +201,16 @@ private:
         interrupts();
     }
    
+    Motor *bothMtrs[2];
+    Encoder *encoders[2];
+    PID pids[2];
     double monitoredLeft;
     double monitoredRight;
-    Encoder* encoders[2];
-    Adafruit_DCMotor* bothMtrs[2];
-    PID* pids[2];
     double* setPoints[2];
     double* ctrlVals[2];
     double* monVals[2];
-    PID* leftPID;
-    PID* rightPID;
+    PID leftPID;
+    PID rightPID;
 };
 
 

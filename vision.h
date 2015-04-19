@@ -19,15 +19,7 @@ Servo *servoPan;
 class Sensors
 {
 public:
-    Sensors()
-    {
-    }
-    
     void init()
-    {
-    }
-    
-    void setup()
     {
         pinMode(SONARPIN, INPUT);
         
