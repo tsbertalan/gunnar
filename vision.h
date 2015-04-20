@@ -13,8 +13,10 @@ const int TILTOFFSET = 8; // Larger is further down.
 const int NEUTRALPAN = -PANOFFSET;
 const int NEUTRALTILT = -TILTOFFSET;
 
-Servo *servoTilt;
-Servo *servoPan;
+bool checkActivitySwitch()
+{
+    return digitalRead(PIN_ACTIVITYSWITCH) == HIGH;
+}
 
 class Sensors
 {
@@ -23,8 +25,8 @@ public:
     {
         pinMode(SONARPIN, INPUT);
         
-        servoTilt->attach(TILTSERVOPIN);
-        servoPan->attach(PANSERVOPIN);
+        servoTilt.attach(TILTSERVOPIN);
+        servoPan.attach(PANSERVOPIN);
         
         setPan(0);
         setTilt(0);
@@ -33,35 +35,35 @@ public:
     void setPan(int pos)
     {
         // -90 <= pos < 90
-        if(!servoPan->attached())
+        if(!servoPan.attached())
         {
-            servoPan->attach(PANSERVOPIN);
+            servoPan.attach(PANSERVOPIN);
         }
-        servoPan->write(pos+90+PANOFFSET);
+        servoPan.write(pos+90+PANOFFSET);
     }
 
     void setTilt(int pos)
     {
         // -90 <= pos < 90
-        if(!servoTilt->attached())
+        if(!servoTilt.attached())
         {
-            servoTilt->attach(TILTSERVOPIN);
+            servoTilt.attach(TILTSERVOPIN);
         }
-        servoTilt->write(-pos+90+TILTOFFSET);
+        servoTilt.write(-pos+90+TILTOFFSET);
     }
 
     void disablePan()
     {
         setPan(0);
-        if(servoPan->attached())
-            servoPan->detach();
+        if(servoPan.attached())
+            servoPan.detach();
     }
 
     void disableTilt()
     {
         setTilt(0);
-        if(servoTilt->attached())
-            servoTilt->detach();
+        if(servoTilt.attached())
+            servoTilt.detach();
     }
 
     void disableServos()
@@ -74,7 +76,6 @@ public:
     {
         return getSonarDist(4);
     }
-
 
     float getSonarDist(int nSonarReadings)
     {
@@ -135,14 +136,21 @@ public:
         
         return (dist < 50);
     }
+    
     bool leftTreadBlocked()
     {
         return treadBlocked(false);
     }
+    
     bool rightTreadBlocked()
     {
         return treadBlocked(true);
     }
+
+private:
+    
+    Servo servoTilt;
+    Servo servoPan;
 };
 
 #endif

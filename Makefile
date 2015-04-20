@@ -2,12 +2,11 @@ ARDUINO_DIR = /usr/share/arduino
 #ARDMK_DIR = /usr/share/arduino
 AVR_TOOLS_DIR = /usr
 
-
 BOARD_TAG = mega2560
 IDE_BOARD_NAME = arduino:avr:mega
-ARDUINO_PORT = `ls /dev/ttyACM*`
 ARDUINO_LIBS = Servo Wire MemoryFree
 IDE_MAKE = arduino --port ${ARDUINO_PORT} --board ${IDE_BOARD_NAME}
+ARDUINO_PORT := $(shell ls /dev/ttyACM*)
 
 include /usr/share/arduino/Arduino.mk
 

@@ -5,6 +5,7 @@
 #include "encoders.h"
 #include "Arduino.h"
 #include "motors.h"
+#include "vision.h"
 
 class ControlledMotors
 {
@@ -42,65 +43,114 @@ public:
     {
         pinMode(encoder0PinA, INPUT);
         pinMode(encoder0PinB, INPUT);
-    } 
+//         pinMode(TURNSIGNALLEFTPIN, OUTPUT);
+//         pinMode(TURNSIGNALRIGHTPIN, OUTPUT);
+    }
+    
+    void signalRight()
+    {
+        analogWrite(TURNSIGNALLEFTPIN, 0);
+        analogWrite(TURNSIGNALRIGHTPIN, 255);
+        analogWrite(TURNSIGNALBACKPIN, 0);
+        analogWrite(TURNSIGNALFORWARDPIN, 0);
+    }
+    
+    void signalLeft()
+    {
+        analogWrite(TURNSIGNALLEFTPIN, 255);
+        analogWrite(TURNSIGNALRIGHTPIN, 0);
+        analogWrite(TURNSIGNALBACKPIN, 0);
+        analogWrite(TURNSIGNALFORWARDPIN, 0);
+    }
+    
+    void signalStop()
+    {
+        analogWrite(TURNSIGNALLEFTPIN, 255);
+        analogWrite(TURNSIGNALRIGHTPIN, 255);
+        analogWrite(TURNSIGNALBACKPIN, 0);
+        analogWrite(TURNSIGNALFORWARDPIN, 0);
+    }
+    
+    void signalForward()
+    {
+        analogWrite(TURNSIGNALLEFTPIN, 0);
+        analogWrite(TURNSIGNALRIGHTPIN, 0);
+        analogWrite(TURNSIGNALBACKPIN, 0);
+        analogWrite(TURNSIGNALFORWARDPIN, 128);
+    }
+    
+    void signalReverse()
+    {
+        analogWrite(TURNSIGNALLEFTPIN, 0);
+        analogWrite(TURNSIGNALRIGHTPIN, 0);
+        analogWrite(TURNSIGNALBACKPIN, 255);
+        analogWrite(TURNSIGNALFORWARDPIN, 0);
+    }
+    
+    boolean isTurning()
+    {
+        return _turning;
+    }
     
     void turn(int angle)
     {
-        _resetEncoders();
-        Serial.print("Turning ");
-        Serial.print(angle);
-        Serial.println(" degrees.");
-        angle = (double) angle * 120./90.; // 120 ticks/90 deg
-        Serial.print("(");
-        Serial.print(angle);
-        Serial.println(" ticks)");
-    //     long delay = 9.0*(double) angle/120.0 * 1000000L; // us
-        unsigned long delay = 3L * 1000000L;
-        uint8_t sgn;
-        if(angle>0)
-        {
-            // Right turn. Right tread should go backwards.
-            sgn = 1;
-        }
-        else
-        {
-            // Left turn. Right tread should go forwards.
-            sgn = -1;
-        }
+        _turning = true;
         if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
         {
-            long startTime = micros();
-            while(1)
+            _resetEncoders();
+            Serial.print("Turning ");
+            Serial.print(angle);
+            Serial.println(" degrees.");
+            angle = (double) angle * 120./90.; // 120 ticks/90 deg
+            Serial.print("(");
+            Serial.print(angle);
+            Serial.println(" ticks)");
+            uint8_t sgn;
+            if(angle>0)
             {
-                _controlMotorPositions(sgn*angle, -sgn*angle);
-                if(micros() - startTime > delay)
-                    break;
+                // Right turn. Right tread should go backwards.
+                sgn = 1;
+                signalRight();
             }
+            else
+            {
+                // Left turn. Right tread should go forwards.
+                sgn = -1;
+                signalLeft();
+            }
+            
+            _controlMotorPositions(sgn*angle, -sgn*angle);
         }
         else
         {
             stop();
         }
-        }
+    }
         
     void stop()
     {
+        _turning = false;
+        signalStop();
         motorStop();
     }
     
     void updatePIDs()
     {
-        // Update the PIDs
-        uint8_t i;
-        for(i=0; i<2; i++)
+        if(checkActivitySwitch())
         {
-            *monVals[i] = (double) encoders[i]->position;
-            pids[i].Compute();
             
-//             if(i==0)
-//             {
-// Serial.println("micros  | m| setp  | monitr| ctrl   | pos| updela");
-              //25492644, 0, -43.00, 364.00, -255.00, 369, 8136
+            // Update the PIDs
+            uint8_t i;
+            for(i=0; i<2; i++)
+            {
+                *monVals[i] = (double) encoders[i]->position;
+                pids[i].Compute();
+                
+    //             if(i==0)
+    //             {
+    #ifdef PRINTCTRLDATA
+    Serial.println("micros  | m| setp | moni | ctrl  | ps| spd  | updela");
+                //10575920, 1, 82.00, 12.00, 255.00, 15, 92.89, 17588
                 Serial.print(micros());
                 Serial.print(", ");
                 Serial.print(i);
@@ -115,31 +165,15 @@ public:
                 Serial.print(", ");
                 Serial.print(encoders[i]->getSpeed());
                 Serial.print(", ");
-//                 Serial.print(pids[i].outMax);
-//                 Serial.print(", ");
                 Serial.println(encoders[i]->trueUpdateDelay);
-//             }
+    #endif
 
-            // Apply the PID output.
-//             if(abs(*ctrlVals[i]) < 15 || *ctrlVals[i] == 0)
-//             {
-//                 bothMtrs[i]->run(MOTORRELEASE);
-//             }
-//             else
-//             {
-//                 if(*ctrlVals[i] < 0)
-//                 {
-//                     bothMtrs[i]->run(MOTORBACKWARD);
-//                 }
-//                 else
-//                 {
-//                     bothMtrs[i]->run(MOTORFORWARD);
-//                 }
-//             }
-//             else
-//             {
                 bothMtrs[i]->setSpeed(*ctrlVals[i]);
-//             }
+            }
+        }
+        else
+        {
+            stop();
         }
     }
     
@@ -153,33 +187,35 @@ public:
     
     void go(int dist)
     {
-        _resetEncoders();
-        Serial.print("Going ");
-        Serial.print(dist);
-        Serial.println(" cm.");
-        dist = (double) dist * 100./23.; // 100 ticks / 23 cm
-        Serial.print("(");
-        Serial.print(dist);
-        Serial.println(" ticks)");
-    //     long delay = 5.0*(double) dist/100.0 * 1000000L; // us
-        long startTime = micros();
-        while(1)
+        _turning = false;
+        if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
         {
-            unsigned long delay = GOSECONDS * 1000000L;  // Arbitrary delay.
-            if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
+            if(dist < 0)
             {
-                _controlMotorPositions(dist, dist);
-                if(micros() - startTime > delay)
-                    break;
+                signalReverse();
             }
             else
             {
-                stop();
+                signalForward();
             }
+            _resetEncoders();
+            Serial.print("Going ");
+            Serial.print(dist);
+            Serial.println(" cm.");
+            dist = (double) dist * 100./23.; // 100 ticks / 23 cm
+            Serial.print("(");
+            Serial.print(dist);
+            Serial.println(" ticks)");
+            _controlMotorPositions(dist, dist);
+        }
+        else
+        {
+            stop();
         }
     }
     
 private:
+    boolean _turning;
     double leftMotorControlledSpeed;
     double rightMotorControlledSpeed;
     

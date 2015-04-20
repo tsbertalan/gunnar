@@ -4,16 +4,16 @@
 const int BAUDRATE = 9600;
 
 // Pin definitions:
-const int PIN_ACTIVITYSWITCH = 6;
-const int SONARPIN = 8;
+const uint8_t PIN_ACTIVITYSWITCH = 6;
+const uint8_t SONARPIN = 8;
 
-const int TILTSERVOPIN = 9;
-const int PANSERVOPIN = 10;
+const uint8_t TILTSERVOPIN = 9;
+const uint8_t PANSERVOPIN = 10;
 
-const int encoder0PinA = 2; // interrupt pin 0
-const int encoder0PinB = 4;
-const int encoder1PinA = 3; // interrupt pin 1
-const int encoder1PinB = 5;
+const uint8_t encoder0PinA = 2; // interrupt pin 0
+const uint8_t encoder0PinB = 4;
+const uint8_t encoder1PinA = 3; // interrupt pin 1
+const uint8_t encoder1PinB = 5;
 
 // Servo one uses pin 10.
 // Servo two uses pin 9.
@@ -23,31 +23,38 @@ const int encoder1PinB = 5;
 
 
 // Other constants:
-const int minimumSensableDistance = 30; // [cm]
+const uint8_t minimumSensableDistance = 30; // [cm]
+const int turnThresh = 120;
 
-const int MAXPWMSPEED = 255;
+const uint8_t MAXPWMSPEED = 180;  // Depends on battery voltage, really.
 const long SPEEDSCALE = 1024000L; // We need to keep the numerator and denominator similarly scaled.
     
 const double KP = 2.0;
 const double KI = 1.5;
 const double KD = 0.1;
-const long GOSECONDS = 32L; // Time to allow for a PID set-point search.
 
-const int ntasks = 2;
+const uint8_t ntasks = 2;
 
 // Sparkfun motor shield pins:
-int motorPinStby = 29; //standby
+const uint8_t motorPinStby = 29; // Standby
 
 //Motor A
-const int motorPinPwmA = 11; // Speed control
-const int motorPinAin1 = 26; //Direction
-const int motorPinAin2 = 25; //Direction
+const uint8_t motorPinPwmA = 11; // Speed control
+const uint8_t motorPinAin1 = 26; // Direction
+const uint8_t motorPinAin2 = 25; // Direction
 
 //Motor B
-const int motorPinPwmB = 12; //Speed control
-const int motorPinBin1 = 30; //Direction
-const int motorPinBin2 = 33; //Direction
+const uint8_t motorPinPwmB = 12; // Speed control
+const uint8_t motorPinBin1 = 30; // Direction
+const uint8_t motorPinBin2 = 33; // Direction
 
+const uint8_t TURNSIGNALLEFTPIN = 52;
+const uint8_t TURNSIGNALRIGHTPIN = 53;
+const uint8_t TURNSIGNALBACKPIN = 50;
+const uint8_t TURNSIGNALFORWARDPIN = 51;
 
+const int maxTurnTime = 10000; // ms
+const uint8_t sonarPeriod = 10; // ms
+const uint8_t PIDperiod = 4; // ms
 
 #endif

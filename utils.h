@@ -31,4 +31,11 @@ float average(float* values, int N)
     return val;
 }
 
+long millisViaMicros()
+{
+    //Apparently millis() can be bad with interrupts.
+    return ((long) micros() / 1000L);
+}
+
+
 #endif
