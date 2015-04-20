@@ -6,7 +6,7 @@ BOARD_TAG = mega2560
 IDE_BOARD_NAME = arduino:avr:mega
 ARDUINO_LIBS = Servo Wire MemoryFree
 IDE_MAKE = arduino --port ${ARDUINO_PORT} --board ${IDE_BOARD_NAME}
-ARDUINO_PORT := $(shell ls /dev/ttyACM*)
+ARDUINO_PORT = $(shell ls /dev/ttyACM* 2> /dev/null)
 
 include /usr/share/arduino/Arduino.mk
 
