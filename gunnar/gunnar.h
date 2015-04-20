@@ -243,12 +243,12 @@ public:
     
     Encoder encoder0;
     Encoder encoder1;
+    Sensors sensors;
     
 private:
     int _nTurns;
     int _lastTurnTime;
     
-    Sensors sensors;
     ControlledMotors controlledMotors;
 
     Motor motor1;
