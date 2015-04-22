@@ -3,24 +3,21 @@
 
 const int BAUDRATE = 9600;
 
-// Pin definitions:
 const uint8_t PIN_ACTIVITYSWITCH = 6;
 const uint8_t SONARPIN = 8;
 
 const uint8_t TILTSERVOPIN = 9;
 const uint8_t PANSERVOPIN = 10;
 
-const uint8_t encoder0PinA = 2; // interrupt pin 0
-const uint8_t encoder0PinB = 4;
-const uint8_t encoder1PinA = 3; // interrupt pin 1
-const uint8_t encoder1PinB = 5;
+// Encoders:
+const uint8_t encoder0Int = 2; // interrupt pin 0
+const uint8_t encoder1Int = 3; // interrupt pin 1
 
-// Servo one uses pin 10.
-// Servo two uses pin 9.
+const uint8_t encoder0PinA = 34;
+const uint8_t encoder0PinB = 36;
 
-// The Adafruit motor shield uses these pins
-// A4 and A5; still usable for i2c.
-
+const uint8_t encoder1PinA = 35;
+const uint8_t encoder1PinB = 37;
 
 // Other constants:
 const uint8_t minimumSensableDistance = 30; // [cm]
@@ -35,18 +32,16 @@ const double KD = 0.1;
 
 const uint8_t ntasks = 2;
 
-// Sparkfun motor shield pins:
-const uint8_t motorPinStby = 29; // Standby
-
+// Dagu5 motor driver pins:
 //Motor A
 const uint8_t motorPinPwmA = 11; // Speed control
-const uint8_t motorPinAin1 = 26; // Direction
-const uint8_t motorPinAin2 = 25; // Direction
+const uint8_t motorPinDirA = 26; // Direction
+const uint8_t motorPinCurA = 25; // Direction
 
 //Motor B
 const uint8_t motorPinPwmB = 12; // Speed control
-const uint8_t motorPinBin1 = 30; // Direction
-const uint8_t motorPinBin2 = 33; // Direction
+const uint8_t motorPinDirB = 30; // Direction
+const uint8_t motorPinCurB = 33; // Direction
 
 const uint8_t TURNSIGNALLEFTPIN = 52;
 const uint8_t TURNSIGNALRIGHTPIN = 53;

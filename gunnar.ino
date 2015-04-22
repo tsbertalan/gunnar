@@ -1,5 +1,4 @@
 #include <Servo.h>
-#include <MemoryFree.h>
 #include <Wire.h>
 #include <gunnar.h>
 #include "constants.h"
@@ -24,8 +23,11 @@ void setup()
     gunnar = Gunnar();
     gunnar.init();
     
-    attachInterrupt(0, doEncoder0, RISING);
-    attachInterrupt(1, doEncoder1, RISING);
+    // Turn on pullup resistors on interrupt lines:
+    pinMode(2, INPUT_PULLUP);
+    pinMode(3, INPUT_PULLUP);
+    attachInterrupt(0, doEncoder0, CHANGE);
+    attachInterrupt(1, doEncoder1, CHANGE);
 }
 
 void loop()

@@ -1,6 +1,5 @@
 #ifndef GUNNAR_H
 #define GUNNAR_H
-#include <MemoryFree.h>
 #include "Arduino.h"
 #include "motorPIDcontrol.h"
 #include "constants.h"
@@ -16,9 +15,6 @@ class Gunnar
 public:
     void init()
     {
-        Serial.print(F("Free RAM: "));
-        Serial.print(freeMemory());
-        Serial.println(F(" bytes"));
         Serial.println(F("initializing Gunnar"));
         motor1 = Motor();
         motor1.init(MOTORLEFT);
@@ -45,8 +41,8 @@ public:
         Serial.println(F("setup Gunnar"));
         pinMode(PIN_ACTIVITYSWITCH, INPUT);
         
-        motor1.run(MOTORRELEASE);
-        motor2.run(MOTORRELEASE);
+        motor1.stop();
+        motor2.stop();
 
         sensors.init();
     }
@@ -244,12 +240,12 @@ public:
     Encoder encoder0;
     Encoder encoder1;
     Sensors sensors;
+    ControlledMotors controlledMotors;
     
 private:
     int _nTurns;
     int _lastTurnTime;
     
-    ControlledMotors controlledMotors;
 
     Motor motor1;
     Motor motor2;
@@ -296,9 +292,6 @@ private:
         void run()
         {
             Serial.println("running taskDriver");
-            Serial.print("Free memory: ");
-            Serial.print(freeMemory());
-            Serial.println(" bytes");
             
             while(1)
             {

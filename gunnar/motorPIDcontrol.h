@@ -131,7 +131,8 @@ public:
     {
         _turning = false;
         signalStop();
-        motorStop();
+        bothMtrs[0]->stop();
+        bothMtrs[1]->stop();
     }
     
     void updatePIDs()

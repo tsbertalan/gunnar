@@ -5,14 +5,7 @@
 //motor B connected between B01 and B02
 
 
-void motorStop()
-{
-  //enable standby  
-  digitalWrite(motorPinStby, LOW); 
-}
-
-
-const uint8_t MOTORRELEASE = 0;
+const uint8_t MOTORSTOP = 0;
 const uint8_t MOTORFORWARD = 1;
 const uint8_t MOTORBACKWARD = 2;
 
@@ -24,21 +17,20 @@ class Motor
 public:
     void init(boolean which)
     {
+        pinMode(motorPinPwmA, OUTPUT);
+        pinMode(motorPinDirA, OUTPUT);
+        pinMode(motorPinCurA, INPUT);
+        pinMode(motorPinPwmB, OUTPUT);
+        pinMode(motorPinDirB, OUTPUT);
+        pinMode(motorPinCurB, INPUT);
         _which = which;
-        pinMode(motorPinStby, OUTPUT);
-        if(_which == 0)
-        {
-            pinMode(motorPinPwmA, OUTPUT);
-            pinMode(motorPinAin1, OUTPUT);
-            pinMode(motorPinAin2, OUTPUT);
-        }
-        else
-        {
-            pinMode(motorPinPwmB, OUTPUT);
-            pinMode(motorPinBin1, OUTPUT);
-            pinMode(motorPinBin2, OUTPUT);
-        }
-        _status = MOTORRELEASE;
+        stop();
+    }
+    
+    void stop()
+    {
+        setSpeed(0);
+        _status = MOTORSTOP;
     }
     
     void run(uint8_t status)
@@ -59,8 +51,6 @@ public:
         }
         _speed = speed;
         
-        
-
         if(_which == MOTORLEFT)
         {
             analogWrite(motorPinPwmA, speed);
@@ -101,42 +91,52 @@ private:
             
         _status = status;
         
-        if(status == MOTORRELEASE)
+        if(status == MOTORSTOP)
         {
-            digitalWrite(motorPinStby, LOW); //enable standby
-            return;
+            stop();
+
         }
         else
         {
-            digitalWrite(motorPinStby, HIGH); //disable standby
-        }
-        
-        boolean inPin1 = HIGH;
-        boolean inPin2 = LOW;
-        
-        if(_status == MOTORBACKWARD)
-        {
-//             Serial.print("going backward : motor ");
-//             Serial.println(_which);
-            inPin1 = LOW;
-            inPin2 = HIGH;
-        }
-        
-        for(uint8_t i=0; i<50; i++)
-        {
-            noInterrupts();
             if(_which == MOTORLEFT)
             {
-                digitalWrite(motorPinAin1, inPin1);
-                digitalWrite(motorPinAin2, inPin2);
+                digitalWrite(motorPinDirA, status==MOTORFORWARD);
             }
             else
             {
-                digitalWrite(motorPinBin1, inPin1);
-                digitalWrite(motorPinBin2, inPin2);
+                // Since both motors are wired the same, but face different
+                // sides of the vehicle, the sense of "forward" is different
+                // for both.
+                digitalWrite(motorPinDirA, status==MOTORBACKWARD);
             }
-            interrupts();
         }
+        
+//         boolean inPin1 = HIGH;
+//         boolean inPin2 = LOW;
+//         
+//         if(_status == MOTORBACKWARD)
+//         {
+// //             Serial.print("going backward : motor ");
+// //             Serial.println(_which);
+//             inPin1 = LOW;
+//             inPin2 = HIGH;
+//         }
+//         
+//         for(uint8_t i=0; i<50; i++)
+//         {
+//             noInterrupts();
+//             if(_which == MOTORLEFT)
+//             {
+//                 digitalWrite(motorPinAin1, inPin1);
+//                 digitalWrite(motorPinAin2, inPin2);
+//             }
+//             else
+//             {
+//                 digitalWrite(motorPinBin1, inPin1);
+//                 digitalWrite(motorPinBin2, inPin2);
+//             }
+//             interrupts();
+//         }
     }
   
 };

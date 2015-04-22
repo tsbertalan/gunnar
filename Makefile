@@ -6,7 +6,7 @@ BOARD_TAG = mega2560
 IDE_BOARD_NAME = arduino:avr:mega
 # The folder gunnar must be copied or, better, symlinked into your
 # user libraries folder:
-ARDUINO_LIBS = Servo Wire MemoryFree gunnar
+ARDUINO_LIBS = Servo Wire gunnar
 IDE_MAKE = arduino --port ${ARDUINO_PORT} --board ${IDE_BOARD_NAME}
 ARDUINO_PORT = $(shell ls /dev/ttyACM* 2> /dev/null)
 
@@ -35,4 +35,4 @@ upload: go
 
 .PHONY: stop
 stop:
-	${IDE_MAKE} --upload stop/stop.ino 
+	${IDE_MAKE} --upload stop/stop.ino
