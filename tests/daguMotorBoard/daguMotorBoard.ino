@@ -21,9 +21,11 @@ void setup()
     pinMode(daguCurPin2, INPUT);
 }
 
-void loop()
+void rampUpDown(boolean direction)
 {
-    boolean direction = HIGH;
+    digitalWrite(daguDirPin1, direction);
+    digitalWrite(daguDirPin2, direction);
+    
     uint8_t speed;
 
     for(speed=0; speed<255; speed++)
@@ -50,5 +52,11 @@ void loop()
         analogWrite(daguPwmPin1, speed);
         analogWrite(daguPwmPin2, speed);
         delay(4);
-    }   
+    }  
+}
+
+void loop()
+{
+    rampUpDown(HIGH);
+    rampUpDown(LOW);
 }
