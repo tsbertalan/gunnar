@@ -4,6 +4,9 @@ from subprocess import Popen, PIPE
 from time import sleep
 import unittest
 
+from os.path import dirname, abspath
+here = dirname(abspath(__file__))
+
 def msg(text):
     print
     print ">>>>>>>>>>>>>>>", text, "<<<<<<<<<<<<<<<<<"
@@ -30,10 +33,10 @@ def arduinoGo(arduCmd):
     return system(cmd)
 
 def verify(testName):
-    return arduinoGo("--verify %s/%s.ino" % (testName, testName))
+    return arduinoGo("--verify %s/%s/%s.ino" % (here, testName, testName))
 
 def upload(testName):
-    return arduinoGo("--upload %s/%s.ino" % (testName, testName))
+    return arduinoGo("--upload %s/%s/%s.ino" % (here, testName, testName))
 
 def monitor(sayCmd=False):
     print "To exit the serial monitor, do \"Ctrl+a, k, y\"."
@@ -45,19 +48,19 @@ def monitor(sayCmd=False):
 def printInstructions(test):
     prefix = " >>>     "
     try:
-        lines = open("%s/README.txt" % test)
+        lines = open("%s/%s/README.txt" % (here, test))
         print
         print "Inspection instructions:"
         for line in lines:
-            print "%s %s" % (prefix, line.strip())
+            print "%s %s" % (prefix, line.replace('\n', ''))
         return True
     except IOError:
         raise IOError("No instructions written for %s." % (test))
         return False
 
 def yn(prompt):
-    # stackoverflow.com/questions/3041986
-    # raw_input returns the empty string for "enter"
+    '''stackoverflow.com/questions/3041986
+    raw_input returns the empty string for "enter"'''
     yes = set(['yes','y', 'ye', ''])
     no = set(['no','n'])
     print
@@ -85,7 +88,6 @@ def doTest(testName=None):
     else:
         if testName != "stop":
             haveInstructions = printInstructions(testName)
-        if testName != "stop":
             monitor()
             #if haveInstructions:
             monitorPassed = yn("Did the test pass inspection?")
@@ -96,20 +98,17 @@ class TestGunnar(unittest.TestCase):
 
     def setUp(self):
         pass
+                
+    #def test_motorsSparkfun(self):  # We're using the Dagu5 driver now.
+    #    doTest()
     
     def test_daguMotorBoard(self):
         doTest()
         
-    def test_encodersMotors(self):
+    def test_positionPID(self):
         doTest()
                 
     def test_encodersNoMotors(self):
-        doTest()
-                
-    def test_motorPid(self):
-        doTest()
-                
-    def test_motorsSparkfun(self):
         doTest()
                 
     def test_servos(self):

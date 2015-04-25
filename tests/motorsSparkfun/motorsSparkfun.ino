@@ -1,4 +1,5 @@
-#include "constants.h"
+#include <Servo.h>
+#include <gunnar.h>
 //motor A connected between A01 and A02
 //motor B connected between B01 and B02
 
@@ -6,7 +7,7 @@ void setup(){
   Serial.begin(9600);
   pinMode(motorPinStby, OUTPUT);
 
-  pinMode(motorPinPwm,A OUTPUT);
+  pinMode(motorPinPwmA OUTPUT);
   pinMode(motorPinAin1, OUTPUT);
   pinMode(motorPinAin2, OUTPUT);
 

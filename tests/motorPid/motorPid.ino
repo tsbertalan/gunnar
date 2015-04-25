@@ -1,11 +1,6 @@
 #include <Wire.h>
-#include <PID_v1.h>
-#include "Adafruit_MotorShield_modified.h"
-#include "stats.h"
-#include "encoders.h"
-#include "pinDefinitions.h"
-#include "motorPIDcontrol.h"
-
+#include <Servo.h>
+#include <gunnar.h>
 
 // GLOBALS
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
