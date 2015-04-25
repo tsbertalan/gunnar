@@ -106,9 +106,6 @@ class TestGunnar(unittest.TestCase):
     def test_encodersNoMotors(self):
         doTest()
                 
-    def test_motorDirections(self):
-        doTest()
-                
     def test_motorPid(self):
         doTest()
                 
