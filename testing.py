@@ -8,67 +8,89 @@ from os import makedirs
 from os.path import dirname, abspath, exists
 here = dirname(abspath(__file__))
 
+
 def msg(text):
-    print
     print ">>>>>>>>>>>>>>>", text, "<<<<<<<<<<<<<<<<<"
 
-def systemOut(cmdList, sayCmd=True):
+
+def systemOut(cmdList, sayCmd=True, giveStatus=False):
     '''Run a command and capture the output.'''
     if sayCmd:
         print "$", " ".join(cmdList)
-    return Popen(cmdList, stdout=PIPE).communicate()[0]
-#out = systemOut(["ping", "google.com", "-c", "4"])
-#print "out is %s, dawg" % out.strip()
+    process = Popen(cmdList, stdout=PIPE)
+    if giveStatus:
+        return process.communicate()[0], process.returncode
+    return process.communicate()[0]
 
-devices = systemOut(["ls", "/dev/"])
-for i, dev in enumerate(devices.split('\n')):
+for i, dev in enumerate(systemOut(["ls", "/dev/"], sayCmd=False).split('\n')):
     if "ACM" in dev:
         port = "/dev/%s" % dev.strip()
+del i, dev
 msg("port is %s" % port)
 board = "arduino:avr:mega"
 baudRate = 9600
 
+
+def stripOutput(stdout):
+    ignoreStrings = [
+        "Loading configuration",
+        "Initializing packages",
+        "Preparing boards",
+        "Sketch uses",
+        "Global variables use",
+        ]
+    for l in stdout.split('\n'):
+        isBad = False
+        for bad in ignoreStrings:
+            if bad in l or len(l.strip()) == 0:
+                isBad = True
+        if not isBad:
+            print l
+    
+
 def verify(sketchName):
     cmd = "arduino --port %s --board %s" % (port, board)
     cmd += " --verify %s/%s/%s.ino"  % (here, sketchName, sketchName)
-    if system(cmd):
+    
+    stdout, status = systemOut(cmd.split(' '), sayCmd=False, giveStatus=True)
+    if status:
         raise VerifyError
     else:
-        return False
+        stripOutput(stdout)
+        return  status
+
 
 def upload(sketchName):
     cmd = "arduino --port %s --board %s" % (port, board)
     cmd += " --upload %s/%s/%s.ino" % (here, sketchName, sketchName)
-    # Ignore Arduino's verbose output.
-    cmd += " | grep -v \"Loading configuration\" "
-    cmd += " | grep -v \"Initializing packages\" "
-    cmd += " | grep -v \"Preparing boards\" "
-    cmd += " | grep -v \"Sketch uses\" "
-    cmd += " | grep -v \"Global variables use\" "
-    if system(cmd):
+    
+    stdout, status = systemOut(cmd.split(' '), sayCmd=False, giveStatus=True)
+    if status:
         raise UploadError
     else:
-        return False
+        stripOutput(stdout)
+        return  status
+
 
 def monitor():
     print "To exit the serial monitor, do \"Ctrl+a, k, y\"."
     cmd = "gnome-terminal --disable-factory --command \"screen %s %s\" 2>&1 | grep -v \"format string\"" % (port, baudRate)
     system(cmd)
-    
+
+
 def printInstructions(instructions):
     prefix = " >>>     "
     lines = instructions.split('\n')
-    print
     print "Inspection instructions:"
     for line in lines:
         print "%s %s" % (prefix, line.replace('\n', ''))
+
 
 def yn(prompt):
     '''stackoverflow.com/questions/3041986
     raw_input returns the empty string for "enter"'''
     yes = set(['yes','y', 'ye'])
     no = set(['no','n'])
-    print
     print prompt
     while True:
         choice = raw_input().lower()
@@ -79,14 +101,18 @@ def yn(prompt):
         else:
             print "Please respond with '[y]es' or '[n]o'."
 
+
 class InspectionError(RuntimeError):
     pass
+
 
 class UploadError(RuntimeError):
     pass
 
+
 class VerifyError(RuntimeError):
     pass
+
 
 class Sketch:
     '''Contains and places Arduino code for compilation and uploading.'''
@@ -95,8 +121,6 @@ class Sketch:
         self.instructions = None
         self.code = None
         self.madeFiles = False
-        self.uploaded = False
-        self.verified = False
     
     def getCode(self):
         return self.code
@@ -112,28 +136,22 @@ class Sketch:
         f.close()
     
     def verify(self):
-        self.verified = not verify('testSketch')
-        return not self.verified
-        
+        return verify('testSketch')
+            
     def upload(self):
-        uploadFailed = upload('testSketch')
-        if not uploadFailed:
-            self.verified = True
-            self.uploaded = True
-        return uploadFailed
+        return upload('testSketch')
 
     def doTest(self, doMonitor=True):
         self.makeFiles()
-        testFailed = self.upload()
-        if testFailed:
-            raise 
-        else:
-            if doMonitor:
-                printInstructions(self.instructions)
-                monitor()
-                monitorPassed = yn("Did the test pass inspection?")
-                if not monitorPassed:
-                    raise InspectionError
+        self.verify()
+        out = self.upload()
+        print "upload out:", out
+        if doMonitor:
+            printInstructions(self.instructions)
+            monitor()
+            monitorPassed = yn("Did the test pass inspection?")
+            if not monitorPassed:
+                raise InspectionError
         
 
 class TestGunnar(unittest.TestCase):
