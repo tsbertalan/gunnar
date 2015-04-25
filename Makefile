@@ -38,4 +38,4 @@ stop:
 	${IDE_MAKE} --upload stop/stop.ino
 
 test:
-	cd tests && python testing.py
+	python testing.py
