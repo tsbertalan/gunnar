@@ -105,6 +105,9 @@ class TestGunnar(unittest.TestCase):
     def test_daguMotorBoard(self):
         doTest()
         
+    def test_motorObjectMovement(self):
+        doTest()
+        
     def test_positionPID(self):
         doTest()
                 

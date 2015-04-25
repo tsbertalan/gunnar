@@ -241,14 +241,13 @@ public:
     Encoder encoder1;
     Sensors sensors;
     ControlledMotors controlledMotors;
+    Motor motor1;
+    Motor motor2;
     
 private:
     int _nTurns;
     int _lastTurnTime;
-    
 
-    Motor motor1;
-    Motor motor2;
     Motor* bothMtrs[2];
     
     typedef void (Gunnar::* GunnarMemFn) ();
