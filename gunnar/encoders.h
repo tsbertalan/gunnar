@@ -44,38 +44,62 @@ public:
         boolean a = digitalRead(pin_a);
         boolean b = digitalRead(pin_b);
         
-        uint8_t newStatus = a + 2*b;
+        uint8_t newStatus = b + 2*a;
         
-        // forward looks like  0, 1, 2, 3
-        // backward looks like 0, 3, 2, 1
+//         ___     ___     ___
+// pin_a      |___|   |___|   |___
+//         1 1 0 0 1 1 0 0 1 1 0 0
+//           ___     ___     ___
+// pin_b   _|   |___|   |___|   |_
+//         
+//         0 1 1 0 0 1 1 0 0 1 1 0
+//         
+//      forward looks like  10 11 01 00 10 ... = 2 3 1 0 2 ...
+//      backward looks like 00 01 11 10 00 ... = 0 1 3 2 0 ...
         
-        switch(status)
+        switch(waveStatus)
         {
-            case 0 :
-                if(newStatus == 1)
+            case 0 : // 00
+                if(newStatus == 2) // 10
                     position++;
                 else
-                    position--;
-            case 1 :
-                if(newStatus == 2)
+                {
+                    if(newStatus == 1)
+                        position--;
+                }
+                break;
+            case 1 : // 01
+                if(newStatus == 0)  // 00
                     position++;
                 else
-                    position--;
-            case 2 :
-                if(newStatus == 3)
+                {
+                    if(newStatus == 3)
+                        position--;
+                }
+                break;
+            case 2 : // 10
+                if(newStatus == 3)  // 11
                     position++;
                 else
-                    position--;
-            case 3 :
-                if(newStatus == 1)
+                {
+                    if(newStatus == 0)
+                        position--;
+                }
+                break;
+            case 3 : // 11
+                if(newStatus == 1) // 01
                     position++;
                 else
-                    position--;
+                {
+                    if(newStatus == 3)
+                        position--;
+                }
+                break;
             default :
                 break; // Should never reach here.
         }
 
-        status = newStatus;
+        waveStatus = newStatus;
         
         interrupts();
     };
