@@ -158,6 +158,17 @@ class Sketch:
             if not monitorPassed:
                 raise InspectionError
         
+baseCode = '''
+#include <Wire.h>
+#include <Servo.h>
+#include <gunnar.h>
+Gunnar gunnar;
+
+void setup()
+{
+    Serial.begin(BAUDRATE);
+    gunnar.init();
+}'''
 
 class TestGunnar(unittest.TestCase):
     '''Upload various sketches. Manually check the behavior.'''
@@ -561,18 +572,7 @@ void loop()
         
     def test_servoObjects(self):
         sk = Sketch()
-        sk.code = '''
-#include <Wire.h>
-#include <Servo.h>
-#include <gunnar.h>
-Gunnar gunnar;
-
-void setup()
-{
-    Serial.begin(BAUDRATE);
-    gunnar.init();
-}
-
+        sk.code = baseCode + '''
 void loop() 
 { 
     int8_t angles[] = {-90, 0, 90};
@@ -629,6 +629,31 @@ void loop()
 2. Servos will go to 90  degrees, and pause for 3 seconds.
 3. Servos will go to 180 degrees, and pause for 3 seconds.'''
         sk.doTest()
+        
+    def test_turn(self):
+        sk = Sketch()
+        sk.code = baseCode + '''
+void loop()
+{ 
+    int8_t angles[] = {-90, 45, 180};
+    for(uint8_t i=0; i<4; i++)
+    {
+        int8_t angle = angles[i];
+        Serial.print("angle=");
+        Serial.println(angle);
+        gunnar.controlledMotors.stop();
+        gunnar.controlledMotors.turn(angle);
+        delay(1000);
+    }
+}'''
+        sk.instructions = '''
+0. Ensure that battery power is available,
+   and that the green activity switch is on.
+1. Gunnar will turn -90  degrees, and pause for 1 second.
+2. Gunnar will turn 45   degrees, and pause for 1 second.
+3. Gunnar will turn +180 degrees, and pause for 1 second.'''
+        sk.doTest()
+
         
     @classmethod
     def tearDownClass(cls):

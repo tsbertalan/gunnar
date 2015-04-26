@@ -117,7 +117,25 @@ public:
                 signalLeft();
             }
             
-            _controlMotorPositions(sgn*angle, -sgn*angle);
+            long startTime = micros();
+            while(true)
+            {
+                _controlMotorPositions(sgn*angle, -sgn*angle);
+                long now = micros();
+                Serial.print("Now it's "); Serial.println(now);
+                if(now - startTime > MAXCONTROLLOOPMICROS)
+                {
+                    break;
+                }
+                
+                double err = getEucError();
+                Serial.print("error is "); Serial.println(err);
+                if(err < EUCCONTROLERRORTHRESH)
+                {
+                    break;
+                }
+                interruptibleDelay(CONTROLLOOPMICROS);
+            }
         }
         else
         {
