@@ -5,11 +5,6 @@
 #include "utils.h"
 #include "Arduino.h"
 
-
-
-
-const int PANOFFSET = 10; // Larger is further to the left.
-const int TILTOFFSET = 8; // Larger is further down.
 const int NEUTRALPAN = -PANOFFSET;
 const int NEUTRALTILT = -TILTOFFSET;
 
