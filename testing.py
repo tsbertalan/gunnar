@@ -197,21 +197,36 @@ void setup() {
     gunnar.controlledMotors.stop();
 }
 
+void sayPosition()
+{
+    Serial.print("Positions are (");
+    Serial.print(gunnar.encoder0.position);
+    Serial.print(", ");
+    Serial.print(gunnar.encoder1.position);
+    Serial.println(") ticks.");
+}
 
 void loop()
 {
     Serial.println("Begin position PID control test loop.");
     gunnar.controlledMotors.go(100);
+    sayPosition();
     gunnar.controlledMotors.go(-200);
+    sayPosition();
     gunnar.controlledMotors.go(600);
+    sayPosition();
+    gunnar.controlledMotors.stop();
+    delay(3000);
 }'''
         sk.instructions = '''
 0. Ensure that green activity switch is on.
-1. Motors will run by control to several positions.
+1. Motors will run by control to several positions,
+   then declare what position they think they're at.
 2. Assert that they don't run forever,
    and that the set points are reached expeditiously.
 3. If ambitions, measure the distances traveled and assert that they are
-   100 cm, -200 cm, and 600 cm.'''
+   100 cm, -200 cm, and 600 cm.
+4. After running to these positions, the motors will stop for 3 seconds.'''
         sk.doTest()
         
     def test_daguMotorBoard(self):

@@ -43,8 +43,6 @@ public:
     {
         pinMode(encoder0PinA, INPUT);
         pinMode(encoder0PinB, INPUT);
-//         pinMode(TURNSIGNALLEFTPIN, OUTPUT);
-//         pinMode(TURNSIGNALRIGHTPIN, OUTPUT);
     }
     
     void signalRight()
@@ -137,6 +135,7 @@ public:
     
     void updatePIDs()
     {
+        updateMonitoredValues();
         if(checkActivitySwitch())
         {
             
@@ -144,7 +143,6 @@ public:
             uint8_t i;
             for(i=0; i<2; i++)
             {
-                *monVals[i] = (double) encoders[i]->position;
                 pids[i].Compute();
                 
     //             if(i==0)
@@ -207,7 +205,24 @@ public:
             Serial.print("(");
             Serial.print(dist);
             Serial.println(" ticks)");
-            _controlMotorPositions(dist, dist);
+            long startTime = micros();
+            while(true)
+            {
+                _controlMotorPositions(dist, dist);
+                long now = micros();
+//                 Serial.print("Now it's "); Serial.println(now);
+                if(now - startTime > MAXCONTROLLOOPMICROS)
+                {
+                    break;
+                }
+                
+                double err = getEucError();
+                if(err < EUCCONTROLERRORTHRESH)
+                {
+                    break;
+                }
+                interruptibleDelay(CONTROLLOOPMICROS);
+            }
         }
         else
         {
@@ -223,11 +238,27 @@ private:
     double leftMotorSetPoint;
     double rightMotorSetPoint;
     
-    void _controlMotorPositions(long position0, long position1)
+    void updateMonitoredValues()
+    {
+        for(uint8_t i=0; i<2; i++)
+        {
+            *monVals[i] = (double) encoders[i]->position;
+        }
+    }
+    
+    void _controlMotorPositions(double position0, double position1)
     {
         *setPoints[0] = (double) position0;
         *setPoints[1] = (double) position1;
+        updateMonitoredValues();
         updatePIDs();  // TODO: Mabye updatePIDs() should be private?
+    }
+    
+    double getEucError()
+    {
+        double err0 = *setPoints[0] - *monVals[0];
+        double err1 = *setPoints[1] - *monVals[1];
+        return sqrt(err0*err0 + err1*err1);
     }
     
     void _resetEncoders()
