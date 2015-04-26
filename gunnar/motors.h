@@ -89,54 +89,26 @@ private:
             Serial.println(status);
         }
             
-        _status = status;
-        
         if(status == MOTORSTOP)
         {
             stop();
-
         }
         else
         {
+            // Since both motors are wired the same, but face different
+            // sides of the vehicle, the sense of "forward" is different
+            // for both.
             if(_which == MOTORLEFT)
             {
-                digitalWrite(motorPinDirA, status==MOTORFORWARD);
+                digitalWrite(motorPinDirA, status==MOTORBACKWARD);
             }
             else
             {
-                // Since both motors are wired the same, but face different
-                // sides of the vehicle, the sense of "forward" is different
-                // for both.
-                digitalWrite(motorPinDirA, status==MOTORBACKWARD);
+                digitalWrite(motorPinDirB, status==MOTORFORWARD);
             }
         }
         
-//         boolean inPin1 = HIGH;
-//         boolean inPin2 = LOW;
-//         
-//         if(_status == MOTORBACKWARD)
-//         {
-// //             Serial.print("going backward : motor ");
-// //             Serial.println(_which);
-//             inPin1 = LOW;
-//             inPin2 = HIGH;
-//         }
-//         
-//         for(uint8_t i=0; i<50; i++)
-//         {
-//             noInterrupts();
-//             if(_which == MOTORLEFT)
-//             {
-//                 digitalWrite(motorPinAin1, inPin1);
-//                 digitalWrite(motorPinAin2, inPin2);
-//             }
-//             else
-//             {
-//                 digitalWrite(motorPinBin1, inPin1);
-//                 digitalWrite(motorPinBin2, inPin2);
-//             }
-//             interrupts();
-//         }
+        _status = status;
     }
   
 };
