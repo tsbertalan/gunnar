@@ -22,10 +22,15 @@ def systemOut(cmdList, sayCmd=True, giveStatus=False):
         return process.communicate()[0], process.returncode
     return process.communicate()[0]
 
-for i, dev in enumerate(systemOut(["ls", "/dev/"], sayCmd=False).split('\n')):
-    if "ACM" in dev:
-        port = "/dev/%s" % dev.strip()
-del i, dev
+devices = [x for x in systemOut(["ls", "/dev/"], sayCmd=False).split('\n')
+           if len(x) > 0 and "ACM" in x]
+if len(devices) == 0:
+    raise IOError('No /dev/ttyACM* device found.')
+else:
+    for i, dev in enumerate(devices):
+        if "ACM" in dev:
+            port = "/dev/%s" % dev.strip()
+del i, dev, devices
 msg("port is %s" % port)
 board = "arduino:avr:mega"
 baudRate = 9600
@@ -160,28 +165,49 @@ class TestGunnar(unittest.TestCase):
     def test_positionPID(self):
         sk = Sketch()
         sk.code = '''
-        #include <Wire.h>
+#include <Wire.h>
 #include <Servo.h>
 #include <gunnar.h>
 
 Gunnar gunnar;
+
+// Interrupt Service Routines
+void doEncoder0()
+{
+    gunnar.encoder0.update();
+}
+
+void doEncoder1()
+{
+    gunnar.encoder1.update();
+}
 
 // Test the motors, encoders, and PID control of position.
 void setup() {
     
     Serial.begin(9600);
     gunnar.init();
+    
+    // Turn on pullup resistors on interrupt lines:
+    pinMode(encoder0Int, INPUT_PULLUP);
+    pinMode(encoder0Int, INPUT_PULLUP);
+    attachInterrupt(0, doEncoder0, CHANGE);
+    attachInterrupt(1, doEncoder1, CHANGE);
+    
     gunnar.controlledMotors.stop();
 }
 
 
 void loop()
 {
+    Serial.println("Begin position PID control test loop.");
     gunnar.controlledMotors.go(100);
     gunnar.controlledMotors.go(-200);
     gunnar.controlledMotors.go(600);
 }'''
-        sk.instructions = '''1. Motors will run by control to several positions.
+        sk.instructions = '''
+0. Ensure that green activity switch is on.
+1. Motors will run by control to several positions.
 2. Assert that they don't run forever,
    and that the set points are reached expeditiously.
 3. If ambitions, measure the distances traveled and assert that they are
@@ -216,6 +242,12 @@ void setup()
 
 void rampUpDown(boolean direction)
 {
+    
+    Serial.print("Writing "); Serial.print(direction);
+    Serial.print(" to pin "); Serial.print(daguDirPin1); Serial.println(".");
+    Serial.print("Writing "); Serial.print(direction);
+    Serial.print(" to pin "); Serial.print(daguDirPin2); Serial.println(".");
+
     digitalWrite(daguDirPin1, direction);
     digitalWrite(daguDirPin2, direction);
     
@@ -253,14 +285,16 @@ void loop()
     rampUpDown(HIGH);
     rampUpDown(LOW);
 }'''
-        sk.instructions = '''1. Let motors ramp up, then down twice.
+        sk.instructions = '''
+1. Let motors ramp up, then down twice.
 2. Motors should go in opposite directions from each other at the same time.
 3. Each motor should go first in one direction, then the other.'''
         sk.doTest()
         
     def test_motorObjectMovement(self):
         sk = Sketch()
-        sk.code = '''#include <Servo.h>
+        sk.code = r'''
+#include <Servo.h>
 #include <gunnar.h>
 
 Gunnar gunnar;
@@ -271,22 +305,54 @@ void setup()
     gunnar.init();
 }
 
+void ramp(int start, int end)
+{
+    int i;
+    Serial.print("ramp from ");
+    Serial.print(start); Serial.print(" from "); Serial.print(end); Serial.println(".");
+    
+    if(start < end)
+    {
+        for(i=start; i<end; i++)
+        {
+            gunnar.motor1.setSpeed(i);
+            gunnar.motor2.setSpeed(i);
+            interruptibleDelay(4);
+        }
+    }
+    else
+    {
+        for(i=start; i>end; i--)
+        {
+            gunnar.motor1.setSpeed(i);
+            gunnar.motor2.setSpeed(i);
+            interruptibleDelay(4);
+        }
+    }
+    
+}
+
 void loop()
 {
-    gunnar.motor1.setSpeed(100);
-    gunnar.motor2.setSpeed(100);
-    delay(1000);
-    gunnar.motor1.setSpeed(-100);
-    gunnar.motor2.setSpeed(-100);
-    delay(1000);
+    ramp(0, 255);
+    delay(500);
+    ramp(255, -95);
+    delay(500);
+    ramp(-95, 0);
+    gunnar.motor1.stop();
+    gunnar.motor2.stop();
+    delay(3000);
 }'''
-        sk.instructions = '''1. Motors should go forward.
-2. Motors should go backward.'''
+        sk.instructions = '''
+1. Motors should ramp to a fast forward speed, then back to 0.
+2. Motors should ramp to a slow reverse speed, then back to 0.
+3. Repeats after a 3 second delay.'''
         sk.doTest()
         
     def test_encodersNoMotors(self):
         sk = Sketch()
-        sk.code = '''#include <Arduino.h>  // I don't know why this is necessary.
+        sk.code = '''
+#include <Arduino.h>  // I don't know why this is necessary.
 #include <Wire.h>
 #include "constants.h"
 #include "utils.h"
@@ -311,7 +377,7 @@ void doEncoder1()
 const boolean explore = false;
 // Test the motors and encoders.
 void setup() {
-    if(explore)
+    if(explore) // TODO: This is cruft.
     {
         Serial.begin(9600);
             
@@ -373,8 +439,8 @@ void setup() {
         encoder1.init(encoder1PinA, encoder1PinB, NULL);
             
         // Turn on pullup resistors on interrupt lines:
-        pinMode(2, INPUT_PULLUP);
-        pinMode(3, INPUT_PULLUP);
+        pinMode(encoder0Int, INPUT_PULLUP);
+        pinMode(encoder1Int, INPUT_PULLUP);
         attachInterrupt(0, doEncoder0, CHANGE);
         attachInterrupt(1, doEncoder1, CHANGE);
         
@@ -407,15 +473,16 @@ void loop()
         delayMicroseconds(1000000);
     }
 }'''
-        sk.instructions = '''1. Push left and right treads independently forward and back.
+        sk.instructions = '''
+1. Push left and right treads independently forward and back.
 2. Verify that the proper columns in the serial output go up and then go back down.
 3. Make sure they can go into both positive and negative values.'''
         sk.doTest()
                 
     def test_servos(self):
         sk = Sketch()
-        sk.code = '''#include <Servo.h> 
-#include <MemoryFree.h>
+        sk.code = '''
+#include <Servo.h> 
 #include <gunnar.h>
 
 Servo tiltServo; 
@@ -438,41 +505,114 @@ void loop()
 { 
   Serial.println("          [          ]");
   Serial.print("Tilt test: ");
-  for(pos = MINPOS; pos < MAXPOS; pos += 1)  // goes from 0 degrees to 180 degrees 
-  {                                  // in steps of 1 degree 
+  for(pos = MINPOS; pos < MAXPOS; pos += 1)
+  {
     tiltServo.write(pos);
-    delay(15);                       // waits 15ms for the servo to reach the position 
+    delay(15);
     if(pos%((MAXPOS-MINPOS)/5) == 0)
       Serial.print("|");
   } 
-  for(pos = MAXPOS; pos>=MINPOS+1; pos-=1)     // goes from 180 degrees to 0 degrees 
+  for(pos = MAXPOS; pos>=MINPOS+1; pos-=1)
   {                                
     tiltServo.write(pos);
-    delay(15);                       // waits 15ms for the servo to reach the position 
-    if(pos%((MAXPOS-MINPOS)/5) == 0)        Serial.print("|");
+    delay(15);
+    if(pos%((MAXPOS-MINPOS)/5) == 0)
+        Serial.print("|");
   }
   Serial.println(" done.");
 
   Serial.println("          [         ]");
   Serial.print("Pan test:  ");
-  for(pos = MINPOS; pos < MAXPOS; pos += 1)  // goes from 0 degrees to 180 degrees 
-  {                                  // in steps of 1 degree 
+  for(pos = MINPOS; pos < MAXPOS; pos += 1)
+  {
     panServo.write(pos);
-    delay(25);                       // waits 15ms for the servo to reach the position 
+    delay(25);
     if(pos%((MAXPOS-MINPOS)/5) == 0)
       Serial.print("|");
   } 
-  for(pos = MAXPOS; pos>=MINPOS+11; pos-=1)     // goes from 180 degrees to 0 degrees 
-  {                                
+  for(pos = MAXPOS; pos>=MINPOS+11; pos-=1)
+  {
     panServo.write(pos);
-    delay(25);                       // waits 15ms for the servo to reach the position 
+    delay(25);
     if(pos%((MAXPOS-MINPOS)/5) == 0)
       Serial.print("|");
   } 
   Serial.println(" done.");
 }'''
-        sk.instructions = '''1. Verify that servos pan when output says they should be, and same for tilting.
+        sk.instructions = '''
+1. Verify that servos pan when output says they should be, and same for tilting.
 2. Verify that movement is centered.'''
+        sk.doTest()
+        
+    def test_servoObjects(self):
+        sk = Sketch()
+        sk.code = '''
+#include <Wire.h>
+#include <Servo.h>
+#include <gunnar.h>
+Gunnar gunnar;
+
+void setup()
+{
+    Serial.begin(BAUDRATE);
+    gunnar.init();
+}
+
+void loop() 
+{ 
+    int8_t angles[] = {-90, 0, 90};
+    for(uint8_t i=0; i<3; i++)
+    {
+        int8_t angle = angles[i];
+        Serial.print("angle=");
+        Serial.println(angle);
+        gunnar.sensors.setPan(angle);
+        gunnar.sensors.setTilt(angle);
+        delay(3000);
+    }
+}'''
+        sk.instructions = '''
+0. Ensure that battery power is available.
+1. Servos will go to -90 degrees with calibrated offset, and pause for 3 seconds.
+2. Servos will go to 0   degrees with calibrated offset, and pause for 3 seconds.
+3. Servos will go to +90 degrees with calibrated offset, and pause for 3 seconds.'''
+        sk.doTest()
+
+    def test_servoCenter(self):
+        sk = Sketch()
+        sk.code = '''
+#include <Servo.h> 
+#include <gunnar.h>
+
+Servo tiltServo; 
+Servo panServo;
+
+void setup() 
+{ 
+  Serial.begin(BAUDRATE);
+  Serial.println("SERVO CENTERING TEST");
+  tiltServo.attach(TILTSERVOPIN);
+  panServo.attach(PANSERVOPIN);
+} 
+
+void loop() 
+{ 
+    uint8_t angles[] = {0, 90, 180};
+    for(uint8_t i=0; i<3; i++)
+    {
+        uint8_t angle = angles[i];
+        Serial.print("angle=");
+        Serial.println(angle);
+        panServo.write(angle);
+        tiltServo.write(angle);
+        delay(3000);
+    }
+}'''
+        sk.instructions = '''
+0. Ensure that battery power is available.
+1. Servos will go to 0   degrees, and pause for 3 seconds.
+2. Servos will go to 90  degrees, and pause for 3 seconds.
+3. Servos will go to 180 degrees, and pause for 3 seconds.'''
         sk.doTest()
         
     @classmethod
