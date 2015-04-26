@@ -166,7 +166,7 @@ public:
             controlledMotors.stop();
             _lastTurnTime = millisViaMicros();
             
-            const int delayBeforeMeasurement = 2;
+            const int delayBeforeMeasurement = 3;
             const int nMeasurements = 4;
             sensors.setTilt(10); // Look up slightly.
             
@@ -181,10 +181,9 @@ public:
             float ldist = sensors.getSonarDist(nMeasurements);
         //     Serial.print("ldist: ");
         //     Serial.println(ldist);
-            int angle;
-            
             sensors.setPan(0);
             sensors.setTilt(0);
+            interruptibleDelay(delayBeforeMeasurement*5);
             
             // Arduino's sprintf doesn't have %f.
             // stackoverflow.com/questions/27651012
@@ -201,6 +200,7 @@ public:
             }
             absAngle = abs(absAngle);
             
+            int angle;
             if(max(rdist, ldist) < minimumSensableDistance)
             {
                 Serial.println("Too close to wall to decide which way to turn.");
