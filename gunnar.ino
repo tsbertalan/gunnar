@@ -24,8 +24,8 @@ void setup()
     gunnar.init();
     
     // Turn on pullup resistors on interrupt lines:
-    pinMode(2, INPUT_PULLUP);
-    pinMode(3, INPUT_PULLUP);
+    pinMode(encoder0Int, INPUT_PULLUP);
+    pinMode(encoder0Int, INPUT_PULLUP);
     attachInterrupt(0, doEncoder0, CHANGE);
     attachInterrupt(1, doEncoder1, CHANGE);
 }
