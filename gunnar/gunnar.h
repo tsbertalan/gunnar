@@ -28,8 +28,9 @@ public:
     }
     
     long lastExecution;
-    
     int freq;
+    boolean active;
+    
 private:
     Gunnar* _that;
     GunnarMemFn _action;
@@ -50,13 +51,13 @@ public:
     {
         Serial.println("running taskDriver");
         
-        while(1)
+        while(true)
         {
             for(int i=0; i<_ntasks; i++)
             {
                 long now = micros()*1000L;
                 Task t = *_tasks[i];
-                if(now - t.lastExecution >= (long) t.freq)
+                if(t.active && (now - t.lastExecution >= (long) t.freq)
                     t.execute();
             }
         }
