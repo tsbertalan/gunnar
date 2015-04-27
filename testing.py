@@ -1,11 +1,10 @@
 #import serial
-from os import system
+from os import system, makedirs
+from os.path import dirname, abspath, exists
 from subprocess import Popen, PIPE
 from time import sleep
 import unittest
 
-from os import makedirs
-from os.path import dirname, abspath, exists
 here = dirname(abspath(__file__))
 
 
@@ -22,15 +21,16 @@ def systemOut(cmdList, sayCmd=True, giveStatus=False):
         return process.communicate()[0], process.returncode
     return process.communicate()[0]
 
-devices = [x for x in systemOut(["ls", "/dev/"], sayCmd=False).split('\n')
-           if len(x) > 0 and "ACM" in x]
-if len(devices) == 0:
-    raise IOError('No /dev/ttyACM* device found.')
-else:
-    for i, dev in enumerate(devices):
-        if "ACM" in dev:
-            port = "/dev/%s" % dev.strip()
-del i, dev, devices
+#devices = [x for x in systemOut(["ls", "/dev/"], sayCmd=False).split('\n')
+           #if len(x) > 0 and "ACM" in x]
+#if len(devices) == 0:
+    #raise IOError('No /dev/ttyACM* device found.')
+#else:
+    #for i, dev in enumerate(devices):
+        #if "ACM" in dev:
+            #port = "/dev/%s" % dev.strip()
+#del i, dev, devices
+port = "/dev/null"
 msg("port is %s" % port)
 board = "arduino:avr:mega"
 baudRate = 9600
@@ -198,6 +198,7 @@ void setup() {
     
     Serial.begin(9600);
     gunnar.init();
+    gunnar.sonarTask.active = false;
     
     // Turn on pullup resistors on interrupt lines:
     pinMode(encoder0Int, INPUT_PULLUP);
@@ -221,10 +222,13 @@ void loop()
 {
     Serial.println("Begin position PID control test loop.");
     gunnar.controlledMotors.go(100);
+    gunnar.taskDriver.run(10L*1000L*1000L);
     sayPosition();
     gunnar.controlledMotors.go(-200);
+    gunnar.taskDriver.run(10L*1000L*1000L);
     sayPosition();
     gunnar.controlledMotors.go(600);
+    gunnar.taskDriver.run(10L*1000L*1000L);
     sayPosition();
     gunnar.controlledMotors.stop();
     delay(3000);
@@ -232,6 +236,7 @@ void loop()
         sk.instructions = '''
 0. Ensure that green activity switch is on.
 1. Motors will run by control to several positions,
+   given 10 seconds to get there.
    then declare what position they think they're at.
 2. Assert that they don't run forever,
    and that the set points are reached expeditiously.
@@ -654,7 +659,6 @@ void loop()
 3. Gunnar will turn +180 degrees, and pause for 1 second.'''
         sk.doTest()
 
-        
     @classmethod
     def tearDownClass(cls):
         sk = Sketch()

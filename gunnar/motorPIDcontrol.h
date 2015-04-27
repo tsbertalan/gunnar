@@ -116,26 +116,7 @@ public:
                 sgn = -1;
                 signalLeft();
             }
-            
-            long startTime = micros();
-            while(true)
-            {
-                _controlMotorPositions(sgn*angle, -sgn*angle);
-                long now = micros();
-                Serial.print("Now it's "); Serial.println(now);
-                if(now - startTime > MAXCONTROLLOOPMICROS)
-                {
-                    break;
-                }
-                
-                double err = getEucError();
-                Serial.print("error is "); Serial.println(err);
-                if(err < EUCCONTROLERRORTHRESH)
-                {
-                    break;
-                }
-                interruptibleDelay(CONTROLLOOPMICROS);
-            }
+            _controlMotorPositions(sgn*angle, -sgn*angle);
         }
         else
         {
@@ -223,24 +204,7 @@ public:
             Serial.print("(");
             Serial.print(dist);
             Serial.println(" ticks)");
-            long startTime = micros();
-            while(true)
-            {
-                _controlMotorPositions(dist, dist);
-                long now = micros();
-//                 Serial.print("Now it's "); Serial.println(now);
-                if(now - startTime > MAXCONTROLLOOPMICROS)
-                {
-                    break;
-                }
-                
-                double err = getEucError();
-                if(err < EUCCONTROLERRORTHRESH)
-                {
-                    break;
-                }
-                interruptibleDelay(CONTROLLOOPMICROS);
-            }
+            _controlMotorPositions(dist, dist);
         }
         else
         {
