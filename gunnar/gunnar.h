@@ -6,8 +6,66 @@
 #include "encoders.h"
 #include "vision.h"
 
+class Gunnar;
+typedef void (Gunnar::* GunnarMemFn) ();
+
+class Task
+{
+public:
+    void init(Gunnar* that, GunnarMemFn action, int frequency)
+    {
+        freq = frequency;
+        _action = action;
+        _that = that;
+        lastExecution = micros() * 1000L;
+        Serial.println("initializing task");
+    };
+    
+    void execute()
+    { 
+        (_that->*_action)();
+        lastExecution = micros() * 1000L;
+    }
+    
+    long lastExecution;
+    
+    int freq;
+private:
+    Gunnar* _that;
+    GunnarMemFn _action;
+};
 
 
+class TaskDriver
+{
+public:
+    void init(const int ntasks, Task *taskArr[])
+    {
+        Serial.println("initializing taskDriver");   
+        _tasks = taskArr;
+        _ntasks = ntasks;
+    };
+    
+    void run()
+    {
+        Serial.println("running taskDriver");
+        
+        while(1)
+        {
+            for(int i=0; i<_ntasks; i++)
+            {
+                long now = micros()*1000L;
+                Task t = *_tasks[i];
+                if(now - t.lastExecution >= (long) t.freq)
+                    t.execute();
+            }
+        }
+    }
+    
+private:
+    Task** _tasks;
+    int _ntasks;
+};
 
 // Consolidate as many globals as possible in a singleton robot.
 class Gunnar
@@ -250,65 +308,6 @@ private:
 
     Motor* bothMtrs[2];
     
-    typedef void (Gunnar::* GunnarMemFn) ();
-    
-    class Task
-    {
-    public:
-        void init(Gunnar* that, GunnarMemFn action, int frequency)
-        {
-            freq = frequency;
-            _action = action;
-            _that = that;
-            lastExecution = micros() * 1000L;
-            Serial.println("initializing task");
-        };
-        
-        void execute()
-        { 
-            (_that->*_action)();
-            lastExecution = micros() * 1000L;
-        }
-        
-        long lastExecution;
-        
-        int freq;
-    private:
-        Gunnar* _that;
-        GunnarMemFn _action;
-    };
-
-    class TaskDriver
-    {
-    public:
-        void init(const int ntasks, Task *taskArr[])
-        {
-            Serial.println("initializing taskDriver");   
-            _tasks = taskArr;
-            _ntasks = ntasks;
-        };
-        
-        void run()
-        {
-            Serial.println("running taskDriver");
-            
-            while(1)
-            {
-                for(int i=0; i<_ntasks; i++)
-                {
-                    long now = micros()*1000L;
-                    Task t = *_tasks[i];
-                    if(now - t.lastExecution >= (long) t.freq)
-                        t.execute();
-                }
-            }
-        }
-        
-    private:
-        Task** _tasks;
-        int _ntasks;
-    };
-
     TaskDriver taskDriver;
     Task sonarTask;
     Task motorPIDsTask;
