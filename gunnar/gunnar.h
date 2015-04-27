@@ -12,8 +12,9 @@ typedef void (Gunnar::* GunnarMemFn) ();
 class Task
 {
 public:
-    void init(Gunnar* that, GunnarMemFn action, int frequency)
+    void init(Gunnar* that, GunnarMemFn action, int frequency, boolean initializeAsActive=true)
     {
+        active = initializeAsActive;
         freq = frequency;
         _action = action;
         _that = that;
@@ -47,9 +48,11 @@ public:
         _ntasks = ntasks;
     };
     
-    void run()
+    void run(unsigned long duration=0)
     {
+        // Duration in microseconds. 0 means endless.
         Serial.println("running taskDriver");
+        startTime = micros();
         
         while(true)
         {
@@ -57,15 +60,19 @@ public:
             {
                 long now = micros()*1000L;
                 Task t = *_tasks[i];
-                if(t.active && (now - t.lastExecution >= (long) t.freq)
+                if(t.active and (now - t.lastExecution >= (long) t.freq))
                     t.execute();
             }
+            
+            if((duration > 0) and (micros() - startTime > duration))
+                break;
         }
     }
     
 private:
     Task** _tasks;
     int _ntasks;
+    long startTime;
 };
 
 // Consolidate as many globals as possible in a singleton robot.
@@ -303,15 +310,16 @@ public:
     Motor motor1;
     Motor motor2;
     
+    TaskDriver taskDriver;
+    Task sonarTask;
+    Task motorPIDsTask;
+    
 private:
     int _nTurns;
     int _lastTurnTime;
 
     Motor* bothMtrs[2];
     
-    TaskDriver taskDriver;
-    Task sonarTask;
-    Task motorPIDsTask;
     Task* tasks[ntasks];
     
 };
