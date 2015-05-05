@@ -78,17 +78,7 @@ private:
     
     void _setStatus(uint8_t status)
     {
-        if(status != _status)
-        {
-            Serial.print(micros());
-            Serial.print(" changing direction of m");
-            Serial.print(_which);
-            Serial.print(" from ");
-            Serial.print(_status);
-            Serial.print(" to ");
-            Serial.println(status);
-        }
-            
+               
         if(status == MOTORSTOP)
         {
             stop();
