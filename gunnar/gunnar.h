@@ -82,6 +82,16 @@ public:
     void init()
     {
         Serial.println(F("initializing Gunnar"));
+        for(uint8_t i=0; i<3; i++)
+        {
+            controlledMotors.signal.forward();
+            interruptibleDelay(50);
+            controlledMotors.signal.backward();
+            interruptibleDelay(50);
+            controlledMotors.signal.stop();
+            interruptibleDelay(50);
+        }
+        controlledMotors.signal.none();
         motor1 = Motor();
         motor1.init(MOTORLEFT);
         motor2 = Motor();
@@ -93,7 +103,7 @@ public:
         encoder1.init(encoder1PinA, encoder1PinB, NULL);
         Serial.println(F("Done initializing  encoders."));
         
-        controlledMotors.init(&motor1, &motor2, &encoder0, &encoder1);
+        controlledMotors.init(&motor1, &motor2, &encoder0, &encoder1, &sensors);
         
         // True black magic:
         sonarTask.init(this, &Gunnar::checkSonar, sonarPeriod);
@@ -214,20 +224,33 @@ public:
         controlledMotors.updatePIDs();
     }
     
-    void decideTurn(int absAngle)
+    void decideTurn(int absAngle=-1)
     {
+        // If We're currently in the process of turning,
+        // only initiate a new turn if the current turn error has gone below
+        // threshold.
+        int timeTurning = millisViaMicros() - _lastTurnTime;
+        boolean doTurn = true;
         if(controlledMotors.isTurning())
         {
-            int timeTurning = millisViaMicros() - _lastTurnTime;
+            doTurn = false;
+            
             Serial.print(F("We've been turning for the last "));
             Serial.print(timeTurning);
             Serial.println(F(" ms."));
             if(timeTurning > maxTurnTime)
             {
-                controlledMotors.stop();
+                Serial.println(F("Turning timeout."));
+                doTurn = true;
+            }
+            
+            if(controlledMotors.getEucError() < EUCCONTROLERRORTHRESH)
+            {
+                Serial.println(F("Turning goal reached. New turn innitiated."));
             }
         }
-        else
+        
+        if(doTurn)
         {
             controlledMotors.stop();
             _lastTurnTime = millisViaMicros();
@@ -249,7 +272,7 @@ public:
         //     Serial.println(ldist);
             sensors.setPan(0);
             sensors.setTilt(0);
-            interruptibleDelay(delayBeforeMeasurement*5);
+            interruptibleDelay(delayBeforeMeasurement*10);
             
             // Arduino's sprintf doesn't have %f.
             // stackoverflow.com/questions/27651012
@@ -298,11 +321,6 @@ public:
         }
     }
 
-    void decideTurn()
-    {
-        decideTurn(-1);
-    }
-    
     Encoder encoder0;
     Encoder encoder1;
     Sensors sensors;

@@ -10,11 +10,15 @@
 class ControlledMotors
 {
 public:
-    void init(Motor* leftMotor,
-              Motor* rightMotor,
-              Encoder *encoder0,
-              Encoder *encoder1)
+    void init(
+                Motor* leftMotor,
+                Motor* rightMotor,
+                Encoder *encoder0,
+                Encoder *encoder1,
+                Sensors *sensorsp
+             )
     {
+        sensors = sensorsp;
         Serial.println("initializing motors");
         leftPID.init(&monitoredLeft,  &leftMotorControlledSpeed,  &leftMotorSetPoint,
                     KP, KI, KD, DIRECT);
@@ -22,6 +26,10 @@ public:
                      KP, KI, KD, DIRECT);
         leftPID.SetMode(AUTOMATIC);
         rightPID.SetMode(AUTOMATIC);
+        
+        anglePID.init(&monitoredAngle, &angleCtrlVal, &angleSetPoint,
+                      KP, KI, KD, DIRECT);
+        anglePID.SetMode(AUTOMATIC);
         
         encoders[0] = encoder0; // We don't use an initializer list
         encoders[1] = encoder1; // because we can't control when global objects.
@@ -39,51 +47,64 @@ public:
         setAccelLimit(MAXPWMSPEED);
     }
     
+    
     void setup()
     {
         pinMode(encoder0PinA, INPUT);
         pinMode(encoder0PinB, INPUT);
     }
     
-    void signalRight()
+    class Signal
     {
-        analogWrite(TURNSIGNALLEFTPIN, 0);
-        analogWrite(TURNSIGNALRIGHTPIN, 255);
-        analogWrite(TURNSIGNALBACKPIN, 0);
-        analogWrite(TURNSIGNALFORWARDPIN, 0);
-    }
-    
-    void signalLeft()
-    {
-        analogWrite(TURNSIGNALLEFTPIN, 255);
-        analogWrite(TURNSIGNALRIGHTPIN, 0);
-        analogWrite(TURNSIGNALBACKPIN, 0);
-        analogWrite(TURNSIGNALFORWARDPIN, 0);
-    }
-    
-    void signalStop()
-    {
-        analogWrite(TURNSIGNALLEFTPIN, 255);
-        analogWrite(TURNSIGNALRIGHTPIN, 255);
-        analogWrite(TURNSIGNALBACKPIN, 0);
-        analogWrite(TURNSIGNALFORWARDPIN, 0);
-    }
-    
-    void signalForward()
-    {
-        analogWrite(TURNSIGNALLEFTPIN, 0);
-        analogWrite(TURNSIGNALRIGHTPIN, 0);
-        analogWrite(TURNSIGNALBACKPIN, 0);
-        analogWrite(TURNSIGNALFORWARDPIN, 128);
-    }
-    
-    void signalReverse()
-    {
-        analogWrite(TURNSIGNALLEFTPIN, 0);
-        analogWrite(TURNSIGNALRIGHTPIN, 0);
-        analogWrite(TURNSIGNALBACKPIN, 255);
-        analogWrite(TURNSIGNALFORWARDPIN, 0);
-    }
+    public:
+        void none()
+        {
+            analogWrite(TURNSIGNALLEFTPIN, 0);
+            analogWrite(TURNSIGNALRIGHTPIN, 0);
+            analogWrite(TURNSIGNALBACKPIN, 0);
+            analogWrite(TURNSIGNALFORWARDPIN, 0);
+        }
+        
+        void right()
+        {
+            analogWrite(TURNSIGNALLEFTPIN, 0);
+            analogWrite(TURNSIGNALRIGHTPIN, 255);
+            analogWrite(TURNSIGNALBACKPIN, 0);
+            analogWrite(TURNSIGNALFORWARDPIN, 0);
+        }
+        
+        void left()
+        {
+            analogWrite(TURNSIGNALLEFTPIN, 255);
+            analogWrite(TURNSIGNALRIGHTPIN, 0);
+            analogWrite(TURNSIGNALBACKPIN, 0);
+            analogWrite(TURNSIGNALFORWARDPIN, 0);
+        }
+        
+        void stop()
+        {
+            analogWrite(TURNSIGNALLEFTPIN, 255);
+            analogWrite(TURNSIGNALRIGHTPIN, 255);
+            analogWrite(TURNSIGNALBACKPIN, 0);
+            analogWrite(TURNSIGNALFORWARDPIN, 0);
+        }
+        
+        void forward()
+        {
+            analogWrite(TURNSIGNALLEFTPIN, 0);
+            analogWrite(TURNSIGNALRIGHTPIN, 0);
+            analogWrite(TURNSIGNALBACKPIN, 0);
+            analogWrite(TURNSIGNALFORWARDPIN, 128);
+        }
+        
+        void backward()
+        {
+            analogWrite(TURNSIGNALLEFTPIN, 0);
+            analogWrite(TURNSIGNALRIGHTPIN, 0);
+            analogWrite(TURNSIGNALBACKPIN, 255);
+            analogWrite(TURNSIGNALFORWARDPIN, 0);
+        }
+    } signal;
     
     boolean isTurning()
     {
@@ -95,28 +116,35 @@ public:
         _turning = true;
         if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
         {
+            double currHeading = sensors->ahrs.getHeading();
+            boolean rightTurn = angle > 0;
             _resetEncoders();
             Serial.print("Turning ");
             Serial.print(angle);
             Serial.println(" degrees.");
-            angle = (double) angle * 120./90.; // 120 ticks/90 deg
-            Serial.print("(");
-            Serial.print(angle);
-            Serial.println(" ticks)");
-            uint8_t sgn;
-            if(angle>0)
+            
+            double newHeading = fmod(
+                    180.0 + currHeading + (double) angle,
+                    360.0
+                ) - 180.0;
+                
+            Serial.print("(To heading ");
+            Serial.print((int) newHeading);
+            Serial.print(" from heading ");
+            Serial.print((int) currHeading);
+            Serial.println(".)");
+            
+            if(rightTurn)
             {
                 // Right turn. Right tread should go backwards.
-                sgn = 1;
-                signalRight();
+                signal.right();
             }
             else
             {
                 // Left turn. Right tread should go forwards.
-                sgn = -1;
-                signalLeft();
+                signal.left();
             }
-            _controlMotorPositions(sgn*angle, -sgn*angle);
+            controlAngle(newHeading);
         }
         else
         {
@@ -127,28 +155,21 @@ public:
     void stop()
     {
         _turning = false;
-        signalStop();
+        signal.stop();
         bothMtrs[0]->stop();
         bothMtrs[1]->stop();
     }
     
-    void updatePIDs()
+    void printCtrlStatus()
     {
-        updateMonitoredValues();
-        if(checkActivitySwitch())
-        {
-            
-            // Update the PIDs
-            uint8_t i;
-            for(i=0; i<2; i++)
-            {
-                pids[i].Compute();
-                
-    //             if(i==0)
-    //             {
+    #define PRINTCTRLDATA
     #ifdef PRINTCTRLDATA
-    Serial.println("micros  | m| setp | moni | ctrl  | ps| spd  | updela");
-                //10575920, 1, 82.00, 12.00, 255.00, 15, 92.89, 17588
+        for(uint8_t i=0; i<2; i++)
+        {
+//             if(i==0)
+//             {
+    //     Serial.println("micros  | m| setp | moni | ctrl  | ps| spd  | updela");
+            //10575920, 1, 82.00, 12.00, 255.00, 15, 92.89, 17588
                 Serial.print(micros());
                 Serial.print(", ");
                 Serial.print(i);
@@ -164,9 +185,32 @@ public:
                 Serial.print(encoders[i]->getSpeed());
                 Serial.print(", ");
                 Serial.println(encoders[i]->trueUpdateDelay);
+//             }
+        }
     #endif
-
-                bothMtrs[i]->setSpeed(*ctrlVals[i]);
+    }
+    
+    void updatePIDs()
+    {
+        if(checkActivitySwitch())
+        {
+            uint8_t i;
+            updateMonitoredValues();
+            if(_turning)
+            {
+                anglePID.Compute();
+                bothMtrs[0]->setSpeed(-angleCtrlVal);
+                bothMtrs[1]->setSpeed(angleCtrlVal);
+            }
+            else
+            {
+                // Update the PIDs
+                for(i=0; i<2; i++)
+                {
+                    pids[i].Compute();
+                    bothMtrs[i]->setSpeed(*ctrlVals[i]);
+                }
+                printCtrlStatus();
             }
         }
         else
@@ -190,11 +234,11 @@ public:
         {
             if(dist < 0)
             {
-                signalReverse();
+                signal.backward();
             }
             else
             {
-                signalForward();
+                signal.forward();
             }
             _resetEncoders();
             Serial.print("Going ");
@@ -212,6 +256,13 @@ public:
         }
     }
     
+    double getEucError()
+    {
+        double err0 = *setPoints[0] - *monVals[0];
+        double err1 = *setPoints[1] - *monVals[1];
+        return sqrt(err0*err0 + err1*err1);
+    }
+    
 private:
     boolean _turning;
     double leftMotorControlledSpeed;
@@ -222,9 +273,16 @@ private:
     
     void updateMonitoredValues()
     {
-        for(uint8_t i=0; i<2; i++)
+        if(_turning)
         {
-            *monVals[i] = (double) encoders[i]->position;
+            monitoredAngle = sensors->ahrs.getHeading();
+        }
+        else
+        {
+            for(uint8_t i=0; i<2; i++)
+            {
+                *monVals[i] = (double) encoders[i]->position;
+            }
         }
     }
     
@@ -236,11 +294,12 @@ private:
         updatePIDs();  // TODO: Mabye updatePIDs() should be private?
     }
     
-    double getEucError()
+    void controlAngle(double angle)
     {
-        double err0 = *setPoints[0] - *monVals[0];
-        double err1 = *setPoints[1] - *monVals[1];
-        return sqrt(err0*err0 + err1*err1);
+        angleSetPoint = angle;
+        sensors->ahrs.update();
+        updateMonitoredValues();
+        updatePIDs();
     }
     
     void _resetEncoders()
@@ -253,6 +312,7 @@ private:
    
     Motor *bothMtrs[2];
     Encoder *encoders[2];
+    Sensors *sensors;
     PID pids[2];
     double monitoredLeft;
     double monitoredRight;
@@ -261,6 +321,11 @@ private:
     double* monVals[2];
     PID leftPID;
     PID rightPID;
+    
+    double monitoredAngle;
+    double angleSetPoint;
+    double angleCtrlVal;
+    PID anglePID;
 };
 
 

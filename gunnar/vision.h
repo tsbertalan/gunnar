@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "utils.h"
 #include "Arduino.h"
+#include "ahrs.h"
 
 const int NEUTRALPAN = -PANOFFSET;
 const int NEUTRALTILT = -TILTOFFSET;
@@ -18,6 +19,8 @@ class Sensors
 public:
     void init()
     {
+        ahrs.init();
+        
         pinMode(SONARPIN, INPUT);
         
         servoTilt.attach(TILTSERVOPIN);
@@ -25,6 +28,7 @@ public:
         
         setPan(0);
         setTilt(0);
+        
     }
 
     void setPan(int pos)
@@ -141,6 +145,8 @@ public:
     {
         return treadBlocked(true);
     }
+    
+    AHRS ahrs;
 
 private:
     

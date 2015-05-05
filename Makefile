@@ -6,7 +6,7 @@ BOARD_TAG = mega2560
 IDE_BOARD_NAME = arduino:avr:mega
 # The folder gunnar must be copied or, better, symlinked into your
 # user libraries folder:
-ARDUINO_LIBS = Servo Wire gunnar
+ARDUINO_LIBS = Servo Wire gunnar Adafruit_Sensor Adafruit_LSM303_U Adafruit_9DOF Adafruit_L3GD20_U
 IDE_MAKE = arduino --port ${ARDUINO_PORT} --board ${IDE_BOARD_NAME}
 ARDUINO_PORT = $(shell ls /dev/ttyACM* 2> /dev/null)
 
