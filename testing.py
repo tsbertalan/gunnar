@@ -21,16 +21,16 @@ def systemOut(cmdList, sayCmd=True, giveStatus=False):
         return process.communicate()[0], process.returncode
     return process.communicate()[0]
 
-#devices = [x for x in systemOut(["ls", "/dev/"], sayCmd=False).split('\n')
-           #if len(x) > 0 and "ACM" in x]
-#if len(devices) == 0:
-    #raise IOError('No /dev/ttyACM* device found.')
-#else:
-    #for i, dev in enumerate(devices):
-        #if "ACM" in dev:
-            #port = "/dev/%s" % dev.strip()
-#del i, dev, devices
-port = "/dev/null"
+devices = [x for x in systemOut(["ls", "/dev/"], sayCmd=False).split('\n')
+           if len(x) > 0 and "ACM" in x]
+if len(devices) == 0:
+    raise IOError('No /dev/ttyACM* device found.')
+else:
+    for i, dev in enumerate(devices):
+        if "ACM" in dev:
+            port = "/dev/%s" % dev.strip()
+del i, dev, devices
+#port = "/dev/null"
 msg("port is %s" % port)
 board = "arduino:avr:mega"
 baudRate = 9600
@@ -150,13 +150,13 @@ class Sketch:
         self.makeFiles()
         self.verify()
         out = self.upload()
-        print "upload out:", out
         if doMonitor:
             printInstructions(self.instructions)
             monitor()
             monitorPassed = yn("Did the test pass inspection?")
             if not monitorPassed:
                 raise InspectionError
+        return out
         
 baseCode = '''
 #include <Wire.h>
@@ -164,10 +164,27 @@ baseCode = '''
 #include <gunnar.h>
 Gunnar gunnar;
 
+// Interrupt Service Routines
+void doEncoder0()
+{
+    gunnar.encoder0.update();
+}
+
+void doEncoder1()
+{
+    gunnar.encoder1.update();
+}
+
 void setup()
 {
     Serial.begin(BAUDRATE);
     gunnar.init();
+    
+    // Turn on pullup resistors on interrupt lines:
+    pinMode(encoder0Int, INPUT_PULLUP);
+    pinMode(encoder0Int, INPUT_PULLUP);
+    attachInterrupt(0, doEncoder0, CHANGE);
+    attachInterrupt(1, doEncoder1, CHANGE);
 }'''
 
 class TestGunnar(unittest.TestCase):
@@ -224,10 +241,10 @@ void loop()
     gunnar.controlledMotors.go(100);
     gunnar.taskDriver.run(10L*1000L*1000L);
     sayPosition();
-    gunnar.controlledMotors.go(-200);
+    gunnar.controlledMotors.go(-300);
     gunnar.taskDriver.run(10L*1000L*1000L);
     sayPosition();
-    gunnar.controlledMotors.go(600);
+    gunnar.controlledMotors.go(200);
     gunnar.taskDriver.run(10L*1000L*1000L);
     sayPosition();
     gunnar.controlledMotors.stop();
@@ -241,7 +258,7 @@ void loop()
 2. Assert that they don't run forever,
    and that the set points are reached expeditiously.
 3. If ambitions, measure the distances traveled and assert that they are
-   100 cm, -200 cm, and 600 cm.
+   100 cm, -300 cm, and 200 cm.
 4. After running to these positions, the motors will stop for 3 seconds.'''
         sk.doTest()
         
@@ -640,23 +657,27 @@ void loop()
         sk.code = baseCode + '''
 void loop()
 { 
-    int8_t angles[] = {-90, 45, 180};
-    for(uint8_t i=0; i<4; i++)
+    int angles[] = {-90, 135, -45};
+    for(uint8_t i=0; i<3; i++)
     {
-        int8_t angle = angles[i];
+        int angle = angles[i];
         Serial.print("angle=");
         Serial.println(angle);
         gunnar.controlledMotors.stop();
         gunnar.controlledMotors.turn(angle);
-        delay(1000);
+        gunnar.sonarTask.active = false;
+        gunnar.taskDriver.run(5L*1000L*1000L);
     }
+    gunnar.controlledMotors.stop();
+    gunnar.taskDriver.run(3L*1000L*1000L);
 }'''
         sk.instructions = '''
 0. Ensure that battery power is available,
    and that the green activity switch is on.
-1. Gunnar will turn -90  degrees, and pause for 1 second.
-2. Gunnar will turn 45   degrees, and pause for 1 second.
-3. Gunnar will turn +180 degrees, and pause for 1 second.'''
+1. Gunnar will turn -90  degrees, over 5 seconds.
+2. Gunnar will turn +135 degrees, over 5 seconds.
+3. Gunnar will turn -45  degrees, over 5 seconds.
+4. Gunnar will stop for 3 seconds.'''
         sk.doTest()
 
     @classmethod
