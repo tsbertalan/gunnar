@@ -157,11 +157,16 @@ class Sketch:
             if not monitorPassed:
                 raise InspectionError
         return out
-        
-baseCode = '''
+ 
+includes = '''
+#include <Adafruit_Sensor.h>
+#include <Adafruit_LSM303_U.h>
+#include <Adafruit_L3GD20_U.h>
+#include <Adafruit_9DOF.h>
 #include <Wire.h>
 #include <Servo.h>
-#include <gunnar.h>
+#include <gunnar.h>'''
+baseCode = includes + '''
 Gunnar gunnar;
 
 // Interrupt Service Routines
@@ -192,11 +197,7 @@ class TestGunnar(unittest.TestCase):
 
     def test_positionPID(self):
         sk = Sketch()
-        sk.code = '''
-#include <Wire.h>
-#include <Servo.h>
-#include <gunnar.h>
-
+        sk.code = includes + '''
 Gunnar gunnar;
 
 // Interrupt Service Routines
@@ -224,6 +225,7 @@ void setup() {
     attachInterrupt(1, doEncoder1, CHANGE);
     
     gunnar.controlledMotors.stop();
+    gunnar.sensors.disableServos();
 }
 
 void sayPosition()
@@ -264,9 +266,7 @@ void loop()
         
     def test_daguMotorBoard(self):
         sk = Sketch()
-        sk.code = '''
-#include <Servo.h>
-#include <gunnar.h>
+        sk.code = includes + '''
 const int daguPwmPin1 = 11;
 const int daguPwmPin2 = 12;
 
@@ -341,10 +341,7 @@ void loop()
         
     def test_motorObjectMovement(self):
         sk = Sketch()
-        sk.code = r'''
-#include <Servo.h>
-#include <gunnar.h>
-
+        sk.code = includes + r'''
 Gunnar gunnar;
 
 void setup()
@@ -399,15 +396,7 @@ void loop()
         
     def test_encodersNoMotors(self):
         sk = Sketch()
-        sk.code = '''
-#include <Arduino.h>  // I don't know why this is necessary.
-#include <Wire.h>
-#include "constants.h"
-#include "utils.h"
-#include "encoders.h"
-#include "motors.h"
-
-
+        sk.code = includes + '''
 // GLOBALS
 Encoder encoder0;
 Encoder encoder1;
@@ -529,10 +518,7 @@ void loop()
                 
     def test_servos(self):
         sk = Sketch()
-        sk.code = '''
-#include <Servo.h> 
-#include <gunnar.h>
-
+        sk.code = includes + '''
 Servo tiltServo; 
 Servo panServo;
 
@@ -617,10 +603,7 @@ void loop()
 
     def test_servoCenter(self):
         sk = Sketch()
-        sk.code = '''
-#include <Servo.h> 
-#include <gunnar.h>
-
+        sk.code = includes + '''
 Servo tiltServo; 
 Servo panServo;
 
@@ -669,6 +652,7 @@ void loop()
         gunnar.taskDriver.run(5L*1000L*1000L);
     }
     gunnar.controlledMotors.stop();
+    Serial.println("Repeating in 3 seconds...");
     gunnar.taskDriver.run(3L*1000L*1000L);
 }'''
         sk.instructions = '''

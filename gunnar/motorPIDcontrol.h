@@ -190,35 +190,6 @@ public:
     #endif
     }
     
-    void updatePIDs()
-    {
-        if(checkActivitySwitch())
-        {
-            uint8_t i;
-            updateMonitoredValues();
-            if(_turning)
-            {
-                anglePID.Compute();
-                bothMtrs[0]->setSpeed(-angleCtrlVal);
-                bothMtrs[1]->setSpeed(angleCtrlVal);
-            }
-            else
-            {
-                // Update the PIDs
-                for(i=0; i<2; i++)
-                {
-                    pids[i].Compute();
-                    bothMtrs[i]->setSpeed(*ctrlVals[i]);
-                }
-                printCtrlStatus();
-            }
-        }
-        else
-        {
-            stop();
-        }
-    }
-    
     void setAccelLimit(int pwm)
     {
         for(uint8_t i=0; i<2; i++)
@@ -263,6 +234,35 @@ public:
         return sqrt(err0*err0 + err1*err1);
     }
     
+    void updatePIDs()
+    {
+        if(checkActivitySwitch())
+        {
+            uint8_t i;
+            updateMonitoredValues();
+            if(_turning)
+            {
+                anglePID.Compute();
+                bothMtrs[0]->setSpeed(angleCtrlVal);
+                bothMtrs[1]->setSpeed(-angleCtrlVal);
+            }
+            else
+            {
+                // Update the PIDs
+                for(i=0; i<2; i++)
+                {
+                    pids[i].Compute();
+                    bothMtrs[i]->setSpeed(*ctrlVals[i]);
+                }
+                printCtrlStatus();
+            }
+        }
+        else
+        {
+            stop();
+        }
+    }
+    
 private:
     boolean _turning;
     double leftMotorControlledSpeed;
@@ -270,6 +270,7 @@ private:
     
     double leftMotorSetPoint;
     double rightMotorSetPoint;
+    
     
     void updateMonitoredValues()
     {
@@ -291,7 +292,7 @@ private:
         *setPoints[0] = (double) position0;
         *setPoints[1] = (double) position1;
         updateMonitoredValues();
-        updatePIDs();  // TODO: Mabye updatePIDs() should be private?
+        updatePIDs();
     }
     
     void controlAngle(double angle)
