@@ -649,18 +649,21 @@ void loop()
         gunnar.controlledMotors.stop();
         gunnar.controlledMotors.turn(angle);
         gunnar.sonarTask.active = false;
-        gunnar.taskDriver.run(5L*1000L*1000L);
+        gunnar.taskDriver.run(32L*1000L*1000L);
+        gunnar.controlledMotors.stop();
+        gunnar.sensors.disableServos();
+
     }
-    gunnar.controlledMotors.stop();
+    //gunnar.controlledMotors.stop();
     Serial.println("Repeating in 3 seconds...");
     gunnar.taskDriver.run(3L*1000L*1000L);
 }'''
         sk.instructions = '''
 0. Ensure that battery power is available,
    and that the green activity switch is on.
-1. Gunnar will turn -90  degrees, over 5 seconds.
-2. Gunnar will turn +135 degrees, over 5 seconds.
-3. Gunnar will turn -45  degrees, over 5 seconds.
+1. Gunnar will turn -90  degrees.
+2. Gunnar will turn +135 degrees.
+3. Gunnar will turn -45  degrees.
 4. Gunnar will stop for 3 seconds.'''
         sk.doTest()
 
