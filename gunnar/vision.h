@@ -2,7 +2,6 @@
 #define VISION_H
 #include <Servo.h>
 #include "constants.h"
-#include "utils.h"
 #include "Arduino.h"
 #include "ahrs.h"
 

@@ -9,6 +9,7 @@
 class Gunnar;
 typedef void (Gunnar::* GunnarMemFn) ();
 
+
 class Task
 {
 public:
@@ -18,14 +19,14 @@ public:
         freq = frequency;
         _action = action;
         _that = that;
-        lastExecution = micros() * 1000L;
+        lastExecution = (long) micros() / 1000L;
         Serial.println("initializing task");
     };
     
-    void execute()
+    void execute(long now)
     { 
         (_that->*_action)();
-        lastExecution = micros() * 1000L;
+        lastExecution = now;
     }
     
     long lastExecution;
@@ -48,23 +49,25 @@ public:
         _ntasks = ntasks;
     };
     
-    void run(unsigned long duration=0)
+    void run(long duration=0)
     {
         // Duration in microseconds. 0 means endless.
         Serial.println("running taskDriver");
-        startTime = micros();
+        startTime = (long) micros();
         
         while(true)
         {
             for(int i=0; i<_ntasks; i++)
             {
-                long now = micros()*1000L;
-                Task t = *_tasks[i];
-                if(t.active and (now - t.lastExecution >= (long) t.freq))
-                    t.execute();
+                long now = (long) micros() / 1000L;  // ms
+                Task *t = _tasks[i];
+                if(t->active and (now - t->lastExecution > t->freq))
+                {
+                    t->execute(now);
+                }
             }
             
-            if((duration > 0) and (micros() - startTime > duration))
+            if((duration > 0) and ((long) micros() - startTime > duration))
                 break;
         }
     }
@@ -74,6 +77,7 @@ private:
     int _ntasks;
     long startTime;
 };
+
 
 // Consolidate as many globals as possible in a singleton robot.
 class Gunnar
@@ -108,9 +112,12 @@ public:
         // True black magic:
         sonarTask.init(this, &Gunnar::checkSonar, sonarPeriod);
         motorPIDsTask.init(this, &Gunnar::updatePIDs, PIDperiod);
+        ahrsUpdateTask.init(this, &Gunnar::updateAHRS, ahrsPeriod);
+        
         
         tasks[0] = &sonarTask;
         tasks[1] = &motorPIDsTask;
+        tasks[2] = &ahrsUpdateTask;
         
         taskDriver.init(ntasks, tasks);
         
@@ -224,6 +231,11 @@ public:
         controlledMotors.updatePIDs();
     }
     
+    void updateAHRS()
+    {
+        sensors.ahrs.update();
+    }
+    
     void decideTurn(int absAngle=-1)
     {
         // If We're currently in the process of turning,
@@ -331,6 +343,7 @@ public:
     TaskDriver taskDriver;
     Task sonarTask;
     Task motorPIDsTask;
+    Task ahrsUpdateTask;
     
 private:
     int _nTurns;
@@ -341,5 +354,6 @@ private:
     Task* tasks[ntasks];
     
 };
+
 
 #endif

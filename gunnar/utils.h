@@ -31,11 +31,37 @@ float average(float* values, int N)
     return val;
 }
 
+double average(double* values, int N)
+{
+    double val = 0;
+    for(int i=0; i<N; i++)
+    {
+        val += values[i];
+    }
+    val /= (double) N;
+    return val;
+}
+
 long millisViaMicros()
 {
     //Apparently millis() can be bad with interrupts.
     return ((long) micros() / 1000L);
 }
 
+void rotateArray(double *arr, int n)
+{
+    // Assume n>1
+//     Serial.print("rotate arr: [");
+    double first = arr[0];
+    for(int i=0; i<n-1; i++)
+    {
+//         Serial.print(arr[i]);
+//         Serial.print(",");
+        arr[i] = arr[i+1];
+    }
+//     Serial.print(arr[n-1]);
+//     Serial.println("]");
+    arr[n-1] = first;
+}
 
 #endif

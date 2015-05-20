@@ -5,6 +5,7 @@
 #include <Adafruit_LSM303_U.h>
 #include <Adafruit_9DOF.h>
 #include <Adafruit_L3GD20_U.h>
+#include "utils.h"
 
 /* Assign a unique ID to the sensors */
 // If it turns out the argumens are unnecessary, make these private members of AHRS.
@@ -47,14 +48,19 @@ public:
         {
             Serial.println("Error while performing sensor fusion.");
         }
+        rotateArray(headingHistories, NUMHEADINGHISTS);
+        headingHistories[NUMHEADINGHISTS-1] = orientation.heading;
         return output;
     }
     
-    float getHeading()
+    double getHeading()
     {
-        update();
-        return orientation.heading;
+        return average(headingHistories, NUMHEADINGHISTS);
     }
+   
+ 
+private:
+    double headingHistories[NUMHEADINGHISTS]; 
 };
 
 #endif

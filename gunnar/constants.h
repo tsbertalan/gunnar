@@ -33,7 +33,6 @@ const double KP = 2.0;
 const double KI = 1.5;
 const double KD = 0.1;
 
-const uint8_t ntasks = 2;
 
 // Dagu5 motor driver pins:
 //Motor A
@@ -52,11 +51,17 @@ const uint8_t TURNSIGNALBACKPIN = 50;
 const uint8_t TURNSIGNALFORWARDPIN = 51;
 
 const int maxTurnTime = 10000; // ms
-const uint8_t sonarPeriod = 10; // ms
-const uint8_t PIDperiod = 4; // ms
+
+// Task driver
+const uint8_t ntasks = 3;
+const int sonarPeriod = 32; // ms
+#define NUMHEADINGHISTS 25
+const int PIDperiod = 100; // ms
+const int ahrsPeriod = 4; // ms, =PIDperiod/NUMHEADINGHISTS
 
 const double EUCCONTROLERRORTHRESH = 64.0; // Euclidean distance threshold for stopping PID.
 const uint8_t CONTROLLOOPMICROS = 4; // Delay for position PID loop.
 const long MAXCONTROLLOOPMICROS = 10L*1000L*1000L;  // Longest time to do position PID, in microseconds.
+
 
 #endif
