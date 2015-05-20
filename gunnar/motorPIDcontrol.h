@@ -18,18 +18,26 @@ public:
                 Sensors *sensorsp
              )
     {
+        pinMode(encoder0PinA, INPUT);
+        pinMode(encoder0PinB, INPUT);
+        fakeAngleSetPoint = 0;
         sensors = sensorsp;
         Serial.println("initializing motors");
         leftPID.init(&monitoredLeft,  &leftMotorControlledSpeed,  &leftMotorSetPoint,
                     KP, KI, KD, DIRECT);
         rightPID.init(&monitoredRight, &rightMotorControlledSpeed, &rightMotorSetPoint,
-                     KP, KI, KD, DIRECT);
+                     5.0, KI, KD, DIRECT);
+        anglePID.init(&angleError, &angleCtrlVal, &fakeAngleSetPoint,
+                      KP, KI, KD, DIRECT);
+        
         leftPID.SetMode(AUTOMATIC);
         rightPID.SetMode(AUTOMATIC);
-        
-        anglePID.init(&monitoredAngle, &angleCtrlVal, &angleSetPoint,
-                      KP, KI, KD, DIRECT);
         anglePID.SetMode(AUTOMATIC);
+        
+        leftPID.SetSampleTime(PIDperiod);
+        rightPID.SetSampleTime(PIDperiod);
+        anglePID.SetSampleTime(PIDperiod);
+        
         
         encoders[0] = encoder0; // We don't use an initializer list
         encoders[1] = encoder1; // because we can't control when global objects.
@@ -44,14 +52,11 @@ public:
         bothMtrs[0] = leftMotor;
         bothMtrs[1] = rightMotor;
         
-        setAccelLimit(MAXPWMSPEED);
-    }
-    
-    
-    void setup()
-    {
-        pinMode(encoder0PinA, INPUT);
-        pinMode(encoder0PinB, INPUT);
+        for(uint8_t i=0; i<2; i++)
+        {
+            pids[i].SetOutputLimits(-MAXPWMSPEED, MAXPWMSPEED);
+        }
+        anglePID.SetOutputLimits(-MAXPWMSPEED, MAXPWMSPEED);
     }
     
     class Signal
@@ -164,6 +169,16 @@ public:
     {
     #define PRINTCTRLDATA
     #ifdef PRINTCTRLDATA
+    if(_turning)
+    {
+        Serial.print(micros()); Serial.print(", ");
+        Serial.print(3); Serial.print(", ");
+        Serial.print(angleSetPoint); Serial.print(", ");
+        Serial.print(angleError); Serial.print(", ");
+        Serial.print(angleCtrlVal); Serial.println(", ");
+    }
+    else
+    {
         for(uint8_t i=0; i<2; i++)
         {
 //             if(i==0)
@@ -187,16 +202,10 @@ public:
                 Serial.println(encoders[i]->trueUpdateDelay);
 //             }
         }
+    }
     #endif
     }
-    
-    void setAccelLimit(int pwm)
-    {
-        for(uint8_t i=0; i<2; i++)
-        {
-            pids[i].SetOutputLimits(-pwm, pwm);
-        }
-    }
+
     
     void go(int dist)
     {
@@ -238,7 +247,6 @@ public:
     {
         if(checkActivitySwitch())
         {
-            uint8_t i;
             updateMonitoredValues();
             if(_turning)
             {
@@ -249,13 +257,14 @@ public:
             else
             {
                 // Update the PIDs
+                uint8_t i;
                 for(i=0; i<2; i++)
                 {
                     pids[i].Compute();
                     bothMtrs[i]->setSpeed(*ctrlVals[i]);
                 }
-                printCtrlStatus();
             }
+            printCtrlStatus();
         }
         else
         {
@@ -270,13 +279,37 @@ private:
     
     double leftMotorSetPoint;
     double rightMotorSetPoint;
-    
+   
+    double getAngleErr(double h, double g)
+    {
+        // Get the signed error between the heading h and the goal heading g.
+        // Returned value should be in [-180, 180].
+        // Assume -180 < h,g, < 180. Maybe <=.
+        
+        // Find the smaller arc between h and g.
+        double delta;
+        h>g ? delta=h-g : delta=g-h;
+        while(delta > 180)
+        {
+            delta -= 180;
+            delta *= -1;
+            delta += 180;
+        }
+        // At this point, 0 < delta < 180 should be true.
+        
+        double gp = h + delta;
+        while(gp > 180)
+            gp -= 360;
+        int m;
+        gp==g ? m=1 : m=-1;
+        return delta * m;
+    }
     
     void updateMonitoredValues()
     {
         if(_turning)
         {
-            monitoredAngle = sensors->ahrs.getHeading();
+            angleError = getAngleErr(sensors->ahrs.getHeading(), angleSetPoint);
         }
         else
         {
@@ -297,8 +330,11 @@ private:
     
     void controlAngle(double angle)
     {
-        angleSetPoint = angle;
-        sensors->ahrs.update();
+        angleSetPoint = sensors->ahrs.getHeading() + angle;
+        if(angleSetPoint > 180)
+            angleSetPoint -= 360;
+        if(angleSetPoint < -180)
+            angleSetPoint += 360;
         updateMonitoredValues();
         updatePIDs();
     }
@@ -317,15 +353,16 @@ private:
     PID pids[2];
     double monitoredLeft;
     double monitoredRight;
-    double* setPoints[2];
     double* ctrlVals[2];
+    double* setPoints[2];
     double* monVals[2];
     PID leftPID;
     PID rightPID;
     
-    double monitoredAngle;
-    double angleSetPoint;
+    double angleError;
     double angleCtrlVal;
+    double fakeAngleSetPoint;
+    double angleSetPoint;
     PID anglePID;
 };
 
