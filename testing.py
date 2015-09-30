@@ -1,9 +1,11 @@
 #import serial
 from os import system, makedirs
 from os.path import dirname, abspath, exists
-from subprocess import Popen, PIPE
 from time import sleep
 import unittest
+import serialFinder
+from config import baudRate. systemOut
+port = serialFinder.port
 
 here = dirname(abspath(__file__))
 
@@ -12,29 +14,11 @@ def msg(text):
     print ">>>>>>>>>>>>>>>", text, "<<<<<<<<<<<<<<<<<"
 
 
-def systemOut(cmdList, sayCmd=True, giveStatus=False):
-    '''Run a command and capture the output.'''
-    if sayCmd:
-        print "cmdList is", cmdList
-        print "$", " ".join(cmdList)
-    process = Popen(cmdList, stdout=PIPE)
-    if giveStatus:
-        return process.communicate()[0], process.returncode
-    return process.communicate()[0]
 
-devices = [x for x in systemOut(["ls", "/dev/"], sayCmd=False).split('\n')
-           if len(x) > 0 and "ACM" in x]
-if len(devices) == 0:
-    raise IOError('No /dev/ttyACM* device found.')
-else:
-    for i, dev in enumerate(devices):
-        if "ACM" in dev:
-            port = "/dev/%s" % dev.strip()
-del i, dev, devices
+
 #port = "/dev/null"
 msg("port is %s" % port)
 board = "arduino:avr:mega"
-baudRate = 9600
 
 
 def stripOutput(stdout):
