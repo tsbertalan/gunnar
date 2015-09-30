@@ -205,7 +205,6 @@ public:
     }
     #endif
     }
-
     
     void go(int dist)
     {

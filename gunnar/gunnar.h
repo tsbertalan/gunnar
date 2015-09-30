@@ -113,11 +113,12 @@ public:
         sonarTask.init(this, &Gunnar::checkSonar, sonarPeriod);
         motorPIDsTask.init(this, &Gunnar::updatePIDs, PIDperiod);
         ahrsUpdateTask.init(this, &Gunnar::updateAHRS, ahrsPeriod);
-        
-        
+        sendDataTask.init(this, &Gunnar::sendData, sendDataPeriod);
+                
         tasks[0] = &sonarTask;
         tasks[1] = &motorPIDsTask;
         tasks[2] = &ahrsUpdateTask;
+        tasks[3] = &sendDataTask;
         
         taskDriver.init(ntasks, tasks);
         
@@ -333,6 +334,36 @@ public:
         }
     }
 
+    void sendData()
+    {
+        Serial.print("#"); Serial.print(sensors.getSonarDist());
+        
+        Serial.print("#"); Serial.print(sensors.ahrs.getHeading());
+        Serial.print("#"); Serial.print(sensors.ahrs.orientation.heading);
+        Serial.print("#"); Serial.print(sensors.ahrs.orientation.roll);
+        Serial.print("#"); Serial.print(sensors.ahrs.orientation.pitch);
+        
+        Serial.print("#"); Serial.print(sensors.ahrs.orientation.x);
+        Serial.print("#"); Serial.print(sensors.ahrs.orientation.y);
+        Serial.print("#"); Serial.print(sensors.ahrs.orientation.z);
+        
+        Serial.print("#"); Serial.print(sensors.ahrs.orientation.v[0]);
+        Serial.print("#"); Serial.print(sensors.ahrs.orientation.v[1]);
+        Serial.print("#"); Serial.print(sensors.ahrs.orientation.v[2]);
+        
+        Serial.print("#"); Serial.print(encoder0.position);
+        Serial.print("#"); Serial.print(motor1.getSpeed());
+        Serial.print("#"); Serial.print(motor1.getStatus());
+        
+        Serial.print("#"); Serial.print(encoder1.position);
+        Serial.print("#"); Serial.print(motor2.getSpeed());
+        Serial.print("#"); Serial.print(motor2.getStatus());
+        
+        Serial.print("#"); Serial.print(controlledMotors.isTurning());
+        
+        Serial.println("");
+    }
+    
     Encoder encoder0;
     Encoder encoder1;
     Sensors sensors;
@@ -344,6 +375,7 @@ public:
     Task sonarTask;
     Task motorPIDsTask;
     Task ahrsUpdateTask;
+    Task sendDataTask;
     
 private:
     int _nTurns;
