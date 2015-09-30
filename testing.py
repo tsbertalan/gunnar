@@ -15,6 +15,7 @@ def msg(text):
 def systemOut(cmdList, sayCmd=True, giveStatus=False):
     '''Run a command and capture the output.'''
     if sayCmd:
+        print "cmdList is", cmdList
         print "$", " ".join(cmdList)
     process = Popen(cmdList, stdout=PIPE)
     if giveStatus:
@@ -54,6 +55,7 @@ def stripOutput(stdout):
     
 
 def verify(sketchName):
+    return False
     cmd = "arduino --port %s --board %s" % (port, board)
     cmd += " --verify %s/%s/%s.ino"  % (here, sketchName, sketchName)
     
@@ -66,20 +68,20 @@ def verify(sketchName):
 
 
 def upload(sketchName):
-    cmd = "arduino --port %s --board %s" % (port, board)
-    cmd += " --upload %s/%s/%s.ino" % (here, sketchName, sketchName)
     
-    stdout, status = systemOut(cmd.split(' '), sayCmd=False, giveStatus=True)
-    if status:
-        raise UploadError
-    else:
-        stripOutput(stdout)
-        return  status
+    cmds = []
+    cmds.append("cd %s/%s/" % (here, sketchName))
+    cmds.append("make")
+    cmds.append("make upload")
+    
+    from os import system
+    system(" && ".join(cmds))
+    
 
-
-def monitor():
+def monitor(testName):
     print "To exit the serial monitor, do \"Ctrl+a, k, y\"."
-    cmd = "gnome-terminal --disable-factory --command \"screen %s %s\" 2>&1 | grep -v \"format string\"" % (port, baudRate)
+    #cmd = "gnome-terminal --disable-factory --command \"screen %s %s\" 2>&1 | grep -v \"format string\"" % (port, baudRate)
+    cmd = "cd %s/%s && make monitor" % (here, testName)
     system(cmd)
 
 
@@ -119,6 +121,17 @@ class VerifyError(RuntimeError):
     pass
 
 
+def makeMakefiles(testName):
+    template = open(here+"/Makefile.template").read()
+    template = template.format(here + "/testSketch", here)
+    
+    f = open(here + "/%s/Makefile"%testName, "w")
+    f.write(template)
+    f.close()
+    
+    systemOut(["cp", "%s/avrdude.conf" % here, "%s/%s/" % (here, testName)])
+
+
 class Sketch:
     '''Contains and places Arduino code for compilation and uploading.'''
     
@@ -139,6 +152,8 @@ class Sketch:
         f = open(sketchDir+'/testSketch.ino', 'w')
         f.write(self.getCode())
         f.close()
+        
+        makeMakefiles('testSketch')
     
     def verify(self):
         return verify('testSketch')
@@ -152,7 +167,8 @@ class Sketch:
         out = self.upload()
         if doMonitor:
             printInstructions(self.instructions)
-            monitor()
+            monitor('testSketch')
+            printInstructions(self.instructions)
             monitorPassed = yn("Did the test pass inspection?")
             if not monitorPassed:
                 raise InspectionError
@@ -666,7 +682,7 @@ void loop()
 3. Gunnar will turn -45  degrees.
 4. Gunnar will stop for 3 seconds.'''
         sk.doTest()
-
+        
     @classmethod
     def tearDownClass(cls):
         sk = Sketch()
@@ -680,7 +696,15 @@ void loop() {
         sk.doTest(doMonitor=False)
         
 if __name__=="__main__":
-#     docTestAll()
-    unittest.main(verbosity=1000000)
-#     t = TestKevrekidis()
-#     t.test_chungLu()
+    if False:
+        sk = Sketch()
+        sk.code = baseCode + '''
+            void loop()
+            {
+                Serial.println("Repeating in 3 seconds...");
+                delay(3000);
+            }'''
+        sk.instructions = ""
+        sk.doTest(doMonitor=True)
+    else:
+        unittest.main(verbosity=1000000)

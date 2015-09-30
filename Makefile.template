@@ -6,13 +6,13 @@
 
 ### PROJECT_DIR
 ### This is the path to where you have created/cloned your project
-PROJECT_DIR       = /home/tsbertalan/sketchbook/gunnar
+PROJECT_DIR       = {0}
 
 AVRDUDE_CONF = $(PROJECT_DIR)/avrdude.conf
 AVRDUDE  = /usr/bin/avrdude
 
-
 ### ARDMK_DIR
+
 ### Path to the Arduino-Makefile directory.
 ARDMK_DIR         = $(PROJECT_DIR)/Arduino-Makefile
 
@@ -23,7 +23,7 @@ ARDUINO_DIR       = /usr/share/arduino
 
 ### USER_LIB_PATH
 ### Path to where the your project's libraries are stored.
-USER_LIB_PATH    :=  $(PROJECT_DIR)
+USER_LIB_PATH    :=  {1}
 
 ### BOARD_TAG
 ### It must be set to the board you are currently using. (i.e uno, mega2560, etc.)
@@ -70,15 +70,6 @@ CURRENT_DIR       = $(shell basename $(CURDIR))
 ### OBJDIR
 ### This is where you put the binaries you just compile using 'make'
 OBJDIR            = $(PROJECT_DIR)/bin/$(BOARD_TAG)/$(CURRENT_DIR)
-
-.PHONY: .Force
-
-.FORCE:
-
-stop: .FORCE
-	python stop.py
-	
-go: upload
 
 ### Do not touch - the path to Arduino.mk, inside the ARDMK_DIR
 include $(ARDMK_DIR)/Arduino.mk
