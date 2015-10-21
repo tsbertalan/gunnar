@@ -12,11 +12,9 @@ const uint8_t MOTORBACKWARD = 2;
 const boolean MOTORLEFT = LOW;
 const boolean MOTORRIGHT = HIGH;
 
-class Motor
-{
+class Motor {
 public:
-    void init(boolean which)
-    {
+    void init(boolean which) {
         pinMode(motorPinPwmA, OUTPUT);
         pinMode(motorPinDirA, OUTPUT);
         pinMode(motorPinCurA, INPUT);
@@ -27,74 +25,68 @@ public:
         stop();
     }
     
-    void stop()
-    {
+    void stop() {
         setSpeed(0);
         _status = MOTORSTOP;
     }
     
-    void run(uint8_t status)
-    {
+    void run(uint8_t status) {
         _setStatus(status);
     }
     
-    void setSpeed(int speed)
-    {
-        if(speed < 0)
-        {
+    void setSpeed(int speed) {
+        if(speed < 0) {
             _setStatus(MOTORBACKWARD);
             speed = abs(speed);
-        }
-        else
-        {
+        } else {
             _setStatus(MOTORFORWARD);
         }
-        _speed = speed;
+        _speed = constrain(speed, 0, 255);
         
-        if(_which == MOTORLEFT)
-        {
+//         Serial.print("Setting motor ");
+//         Serial.print(_which);
+//         Serial.print(" to ");
+//         Serial.print(speed);
+//         Serial.println(".");
+        if(_which == MOTORLEFT) {
             analogWrite(motorPinPwmA, speed);
-        }
-        else
-        {
+        } else {
             analogWrite(motorPinPwmB, speed);
         }
     }
     
-    uint8_t getSpeed()
-    {
+    uint16_t getSpeed() {
         return _speed;
     }
     
-    uint8_t getStatus()
-    {
+    int16_t getSpeedSigned() {
+        if(getStatus() == MOTORBACKWARD)
+            return -1 * (int16_t) getSpeed();
+        else
+            return getSpeed();
+    }
+    
+    uint8_t getStatus() {
         return _status;
     }
         
 private:
     boolean _which;
-    uint8_t _speed;
+    uint16_t _speed;
     uint8_t _status;
     
-    void _setStatus(uint8_t status)
-    {
+    void _setStatus(uint8_t status) {
                
-        if(status == MOTORSTOP)
-        {
+        if(status == MOTORSTOP) {
             stop();
-        }
-        else
-        {
+        } else {
             // Since both motors are wired the same, but face different
             // sides of the vehicle, the sense of "forward" is different
             // for both.
-            if(_which == MOTORLEFT)
-            {
-                digitalWrite(motorPinDirA, status==MOTORBACKWARD);
-            }
-            else
-            {
-                digitalWrite(motorPinDirB, status==MOTORFORWARD);
+            if(_which == MOTORLEFT) {
+                digitalWrite(motorPinDirA, status==MOTORFORWARD);
+            } else {
+                digitalWrite(motorPinDirB, status==MOTORBACKWARD);
             }
         }
         

@@ -9,8 +9,7 @@ class Encoder
 public:
 
     // initializer : sets pins as inputs and turns on pullup resistors
-    void init(uint8_t PinA, uint8_t PinB, Motor* assocMotor)
-    {
+    void init(uint8_t PinA, uint8_t PinB, Motor* assocMotor) {
         Serial.println("Initializing encoder.");
         pin_a = PinA;
         pin_b = PinB;
@@ -27,10 +26,8 @@ public:
         Serial.println("    Encoder initialized.");
     };
 
-    
     // Call this from your interrupt function.
-    void update()
-    {
+    void update() {
         // TODO: This is probably too long for an ISR.
         noInterrupts();
         
@@ -104,8 +101,7 @@ public:
         interrupts();
     };
     
-    float getSpeed()
-    {
+    float getSpeed() {
         uint8_t motorStatus = motor->getStatus();
         if(motorStatus==MOTORSTOP)
         {

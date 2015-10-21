@@ -53,16 +53,18 @@ const uint8_t TURNSIGNALFORWARDPIN = 51;
 const int maxTurnTime = 10000; // ms
 
 // Task driver
-const uint8_t ntasks = 4;
+const uint8_t ntasks = 5;
 const int sonarPeriod = 32; // ms
 #define NUMHEADINGHISTS 25
 const int PIDperiod = 100; // ms
 const int ahrsPeriod = 4; // ms, =PIDperiod/NUMHEADINGHISTS
 const int sendDataPeriod = 1000;  // ms
+const int checkSerialForCommandsPeriod = 10;  // ms
 
 const double EUCCONTROLERRORTHRESH = 64.0; // Euclidean distance threshold for stopping PID.
 const uint8_t CONTROLLOOPMICROS = 4; // Delay for position PID loop.
 const long MAXCONTROLLOOPMICROS = 10L*1000L*1000L;  // Longest time to do position PID, in microseconds.
 
+const bool keyboardControl = true;
 
 #endif

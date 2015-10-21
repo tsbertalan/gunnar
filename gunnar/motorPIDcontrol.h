@@ -7,8 +7,7 @@
 #include "motors.h"
 #include "vision.h"
 
-class ControlledMotors
-{
+class ControlledMotors {
 public:
     void init(
                 Motor* leftMotor,
@@ -59,8 +58,7 @@ public:
         anglePID.SetOutputLimits(-MAXPWMSPEED, MAXPWMSPEED);
     }
     
-    class Signal
-    {
+    class Signal {
     public:
         void none()
         {
@@ -111,16 +109,15 @@ public:
         }
     } signal;
     
-    boolean isTurning()
-    {
+    boolean isTurning() {
         return _turning;
     }
     
-    void turn(int angle)
-    {
+    void turn(int angle) {
         _turning = true;
-        if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
-        {
+        
+        if(keyboardControl || checkActivitySwitch()) {
+            
             double currHeading = sensors->ahrs.getHeading();
             boolean rightTurn = angle > 0;
             _resetEncoders();
@@ -139,84 +136,74 @@ public:
             Serial.print((int) currHeading);
             Serial.println(".)");
             
-            if(rightTurn)
-            {
+            if(rightTurn) {
                 // Right turn. Right tread should go backwards.
                 signal.right();
-            }
-            else
-            {
+            } else {
                 // Left turn. Right tread should go forwards.
                 signal.left();
             }
             controlAngle(newHeading);
-        }
-        else
-        {
+            
+        } else {
             stop();
         }
     }
         
-    void stop()
-    {
+    void stop() {
         _turning = false;
         signal.stop();
         bothMtrs[0]->stop();
         bothMtrs[1]->stop();
     }
     
-    void printCtrlStatus()
-    {
-    #define PRINTCTRLDATA
-    #ifdef PRINTCTRLDATA
-    if(_turning)
-    {
-        Serial.print(micros()); Serial.print(", ");
-        Serial.print(3); Serial.print(", ");
-        Serial.print(angleSetPoint); Serial.print(", ");
-        Serial.print(angleError); Serial.print(", ");
-        Serial.print(angleCtrlVal); Serial.println(", ");
-    }
-    else
-    {
-        for(uint8_t i=0; i<2; i++)
+    void printCtrlStatus() {
+        #define PRINTCTRLDATA
+        #ifdef PRINTCTRLDATA
+        if(isTurning())
         {
-//             if(i==0)
-//             {
-    //     Serial.println("micros  | m| setp | moni | ctrl  | ps| spd  | updela");
-            //10575920, 1, 82.00, 12.00, 255.00, 15, 92.89, 17588
-                Serial.print(micros());
-                Serial.print(", ");
-                Serial.print(i);
-                Serial.print(", ");
-                Serial.print(*setPoints[i]);
-                Serial.print(", ");
-                Serial.print(*monVals[i]);
-                Serial.print(", ");
-                Serial.print(*ctrlVals[i]);
-                Serial.print(", ");
-                Serial.print(encoders[i]->position);
-                Serial.print(", ");
-                Serial.print(encoders[i]->getSpeed());
-                Serial.print(", ");
-                Serial.println(encoders[i]->trueUpdateDelay);
-//             }
+//             Serial.println("micros  | m| setp | moni | ctrl  | ps| spd  | updela");
+            Serial.print(micros()); Serial.print(", ");
+            Serial.print(3); Serial.print(", ");
+            Serial.print(angleSetPoint); Serial.print(", ");
+            Serial.print(angleError); Serial.print(", ");
+            Serial.print(angleCtrlVal); Serial.println(", ");
         }
-    }
-    #endif
+        else
+        {
+            for(uint8_t i=0; i<2; i++)
+            {
+    //             if(i==0)
+    //             {
+//             Serial.println("micros  | m| setp | moni | ctrl  | ps| spd  | updela");
+                //10575920, 1, 82.00, 12.00, 255.00, 15, 92.89, 17588
+                    Serial.print(micros());
+                    Serial.print(", ");
+                    Serial.print(i);
+                    Serial.print(", ");
+                    Serial.print(*setPoints[i]);
+                    Serial.print(", ");
+                    Serial.print(*monVals[i]);
+                    Serial.print(", ");
+                    Serial.print(*ctrlVals[i]);
+                    Serial.print(", ");
+                    Serial.print(encoders[i]->position);
+                    Serial.print(", ");
+                    Serial.print(encoders[i]->getSpeed());
+                    Serial.print(", ");
+                    Serial.println(encoders[i]->trueUpdateDelay);
+    //             }
+            }
+        }
+        #endif
     }
     
-    void go(int dist)
-    {
+    void go(int dist) {
         _turning = false;
-        if(digitalRead(PIN_ACTIVITYSWITCH) == HIGH)
-        {
-            if(dist < 0)
-            {
+        if(keyboardControl || checkActivitySwitch()) {
+            if(dist < 0) {
                 signal.backward();
-            }
-            else
-            {
+            } else {
                 signal.forward();
             }
             _resetEncoders();
@@ -235,38 +222,29 @@ public:
         }
     }
     
-    double getEucError()
-    {
+    double getEucError() {
         double err0 = *setPoints[0] - *monVals[0];
         double err1 = *setPoints[1] - *monVals[1];
         return sqrt(err0*err0 + err1*err1);
     }
     
-    void updatePIDs()
-    {
-        if(checkActivitySwitch())
-        {
+    void updatePIDs() {
+        if(keyboardControl || checkActivitySwitch()) {
             updateMonitoredValues();
-            if(_turning)
-            {
+//             printCtrlStatus();
+            if(_turning) {
                 anglePID.Compute();
                 bothMtrs[0]->setSpeed(angleCtrlVal);
                 bothMtrs[1]->setSpeed(-angleCtrlVal);
-            }
-            else
-            {
+            } else {
                 // Update the PIDs
                 uint8_t i;
-                for(i=0; i<2; i++)
-                {
+                for(i=0; i<2; i++) {
                     pids[i].Compute();
                     bothMtrs[i]->setSpeed(*ctrlVals[i]);
                 }
             }
-            printCtrlStatus();
-        }
-        else
-        {
+        } else {
             stop();
         }
     }
@@ -279,8 +257,7 @@ private:
     double leftMotorSetPoint;
     double rightMotorSetPoint;
    
-    double getAngleErr(double h, double g)
-    {
+    double getAngleErr(double h, double g) {
         // Get the signed error between the heading h and the goal heading g.
         // Returned value should be in [-180, 180].
         // Assume -180 < h,g, < 180. Maybe <=.
@@ -304,31 +281,24 @@ private:
         return delta * m;
     }
     
-    void updateMonitoredValues()
-    {
-        if(_turning)
-        {
+    void updateMonitoredValues() {
+        if(isTurning()) {
             angleError = getAngleErr(sensors->ahrs.getHeading(), angleSetPoint);
-        }
-        else
-        {
-            for(uint8_t i=0; i<2; i++)
-            {
+        } else {
+            for(uint8_t i=0; i<2; i++) {
                 *monVals[i] = (double) encoders[i]->position;
             }
         }
     }
     
-    void _controlMotorPositions(double position0, double position1)
-    {
+    void _controlMotorPositions(double position0, double position1) {
         *setPoints[0] = (double) position0;
         *setPoints[1] = (double) position1;
         updateMonitoredValues();
         updatePIDs();
     }
     
-    void controlAngle(double angle)
-    {
+    void controlAngle(double angle) {
         angleSetPoint = sensors->ahrs.getHeading() + angle;
         if(angleSetPoint > 180)
             angleSetPoint -= 360;
@@ -338,8 +308,7 @@ private:
         updatePIDs();
     }
     
-    void _resetEncoders()
-    {
+    void _resetEncoders() {
         noInterrupts();
         encoders[0]->position = 0;
         encoders[1]->position = 0;
