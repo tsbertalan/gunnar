@@ -4,7 +4,7 @@ from os.path import dirname, abspath, exists
 from time import sleep
 import unittest
 import serialFinder
-from config import baudRate. systemOut
+from config import baudRate, systemOut
 port = serialFinder.port
 
 here = dirname(abspath(__file__))
