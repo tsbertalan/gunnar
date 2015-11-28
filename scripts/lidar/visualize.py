@@ -14,7 +14,7 @@ else:
 
 com_port = "/dev/ttyUSB0" # example: 5 == "COM6" == "/dev/tty5"
 baudrate = 115200
-visualization = False
+visualization = True
 
 offset = 140
 init_level = 0
