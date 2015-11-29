@@ -76,8 +76,8 @@ def compute_speed(data):
     return speed_rpm
 
 
-def read_Lidar(hostname, port):
-    client = Client(hostname, port, timeout=4)
+def read_Lidar(hostname, port, SEND=True):
+    client = Client(hostname, port, timeout=10)
     print "Connected to %s:%d. Will begin sending data. Ctrl+C to quit." % (hostname, port)
     time.sleep(1)
     global init_level, angle, index
@@ -96,7 +96,8 @@ def read_Lidar(hostname, port):
                         dataArr = np.vstack(lidarData)
                         if dataArr.size > 0:
                             allData.append(lidarData)
-                            client.send(dataArr)
+                            if SEND:
+                                client.send(dataArr)
                     except ValueError:  # Data is likely ragged (not all filled).
                         pass
                 else:
@@ -181,12 +182,16 @@ ser = serial.Serial(com_port, baudrate)
 
 hostname = 'localhost'
 port = 9009
+SEND = False
 if len(sys.argv) > 1:
     print sys.argv
     hostname = sys.argv[1]
     if len(sys.argv) > 2:
         port = int(sys.argv[2])
-read_Lidar(hostname, port)
+        if len(sys.argv) > 3:
+            SEND = 'do' in sys.argv[3]
+
+read_Lidar(hostname, port, SEND=SEND)
 print
 print "Saving data..."
 allData = np.array(allData)

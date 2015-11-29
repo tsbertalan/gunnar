@@ -55,11 +55,12 @@ class PyTableSavingHandler(Handler):
         if (
             isinstance(data, np.ndarray)
             and data.size > 0
-            and len(data[0]) == 2
+            and len(data.shape) == 2
+            and data.shape[1] == 2
             ):
             self.array_c.append([data])
-            #t = time()
-            #logging.info('Saving data at t=%s.' % t)
+            t = time()
+            logging.info('Saving data at t=%s.' % t)
             self.file.flush()
 
 

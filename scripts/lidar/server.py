@@ -71,7 +71,7 @@ class Server(object):
 
         self.handler = handler
         self.SOCKET_LIST = []
-        self.RECV_BUFFER = 2 ** 16
+        self.RECV_BUFFER = 2 ** 20
 
         server_socket = self.server_socket = socket.socket(socket.AF_INET,
                                                            socket.SOCK_STREAM)
@@ -127,8 +127,8 @@ class Server(object):
     def recv(self, sock, length=2 ** 13, unpickle=True):
         data = sock.recv(length)
         try:
-            data = loads(data)
-        except (KeyError, IndexError) as e:
+            data = np.fromstring(data, dtype=np.int32)
+        except (IndexError,) as e:
             import warnings
             warnings.warn(str(e))
             return False, None

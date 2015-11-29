@@ -22,7 +22,7 @@ class Client(object):
         s.settimeout(timeout)
 
         # connect to remote host
-        try :
+        try:
             s.connect((host, port))
         except Exception:
             traceback.print_exc()
@@ -35,10 +35,12 @@ class Client(object):
         self.messages = deque()
 
     def send(self, obj):
-        data = dumps(obj)
-        self.nsent += 1
-        #print "sending message %d: object of type %s, len %d" % (self.nsent, type(obj), len(data))
-        self.s.send(data)
+        if isinstance(obj, np.ndarray):
+            data = obj.tostring()
+            self.nsent += 1
+            #print "sending message %d: object of type %s, len %d" % (self.nsent, type(obj), len(data))
+            print len(data)
+            self.s.send(data)
 
 
 class Message(object):
