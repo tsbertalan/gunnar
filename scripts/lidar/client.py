@@ -11,8 +11,6 @@ import traceback
 from dill import dumps, loads
 import numpy as np
 
-from server import recv
-
 
 class Client(object):
     def __init__(self, host, port, timeout=2):
@@ -41,27 +39,6 @@ class Client(object):
         self.nsent += 1
         print "sending message %d: object of type %s, len %d" % (self.nsent, type(obj), len(data))
         self.s.send(data)
-
-    def read(self):
-        """This doesn't seem to work right now."""
-
-        socket_list = [sys.stdin, self.s]
-
-        data = None
-        # Get the list sockets which are readable
-        ready_to_read, ready_to_write, in_error = select.select(socket_list , [], [])
-        for sock in ready_to_read:
-            if sock == self.s:
-                # incoming message from remote server, s
-                data = recv(sock, length=4096, unpickle=True)
-
-                if not data:
-                    print '\nDisconnected from server'
-                    sys.exit()
-                else:
-                    print dir(self.s)
-                    self.messages.appendleft(Message(self.s.addr, data))
-        return data
 
 
 class Message(object):
