@@ -16,8 +16,10 @@ Instance = type(object())
 class Handler(object):
     def __init__(self):
         self.data = deque()
+
     def enque(self, item):
         self.data.append(item)
+
     def work(self):
         if len(self.data) > 0:
             item = self.data.popleft()
@@ -32,7 +34,7 @@ def typeData(data):
     return "%s: '%s'" % (type(data), dataStr)
 
 
-def recv(sock, length=2**13, unpickle=True):
+def recv(sock, length=2 ** 13, unpickle=True):
     data = sock.recv(length)
     try:
         data = loads(data)
@@ -48,7 +50,7 @@ def recv(sock, length=2**13, unpickle=True):
 
 SOCKET_LIST = []
 def server(HOST='', PORT=9009):
-    RECV_BUFFER = 2**16
+    RECV_BUFFER = 2 ** 16
     def removeSocket(sock):
         if sock in SOCKET_LIST:
             logging.info("Removing socket %s." % sock)
@@ -68,12 +70,12 @@ def server(HOST='', PORT=9009):
 
     handler = Handler()
 
-    while 1:
+    while True:
         handler.work()
 
         # get the list sockets which are ready to be read through select
         # 4th arg, time_out  = 0 : poll and never block
-        ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
+        ready_to_read, unused_ready_to_write, unused_in_error = select.select(SOCKET_LIST, [], [], 0)
 
         for sock in ready_to_read:
             # a new connection request recieved

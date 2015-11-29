@@ -49,7 +49,7 @@ class Client(object):
 
         data = None
         # Get the list sockets which are readable
-        ready_to_read,ready_to_write,in_error = select.select(socket_list , [], [])
+        ready_to_read, ready_to_write, in_error = select.select(socket_list , [], [])
         for sock in ready_to_read:
             if sock == self.s:
                 # incoming message from remote server, s
