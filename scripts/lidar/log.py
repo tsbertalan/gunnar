@@ -43,23 +43,12 @@ class PyTableSavingHandler(Handler):
         if fname[-3:] != ".h5":
             fname += ".h5"
         self.fname = fname
-        self.file = tables.open_file(fname, mode='w', title='test file')
-        group = self.file.create_group('/', 'lidar', 'lidar data')
+        self.file = tables.open_file(fname, mode='w', title='lidar data file')
 
-        # Define the row format.
-        self.idCounter = 0
-        dataDefLines = [
-                        'class Data(tables.IsDescription):',
-                        '    id = tables.UInt64Col()',
-                        '    t = tables.Time64Col()',
-                        ]
-        for i in range(360):
-            dataDefLines.append('    dist%03d = tables.UInt64Col()' % i)
-            dataDefLines.append('    qual%03d = tables.UInt64Col()' % i)
-        exec('\n'.join(dataDefLines))
-
-        # Initialize the table. PyTables will complain about too many columns.
-        self.table = self.file.create_table(group, 'scans', Data, 'scan data table')
+        # Define the data shape.
+        atom = tables.UInt32Atom()
+        # Make the enlargable array.
+        self.array_c = self.file.createEArray(self.file.root, 'scans', atom, (0, 360, 2), "Scans EArray", expectedrows=100000)
 
 
     def enquque(self, data):
@@ -68,19 +57,11 @@ class PyTableSavingHandler(Handler):
             and data.size > 0
             and len(data[0]) == 2
             ):
-            self.table.row['id'] = self.idCounter
-            self.idCounter += 1
+            self.array_c.append([data])
+            #t = time()
+            #logging.info('Saving data at t=%s.' % t)
+            self.file.flush()
 
-            t = time()
-            self.table.row['t'] = t
-
-            for a in range(360):
-                self.table.row['dist%03d' % a] = data[a, 0]
-                self.table.row['qual%03d' % a] = data[a, 1]
-
-            logging.info('Saving data at t=%s.' % t)
-            self.table.row.append()
-            self.table.flush()
 
     def __del__(self):
         print 'Closing file %s.' % self.fname
