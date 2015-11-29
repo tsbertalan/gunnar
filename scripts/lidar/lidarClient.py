@@ -3,19 +3,13 @@
 # requires pyserial
 
 
-import thread, time, sys, traceback, math
+import sys, math
 import serial
-from sys import argv
 import time
 
 import numpy as np
 
 from client import Client
-
-if len(argv) > 1:
-    timeout = int(argv[1])
-else:
-    timeout = np.inf
 
 com_port = "/dev/ttyUSB0"  # example: 5 == "COM6" == "/dev/tty5"
 baudrate = 115200
@@ -81,18 +75,14 @@ def compute_speed(data):
     speed_rpm = float(data[0] | (data[1] << 8)) / 64.0
     return speed_rpm
 
-def read_Lidar():
-    client = Client('localhost', 9009, timeout=4)
+
+def read_Lidar(hostname, port):
+    client = Client(hostname, port, timeout=4)
     time.sleep(1)
-    start = time.time()
-    lastTime = start
     global init_level, angle, index
 
     nb_errors = 0
     while True:
-        now = time.time()
-        if now - start > timeout:
-            break
         try:
             time.sleep(0.00001)  # do not hog the processor power
 
@@ -103,9 +93,6 @@ def read_Lidar():
                     init_level = 1
                     allData.append(lidarData)
                     client.send(np.array(lidarData))
-                    if now - lastTime > 1:
-                        print now - start, "seconds elapsed of %s total." % timeout
-                        lastTime = now
                 else:
                     init_level = 0
             elif init_level == 1:
@@ -186,7 +173,14 @@ def read_Lidar():
 
 ser = serial.Serial(com_port, baudrate)
 
-read_Lidar()
+hostname = 'localhost'
+port = 9009
+if len(sys.argv) > 1:
+    print sys.argv
+    hostname = sys.argv[1]
+    if len(sys.argv) > 2:
+        port = int(sys.argv[2])
+read_Lidar(hostname, port)
 print
 print "Saving data..."
 allData = np.array(allData)
