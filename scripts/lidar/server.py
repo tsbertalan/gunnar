@@ -1,5 +1,5 @@
 # server.py
- 
+
 import sys
 import socket
 import select
@@ -20,17 +20,26 @@ class Handler(object):
     def work(self):
         if len(self.data) > 0:
             item = self.data.popleft()
-            logging.info("De-que'd %s : '%s'" % (type(item), str(item).strip()))
+            logging.info("De-que'd %s" % typeData(item))
 
 def typeData(data):
-    return "%s: '%s'" % (type(data), str(data).strip())
+    if isinstance(data, np.ndarray):
+        dataStr = str(data.shape)
+    else:
+        dataStr = str(data).strip()
+    return "%s: '%s'" % (type(data), dataStr)
 
 def recv(sock, length=4096, unpickle=True):
     data = sock.recv(length)
     if isinstance(data, bool) and not data:
         return False, None
     if unpickle:
-        data = loads(data)
+        try:
+            data = loads(data)
+        except (KeyError, IndexError) as e:
+            import warnings
+            warnings.warn(str(e))
+            return False, None
     sys.stdout.flush()
     msg = ">>>>"
     msg += "\n    RECV():"
@@ -52,7 +61,7 @@ def recv(sock, length=4096, unpickle=True):
 
 SOCKET_LIST = []
 def server(HOST='', PORT=9009):
-    RECV_BUFFER = 4096 
+    RECV_BUFFER = 1024*10
     def removeSocket(sock):
         if sock in SOCKET_LIST:
             logging.info("Removing socket %s." % sock)
@@ -64,36 +73,36 @@ def server(HOST='', PORT=9009):
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((HOST, PORT))
     server_socket.listen(10)
- 
+
     # add server socket object to the list of readable connections
     SOCKET_LIST.append(server_socket)
- 
+
     logging.info("Server started on port " + str(PORT))
 
     handler = Handler()
- 
+
     while 1:
         handler.work()
 
         # get the list sockets which are ready to be read through select
         # 4th arg, time_out  = 0 : poll and never block
         ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
-      
+
         for sock in ready_to_read:
             # a new connection request recieved
-            if sock == server_socket: 
+            if sock == server_socket:
                 sockfd, addr = server_socket.accept()
                 if len(SOCKET_LIST) == 2:
                     logging.warn("Not accepting new connection request from [%s:%s]." % addr)
                 else:
                     SOCKET_LIST.append(sockfd)
                     logging.info("Client (%s, %s) connected" % addr)
-                 
+
                     broadcast(server_socket, sockfd, "[%s:%s] entered the server." % addr)
-             
+
             # a message from a client, not a new connection
             else:
-                # process data recieved from client, 
+                # process data recieved from client,
                 try:
                     # receiving data from the socket.
                     success, data = recv(sock, RECV_BUFFER)
@@ -102,14 +111,14 @@ def server(HOST='', PORT=9009):
                         if isinstance(data, np.ndarray):
                             handler.enque(data)
                     else:
-                        # remove the socket that's broken    
-                        logging.warn("False data: %s" % typeDat(data))
-                        removeSocket(sock)
+                        # remove the socket that's broken
+                        logging.warn("False data: %s" % typeData(data))
+#                         removeSocket(sock)
 
-                        # at this stage, no data means probably the connection has been broken
-                        logging.warn("Client (%s, %s) is offline" % addr)
+#                         # at this stage, no data means probably the connection has been broken
+#                         logging.warn("Client (%s, %s) is offline" % addr)
 
-                # exception 
+                # exception
                 except EOFError:
                     logging.warn(traceback.format_exc())
                     logging.warn("Lost connection (client killed?).")
@@ -120,7 +129,7 @@ def server(HOST='', PORT=9009):
                     continue
 
     server_socket.close()
-    
+
 # broadcast messages to all connected clients
 def broadcast (server_socket, sock, message, pickle=True):
     logging.info("sending data %s" % typeData(message))
@@ -137,8 +146,8 @@ def broadcast (server_socket, sock, message, pickle=True):
                 # broken socket, remove it
                 if socket in SOCKET_LIST:
                     SOCKET_LIST.remove(socket)
- 
+
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
-    sys.exit(server()) 
+    sys.exit(server())
 

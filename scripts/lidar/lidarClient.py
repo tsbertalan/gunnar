@@ -42,7 +42,7 @@ Takes the angle (an int, from 0 to 359) and the list of four bytes of data in th
     x1= data[1]
     x2= data[2]
     x3= data[3]
-    
+
     angle_rad = angle * math.pi / 180.0
     c = math.cos(angle_rad)
     s = -math.sin(angle_rad)
@@ -63,7 +63,7 @@ data -- list of 20 bytes (as ints), in the order they arrived in.
     data_list = []
     for t in range(10):
         data_list.append( data[2*t] + (data[2*t+1]<<8) )
-    
+
     # compute the checksum on 32 bits
     chk32 = 0
     for d in data_list:
@@ -80,12 +80,12 @@ def compute_speed(data):
     return speed_rpm
 
 def read_Lidar():
-    client = Client('localhost', 9009)
+    client = Client('localhost', 9009, timeout=4)
     time.sleep(1)
     start = time.time()
     lastTime = start
     global init_level, angle, index
-    
+
     nb_errors = 0
     while True:
         now = time.time()
@@ -100,6 +100,7 @@ def read_Lidar():
                 if b == 0xFA :
                     init_level = 1
                     allData.append(lidarData)
+                    client.send(np.array(lidarData))
                     if now - lastTime > 1:
                         print now - start, "seconds elapsed of %s total." % timeout
                         lastTime = now
@@ -116,7 +117,7 @@ def read_Lidar():
             elif init_level == 2 :
                 # speed
                 b_speed = [ ord(b) for b in ser.read(2)]
-                
+
                 # data
                 #
                 # (Data description from
@@ -127,7 +128,7 @@ def read_Lidar():
                 # [Data 0] [Data 1] [Data 2] [Data 3] <checksum_L> <checksum_H>
                 #
                 # where:
-                # 
+                #
                 # start is always 0xFA
                 # index is the index byte in the 90 packets, going from 0xA0
                 # (packet 0, readings 0 to 3) to 0xF9 (packet 89, readings 356 to 359).
@@ -136,7 +137,7 @@ def read_Lidar():
                 # fixed point, with 6 bits used for the decimal part).
                 # [Data 0] to [Data 3] are the 4 readings. Each one is 4 bytes
                 # long, and organized as follows :
-                # 
+                #
                 # `byte 0 : <distance 7:0>`
                 # `byte 1 : <"invalid data" flag> <"strength warning" flag> <distance 13:8>`
                 # `byte 2 : <signal strength 7:0>`
@@ -158,7 +159,7 @@ def read_Lidar():
                 # verify that the received checksum is equal to the one computed from the data
                 if checksum(all_data) == incoming_checksum:
                     speed_rpm = compute_speed(b_speed)
-                    
+
                     update_view(index * 4 + 0, b_data0)
                     update_view(index * 4 + 1, b_data1)
                     update_view(index * 4 + 2, b_data2)
@@ -166,15 +167,15 @@ def read_Lidar():
                 else:
                     # the checksum does not match, something went wrong...
                     nb_errors +=1
-                    
+
                     # display the samples in an error state
                     update_view(index * 4 + 0, [0, 0x80, 0, 0])
                     update_view(index * 4 + 1, [0, 0x80, 0, 0])
                     update_view(index * 4 + 2, [0, 0x80, 0, 0])
                     update_view(index * 4 + 3, [0, 0x80, 0, 0])
-                    
+
                 init_level = 0 # reset and wait for the next packet
-                
+
             else: # default, should never happen...
                 init_level = 0
         except KeyboardInterrupt:
@@ -189,4 +190,4 @@ print "Saving data..."
 allData = np.array(allData)
 np.savez("lidar.npz", data=allData)
 print "all the data is of shape %s" % (allData.shape, )
-    
+
