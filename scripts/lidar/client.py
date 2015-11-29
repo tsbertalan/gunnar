@@ -37,7 +37,7 @@ class Client(object):
     def send(self, obj):
         data = dumps(obj)
         self.nsent += 1
-        print "sending message %d: object of type %s, len %d" % (self.nsent, type(obj), len(data))
+        #print "sending message %d: object of type %s, len %d" % (self.nsent, type(obj), len(data))
         self.s.send(data)
 
 

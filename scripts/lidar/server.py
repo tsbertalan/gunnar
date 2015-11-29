@@ -60,9 +60,15 @@ class Server(object):
         else:
             logging.error("Socket %s not in socket list." % sock)
 
-    def __init__(self, handler=None, HOST='', PORT=9009):
+    def __init__(self, handler=None, HOST='', PORT=9009, exitTimeCallback=None):
         if handler is None:
             handler = DummyHandler()
+
+        if exitTimeCallback is None:
+            self.exitTimeCallback = lambda : False
+        else:
+            self.exitTimeCallback = exitTimeCallback
+
         self.handler = handler
         self.SOCKET_LIST = []
         self.RECV_BUFFER = 2 ** 16
@@ -81,6 +87,8 @@ class Server(object):
 
     def serve(self):
         while True:
+            if self.exitTimeCallback():
+                break
             # get the list sockets which are ready to be read through select
             # 4th arg, time_out  = 0 : poll and never block
             ready_to_read, unused_ready_to_write, unused_in_error = select.select(self.SOCKET_LIST, [], [], 0)
@@ -100,13 +108,16 @@ class Server(object):
                     # process data recieved from client,
                     try:
                         # receiving data from the socket.
-                        success, data = self.recv(sock, self.RECV_BUFFER)
-                        if success:
-                            # there is something in the socket
-                            if isinstance(data, np.ndarray):
-                                self.handler.enquque(data)
-#                         else:
-#                             logging.warn("False data: %s." % typeData(data))
+                        try:
+                            success, data = self.recv(sock, self.RECV_BUFFER)
+                            if success:
+                                # there is something in the socket
+                                if isinstance(data, np.ndarray):
+                                    self.handler.enquque(data)
+#                             else:
+#                                 logging.warn("False data: %s." % typeData(data))
+                        except EOFError:
+                            pass
 
                     except Exception:
                         logging.error(traceback.format_exc())
@@ -122,7 +133,7 @@ class Server(object):
             warnings.warn(str(e))
             return False, None
         sys.stdout.flush()
-        logging.info("Got data: %s" % typeData(data))
+        #logging.info("Got data: %s" % typeData(data))
         sys.stdout.flush()
         return True, data
 

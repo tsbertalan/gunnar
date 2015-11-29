@@ -78,6 +78,7 @@ def compute_speed(data):
 
 def read_Lidar(hostname, port):
     client = Client(hostname, port, timeout=4)
+    print "Connected to %s:%d. Will begin sending data. Ctrl+C to quit." % (hostname, port)
     time.sleep(1)
     global init_level, angle, index
 
@@ -91,8 +92,13 @@ def read_Lidar(hostname, port):
                 # start byte
                 if b == 0xFA :
                     init_level = 1
-                    allData.append(lidarData)
-                    client.send(np.array(lidarData))
+                    try:
+                        dataArr = np.vstack(lidarData)
+                        if dataArr.size > 0:
+                            allData.append(lidarData)
+                            client.send(dataArr)
+                    except ValueError:  # Data is likely ragged (not all filled).
+                        pass
                 else:
                     init_level = 0
             elif init_level == 1:

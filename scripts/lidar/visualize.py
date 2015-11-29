@@ -38,6 +38,8 @@ class Visualizer:
         self.use_lines = True
         self.use_intensity = True
 
+        self.scans = []  # Save all the gathered scans.
+
 
     def update_view(self, angle, dist_mm, quality):
         """Updates the view of a sample.
@@ -76,14 +78,20 @@ class Visualizer:
             try:
                 scan = handler.dequque()
                 if isinstance(scan, np.ndarray) and scan.size > 0:
+                    goodScan = False
                     for angle, distQual in zip(angles, scan):
                         if len(distQual) == 2:
+                            goodScan = True
                             dist_mm, quality = distQual
                             self.update_view(angle, dist_mm, quality)
+                    if goodScan:
+                        self.scans.append(scan)
                 self.checkKeys()
             except KeyboardInterrupt:
                 break
-
+        fname = "visualizedData.npz"
+        logging.info("saving %s" % fname)
+        np.savez_compressed(fname, data=np.vstack(self.scans))
 
     def checkKeys(self):
         if scene.kb.keys:  # event waiting to be processed?
