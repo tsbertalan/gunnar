@@ -10,21 +10,37 @@ from collections import deque
 from dill import loads, dumps
 import numpy as np
 
+
 Instance = type(object())
 
 
 class Handler(object):
+    pass
+
+
+class QueueHandler(Handler):
     def __init__(self):
         self.data = deque()
 
-    def enque(self, item):
-        logging.info("Enque'd %s." % typeData(item))
+    def enquque(self, item):
+        logging.info("Enququed %s." % typeData(item))
         self.data.append(item)
 
-    def work(self):
+    def dequque(self):
         if len(self.data) > 0:
             item = self.data.popleft()
-            logging.info("De-que'd %s." % typeData(item))
+            logging.info("Deququed %s. %d left." % (typeData(item), len(self.data)))
+            return item
+        return False
+
+class DummyHandler(Handler):
+
+    def enquque(self, item):
+        pass
+
+    def dequque(self):
+        pass
+
 
 
 def typeData(data):
@@ -33,8 +49,6 @@ def typeData(data):
     else:
         dataStr = str(data).strip()
     return "%s: '%s'" % (type(data), dataStr)
-
-
 
 
 class Server(object):
@@ -46,7 +60,10 @@ class Server(object):
         else:
             logging.error("Socket %s not in socket list." % sock)
 
-    def __init__(self, HOST='', PORT=9009):
+    def __init__(self, handler=None, HOST='', PORT=9009):
+        if handler is None:
+            handler = DummyHandler()
+        self.handler = handler
         self.SOCKET_LIST = []
         self.RECV_BUFFER = 2 ** 16
 
@@ -61,12 +78,9 @@ class Server(object):
 
         logging.info("Server started on port %s." % PORT)
 
-        self.handler = Handler()
 
     def serve(self):
         while True:
-            self.handler.work()
-
             # get the list sockets which are ready to be read through select
             # 4th arg, time_out  = 0 : poll and never block
             ready_to_read, unused_ready_to_write, unused_in_error = select.select(self.SOCKET_LIST, [], [], 0)
@@ -90,10 +104,9 @@ class Server(object):
                         if success:
                             # there is something in the socket
                             if isinstance(data, np.ndarray):
-                                self.handler.enque(data)
-                        else:
-                            # remove the socket that's broken
-                            logging.warn("False data: %s." % typeData(data))
+                                self.handler.enquque(data)
+#                         else:
+#                             logging.warn("False data: %s." % typeData(data))
 
                     except Exception:
                         logging.error(traceback.format_exc())
