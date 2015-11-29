@@ -29,39 +29,23 @@ def typeData(data):
         dataStr = str(data).strip()
     return "%s: '%s'" % (type(data), dataStr)
 
-def recv(sock, length=4096, unpickle=True):
+def recv(sock, length=2**13, unpickle=True):
     data = sock.recv(length)
-    if isinstance(data, bool) and not data:
+    try:
+        data = loads(data)
+    except (KeyError, IndexError) as e:
+        import warnings
+        warnings.warn(str(e))
         return False, None
-    if unpickle:
-        try:
-            data = loads(data)
-        except (KeyError, IndexError) as e:
-            import warnings
-            warnings.warn(str(e))
-            return False, None
     sys.stdout.flush()
-    msg = ">>>>"
-    msg += "\n    RECV():"
-    msg += "\n    Got data: %s" % typeData(data)
-    if isinstance(data, Instance) and not (
-        isinstance(data, str) or isinstance(data, np.ndarray)
-        ):
-        msg += "\n    object fields:"
-        for key in dir(data):
-            val = getattr(data, key)
-            msg += "\n        \"%s\":: %s" % (key, typeData(val))
-    if hasattr(data, "doubleTime"):
-        msg += "\ndata times:", data.time, data.doubleTime()
-    msg += "\n<<<<"
-    logging.info(msg)
+    logging.info("Got data: %s" % typeData(data))
     sys.stdout.flush()
     return True, data
 
 
 SOCKET_LIST = []
 def server(HOST='', PORT=9009):
-    RECV_BUFFER = 1024*10
+    RECV_BUFFER = 2**16
     def removeSocket(sock):
         if sock in SOCKET_LIST:
             logging.info("Removing socket %s." % sock)
