@@ -87,8 +87,6 @@ def server(HOST='', PORT=9009):
                     SOCKET_LIST.append(sockfd)
                     logging.info("Client (%s, %s) connected" % addr)
 
-                    broadcast(server_socket, sockfd, "[%s:%s] entered the server." % addr)
-
             # a message from a client, not a new connection
             else:
                 # process data recieved from client,
@@ -102,39 +100,12 @@ def server(HOST='', PORT=9009):
                     else:
                         # remove the socket that's broken
                         logging.warn("False data: %s" % typeData(data))
-#                         removeSocket(sock)
 
-#                         # at this stage, no data means probably the connection has been broken
-#                         logging.warn("Client (%s, %s) is offline" % addr)
-
-                # exception
-                except EOFError:
-                    logging.warn(traceback.format_exc())
-                    logging.warn("Lost connection (client killed?).")
-                    removeSocket(sock)
-                    continue
                 except Exception:
                     logging.error(traceback.format_exc())
                     continue
 
     server_socket.close()
-
-# broadcast messages to all connected clients
-def broadcast (server_socket, sock, message, pickle=True):
-    logging.info("sending data %s" % typeData(message))
-    if pickle:
-        message = dumps(message)
-    for socket in SOCKET_LIST:
-        # send the message only to peer
-        if socket != server_socket and socket != sock :
-            try :
-                socket.send(message)
-            except :
-                # broken socket connection
-                socket.close()
-                # broken socket, remove it
-                if socket in SOCKET_LIST:
-                    SOCKET_LIST.remove(socket)
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
