@@ -5,12 +5,13 @@ import socket
 import select
 import traceback
 import logging
+from collections import deque
 
 from dill import loads, dumps
+import numpy as np
+
 Instance = type(object())
 
-from collections import deque
-import numpy as np
 
 class Handler(object):
     def __init__(self):
@@ -22,12 +23,14 @@ class Handler(object):
             item = self.data.popleft()
             logging.info("De-que'd %s" % typeData(item))
 
+
 def typeData(data):
     if isinstance(data, np.ndarray):
         dataStr = str(data.shape)
     else:
         dataStr = str(data).strip()
     return "%s: '%s'" % (type(data), dataStr)
+
 
 def recv(sock, length=2**13, unpickle=True):
     data = sock.recv(length)

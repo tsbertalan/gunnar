@@ -5,11 +5,14 @@ import socket
 from time import sleep
 import select
 from time import time
-from dill import dumps, loads
-from server import recv
-import numpy as np
 from collections import deque
 import traceback
+
+from dill import dumps, loads
+import numpy as np
+
+from server import recv
+
 
 class Client(object):
     def __init__(self, host, port, timeout=2):
@@ -60,10 +63,12 @@ class Client(object):
                     self.messages.appendleft(Message(self.s.addr, data))
         return data
 
+
 class Message(object):
     def __init__(source, content):
         self.source = source
         self.content = content
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
