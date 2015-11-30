@@ -1,6 +1,7 @@
 # Log data from Neato LIDAR via socket server
 
 from threading import Thread, Event
+from sys import stdout
 import logging
 from time import time, sleep
 
@@ -49,6 +50,8 @@ class PyTableSavingHandler(Handler):
         self.fname = fname
         self.file = tables.open_file(fname, mode='w', title='lidar data file')
 
+        self.nsaved = 0
+
         # Define the data shape.
         atom = tables.UInt32Atom()
         # Make the enlargable array.
@@ -61,6 +64,9 @@ class PyTableSavingHandler(Handler):
             and len(data.shape) == 2
             and data.shape[1] == 2
             ):
+            self.nsaved += 1
+            print '\r%09d scans saved.' % self.nsaved,
+            stdout.flush()
             self.array_c.append([data])
             t = time()
             #logging.info('Saving data of shape %s at t=%s.' % (data.shape, t))
