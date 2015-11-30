@@ -82,7 +82,7 @@ class Server(object):
         if self.lastMessage is None:
             haveMessages = self.doWeHaveMessages()
             niter = 0
-            maxiter = 100
+            maxiter = 1000
             while not haveMessages:  # Block until we have messages.
                 if niter > maxiter:
                     # If we wait too long, put a dummy message on the deque.
