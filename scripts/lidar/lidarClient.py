@@ -46,8 +46,6 @@ Takes the angle (an int, from 0 to 359) and the list of four bytes of data in th
     dist_mm = x | ((x1 & 0x3f) << 8)  # distance is coded on 13 bits ? 14 bits ?
     quality = x2 | (x3 << 8)  # quality is on 16 bits
     lidarData[angle] = [dist_mm, quality]
-    dist_x = dist_mm * c
-    dist_y = dist_mm * s
 
 
 def checksum(data):

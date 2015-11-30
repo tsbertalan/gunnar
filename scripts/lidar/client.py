@@ -35,12 +35,11 @@ class Client(object):
         self.messages = deque()
 
     def send(self, obj):
-        if isinstance(obj, np.ndarray):
-            data = obj.tostring()
-            self.nsent += 1
-            #print "sending message %d: object of type %s, len %d" % (self.nsent, type(obj), len(data))
-            print len(data)
-            self.s.send(data)
+        data = str(obj)
+        self.nsent += 1
+        print "sending message %d: object of type %s, len %d" % (self.nsent, type(obj), len(data))
+        print len(data)
+        self.s.send(data)
 
 
 class Message(object):

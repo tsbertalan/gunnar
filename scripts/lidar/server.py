@@ -6,6 +6,8 @@ import select
 import traceback
 import logging
 from collections import deque
+from array import array
+from time import sleep
 
 from dill import loads, dumps
 import numpy as np
@@ -14,38 +16,16 @@ import numpy as np
 Instance = type(object())
 
 
-class Handler(object):
-    pass
+class StreamHandler(object):
 
-
-class QueueHandler(Handler):
-    def __init__(self):
-        self.data = deque()
-
-    def enquque(self, item):
-        logging.info("Enququed %s." % typeData(item))
-        self.data.append(item)
-
-    def dequque(self):
-        if len(self.data) > 0:
-            item = self.data.popleft()
-            logging.info("Deququed %s. %d left." % (typeData(item), len(self.data)))
-            return item
-        return False
-
-class DummyHandler(Handler):
-
-    def enquque(self, item):
+    def __init__(self, generator=None):
         pass
-
-    def dequque(self):
-        pass
-
-
 
 def typeData(data):
     if isinstance(data, np.ndarray):
         dataStr = str(data.shape)
+    elif isinstance(data, str):
+        dataStr = "length %d" % len(data)
     else:
         dataStr = str(data).strip()
     return "%s: '%s'" % (type(data), dataStr)
@@ -60,18 +40,18 @@ class Server(object):
         else:
             logging.error("Socket %s not in socket list." % sock)
 
-    def __init__(self, handler=None, HOST='', PORT=9009, exitTimeCallback=None):
-        if handler is None:
-            handler = DummyHandler()
+    def __init__(self, HOST='', PORT=9009, exitTimeCallback=None):
 
         if exitTimeCallback is None:
             self.exitTimeCallback = lambda : False
         else:
             self.exitTimeCallback = exitTimeCallback
 
-        self.handler = handler
         self.SOCKET_LIST = []
         self.RECV_BUFFER = 2 ** 20
+
+        self.messages = deque()
+        self.lastMessage = None
 
         server_socket = self.server_socket = socket.socket(socket.AF_INET,
                                                            socket.SOCK_STREAM)
@@ -84,9 +64,57 @@ class Server(object):
 
         logging.info("Server started on port %s." % PORT)
 
+    def getChar(self, nchars=1):
+        logging.debug("Getting %d char(s)." % nchars)
+        if nchars == 1:
+            return self.getOneChar()
+        else:
+            chars = array('c', ['a']*nchars)
+            for i in range(nchars):
+                chars[i] = self.getOneChar()
+            return chars
+
+    def doWeHaveMessages(self):
+        return len(self.messages) > 0
+
+    def getOneChar(self):
+        logging.debug("    Getting one char.")
+        if self.lastMessage is None:
+            haveMessages = self.doWeHaveMessages()
+            niter = 0
+            maxiter = 100
+            while not haveMessages:  # Block until we have messages.
+                if niter > maxiter:
+                    # If we wait too long, put a dummy message on the deque.
+                    self.messages.append([None])
+                    break
+                else:
+                    niter += 1
+                haveMessages = self.doWeHaveMessages()
+                logging.debug("Blocking (iter %d) until messages are available." % niter)
+                if self.getNumClients() > 0:
+                    sleep(.01)
+                else:
+                    sleep(10)
+            self.lastMessage = deque(self.messages.popleft())
+
+        if len(self.lastMessage) == 0:
+            self.lastMessage = None
+            charGot = self.getOneChar()  # This shouldn't recurse more than once.
+            logging.debug("    `->Returning char %s via a recursion." % hex(ord(charGot)))
+            return charGot
+        else:
+            charGot = self.lastMessage.popleft()
+            logging.debug("    `->Returning char %s." % hex(ord(charGot)))
+            return charGot
+
+
+    def getNumClients(self):
+        return len(self.SOCKET_LIST) - 1
 
     def serve(self):
         while True:
+            sleep(.00001)
             if self.exitTimeCallback():
                 break
             # get the list sockets which are ready to be read through select
@@ -112,8 +140,7 @@ class Server(object):
                             success, data = self.recv(sock, self.RECV_BUFFER)
                             if success:
                                 # there is something in the socket
-                                if isinstance(data, np.ndarray):
-                                    self.handler.enquque(data)
+                                self.messages.append(data)
 #                             else:
 #                                 logging.warn("False data: %s." % typeData(data))
                         except EOFError:
@@ -127,7 +154,7 @@ class Server(object):
     def recv(self, sock, length=2 ** 13, unpickle=True):
         data = sock.recv(length)
         try:
-            data = np.fromstring(data, dtype=np.int32)
+            data = str(data)
         except (IndexError,) as e:
             import warnings
             warnings.warn(str(e))
