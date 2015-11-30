@@ -28,7 +28,7 @@ tdata, rdata = np.linspace(0, np.pi*2, 360), [0]*360
 saveVideo = False
 reDraw = saveVideo
 if not reDraw:
-    line, = ax.plot(tdata, rdata, 'ko-', ms=4,
+    line, = ax.plot(tdata, rdata, 'ko', ms=4,
     #                 lw=0,
                     c='k',
                     )
