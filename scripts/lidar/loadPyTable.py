@@ -24,16 +24,15 @@ import matplotlib.animation as animation
 fig, ax = plt.subplots(subplot_kw={'polar': True}, figsize=(16,9))
 tdata, rdata = np.linspace(0, np.pi*2, 360), [0]*360
 
-line, = ax.plot(tdata, rdata, 'ko-', ms=4,
-#                 lw=0,
-                c='k',
-                )
 
+saveVideo = False
+reDraw = saveVideo
+if not reDraw:
+    line, = ax.plot(tdata, rdata, 'ko-', ms=4,
+    #                 lw=0,
+                    c='k',
+                    )
 
-# FFMpegWriter = manimation.writers['ffmpeg']
-# metadata = dict(title='Movie Test', artist='Matplotlib',
-#         comment='Movie support!')
-# writer = FFMpegWriter(fps=15, metadata=metadata)
 
 def run(row):
     ax.cla()
@@ -42,20 +41,23 @@ def run(row):
     quality  = row[:, 1]
     ax.set_rlim([0, data[:, :, 0].max()])
 
-    if True:
+    if False:
         ok = quality > 1
         quality = quality[ok]
         distance = distance[ok]
         thetas = thetas[ok]
 
-    line.set_data(thetas, distance)
-    return line,
-#     return ax.scatter(thetas, distance, s=10, c=quality, lw=0),
+    if reDraw:
+        return ax.scatter(thetas, distance, s=10, c=quality, lw=0),
+    else:
+        line.set_data(thetas, distance)
+        return line,
 
 def data_gen():
     for i in range(data.shape[0]):
         yield data[i]
-if True:
+
+if not saveVideo:
     ani = animation.FuncAnimation(fig, run, data_gen, blit=True, interval=200, repeat=True)
     plt.show()
 else:
