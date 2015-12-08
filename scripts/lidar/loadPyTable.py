@@ -25,7 +25,7 @@ fig, ax = plt.subplots(subplot_kw={'polar': True}, figsize=(16,9))
 tdata, rdata = np.linspace(0, np.pi*2, 360), [0]*360
 
 
-saveVideo = False
+saveVideo = True
 reDraw = saveVideo
 if not reDraw:
     line, = ax.plot(tdata, rdata, 'ko', ms=4,
@@ -33,7 +33,7 @@ if not reDraw:
                     c='k',
                     )
 
-
+didColorbar = [False]
 def run(row):
     ax.cla()
     distance = row[:, 0]
@@ -48,7 +48,12 @@ def run(row):
         thetas = thetas[ok]
 
     if reDraw:
-        return ax.scatter(thetas, distance, s=10, c=quality, lw=0),
+        out, = ax.scatter(thetas, distance, s=10, c=quality, lw=0),
+        if not didColorbar[0]:
+            fig.colorbar(out, label="quality")
+            didColorbar[0] = True
+#         plt.show()
+        return out
     else:
         line.set_data(thetas, distance)
         return line,
@@ -67,7 +72,7 @@ else:
     writer = FFMpegWriter(fps=15, metadata=metadata)
 
     dpi = 300
-    movieFname = fname+"-color-c.mp4"
+    movieFname = fname+"-color-d.mp4"
     with writer.saving(fig, movieFname, dpi):
         from progressbar import ProgressBar, Bar, ETA
         bar = ProgressBar(widgets=["Making %s. " % movieFname, ETA(), Bar()])
