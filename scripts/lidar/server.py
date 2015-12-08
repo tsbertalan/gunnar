@@ -9,7 +9,6 @@ from collections import deque
 from array import array
 from time import sleep
 
-from dill import loads, dumps
 import numpy as np
 
 
@@ -108,7 +107,6 @@ class Server(object):
             logging.debug("    `->Returning char %s." % hex(ord(charGot)))
             return charGot
 
-
     def getNumClients(self):
         return len(self.SOCKET_LIST) - 1
 
@@ -149,7 +147,6 @@ class Server(object):
                     except Exception:
                         logging.error(traceback.format_exc())
                         continue
-
 
     def recv(self, sock, length=2 ** 13, unpickle=True):
         data = sock.recv(length)
