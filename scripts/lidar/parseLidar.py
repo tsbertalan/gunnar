@@ -6,6 +6,7 @@ Created on Nov 29, 2015
 
 import time, math, logging
 from collections import deque
+from time import sleep
 
 import numpy as np
 
@@ -50,6 +51,13 @@ class LidarParser:
         return len(self.dataArrs)
 
     def pop(self):
+        maxIter = 100
+        for iter in range(maxIter):
+            if len(self.dataArrs) > 0:
+                break
+            else:
+                logging.debug("Parser has no data yet (attempt %d of %d)" % (iter, maxIter))
+                sleep(1)  # Block this thread until we have data.
         return self.dataArrs.popleft()
 
     def savePacketQuarter(self, angle, data):
