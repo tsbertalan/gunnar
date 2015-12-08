@@ -1,7 +1,7 @@
 #ifndef PINDEFS_H
 #define PINDEFS_H
 
-const int BAUDRATE = 9600;
+const int BAUDRATE = 19200;
 
 const uint8_t PIN_ACTIVITYSWITCH = 6;
 const uint8_t SONARPIN = 8;
@@ -58,7 +58,7 @@ const int sonarPeriod = 32; // ms
 #define NUMHEADINGHISTS 25
 const int PIDperiod = 100; // ms
 const int ahrsPeriod = 4; // ms, =PIDperiod/NUMHEADINGHISTS
-const int sendDataPeriod = 1000;  // ms
+const int sendDataPeriod = 100;  // ms
 const int checkSerialForCommandsPeriod = 10;  // ms
 
 const double EUCCONTROLERRORTHRESH = 64.0; // Euclidean distance threshold for stopping PID.

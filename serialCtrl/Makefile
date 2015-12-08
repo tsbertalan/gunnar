@@ -31,7 +31,7 @@ BOARD_TAG         = mega2560
 
 ### MONITOR_BAUDRATE
 ### It must be set to Serial baudrate value you are using.
-MONITOR_BAUDRATE  = 9600
+MONITOR_BAUDRATE  = 19200
 
 ### AVR_TOOLS_DIR
 ### Path to the AVR tools directory such as avr-gcc, avr-g++, etc.
