@@ -277,9 +277,12 @@ public:
     }
 
     void sendData() {
-        if (keyboardControl) {
-            controlledMotors.printCtrlStatus();
-        } else {
+//        if (keyboardControl) {
+//            controlledMotors.printCtrlStatus();
+//        } else {
+            Serial.print("ZZ");  // Print something distinctive to start the data line.
+            Serial.print("#"); Serial.print(millis());
+
             Serial.print("#"); Serial.print(sensors.getSonarDist());
             
             Serial.print("#"); Serial.print(sensors.ahrs.getHeading());
@@ -306,7 +309,7 @@ public:
             Serial.print("#"); Serial.print(controlledMotors.isTurning());
             
             Serial.println("");
-        }
+//        }
     }
     
     void saySpeeds() {
