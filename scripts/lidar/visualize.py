@@ -4,16 +4,23 @@
 
 from threading import Thread  # TODO: Use processes to make the GUI more fluid.
 import logging
+from time import sleep
+import math
 
 import numpy as np
-from visual import *
+from visual import points, curve, label, vector, ring, scene, cos, pi, sin, color
 
-from server import Server, QueueHandler
+from server import Server
+from parseLidar import LidarParser
+from collections import deque
+from rawStringsLoggingServer import Watcher
+
 
 
 class Visualizer:
 
-    def __init__(self, handler):
+    def __init__(self, parser):
+        self.parser = parser
         self.lidarData = [[] for i in range(360)]  # A list of 360 elements Angle, Distance , quality
         offset = self.offset = 140
         init_level = 0
@@ -71,12 +78,11 @@ class Visualizer:
         if self.use_lines : self.lines[angle].pos[1] = (dist_x, 0, dist_y)
         if self.use_outer_line : self.outer_line.pos[angle] = (dist_x, 0, dist_y)
 
-
     def read_Lidar(self):
         angles = range(360)
         while True:
             try:
-                scan = handler.dequque()
+                scan = self.parser.pop()
                 if isinstance(scan, np.ndarray) and scan.size > 0:
                     goodScan = False
                     for angle, distQual in zip(angles, scan):
@@ -113,14 +119,17 @@ class Visualizer:
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.INFO)
 
-    handler = QueueHandler()
-    server = Server(handler)
-    visualizer = Visualizer(handler)
+    watcher = Watcher()
+    server = Server()
+    parser = LidarParser(server, exitTimeCallback=watcher.exitNowCallback)
+    visualizer = Visualizer(parser)
 
-    serverThread = Thread(target=server.serve)
-    visualizationThread = Thread(target=visualizer.read_Lidar)
-    serverThread.start()
-    visualizationThread.start()
+    threads = []
+    for target in server.serve, parser.parse, visualizer.read_Lidar:
+        threads.append(Thread(target=target))
+        threads[-1].start()
+        sleep(.1)
 
+    watcher.watch()
