@@ -22,14 +22,6 @@ enum
   kStatus              , // Command to report status
 };
 
-// Callbacks define on which received commands we take action
-void attachCommandCallbacks()
-{
-  // Attach callback methods
-  cmdMessenger.attach(OnUnknownCommand);
-  cmdMessenger.attach(kSetLed, OnSetLed);
-}
-
 // Called when a received command has no attached function
 void OnUnknownCommand()
 {
@@ -45,6 +37,14 @@ void OnSetLed()
   digitalWrite(kBlinkLed, ledState?HIGH:LOW);
   // Send back status that describes the led state
   cmdMessenger.sendCmd(kStatus,(int)ledState);
+}
+
+// Callbacks define on which received commands we take action
+void attachCommandCallbacks()
+{
+  // Attach callback methods
+  cmdMessenger.attach(OnUnknownCommand);
+  cmdMessenger.attach(kSetLed, OnSetLed);
 }
 
 // Setup function

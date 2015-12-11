@@ -35,12 +35,6 @@ enum
   kSetLed, // Command to request led to be set in specific state
 };
 
-// Callbacks define on which received commands we take action 
-void attachCommandCallbacks()
-{
-  cmdMessenger.attach(kSetLed, OnSetLed);
-}
-
 // Callback function that sets led on or off
 void OnSetLed()
 {
@@ -48,6 +42,12 @@ void OnSetLed()
   ledState = cmdMessenger.readBoolArg();
   // Set led
   digitalWrite(kBlinkLed, ledState?HIGH:LOW);
+}
+
+// Callbacks define on which received commands we take action 
+void attachCommandCallbacks()
+{
+  cmdMessenger.attach(kSetLed, OnSetLed);
 }
 
 // Setup function

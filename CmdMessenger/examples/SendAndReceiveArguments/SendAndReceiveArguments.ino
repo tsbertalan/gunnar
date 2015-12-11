@@ -29,16 +29,6 @@ enum
   kFloatAdditionResult , // Command to report addition result
 };
 
-// Commands we send from the PC and want to receive on the Arduino.
-// We must define a callback function in our Arduino program for each entry in the list below.
-
-void attachCommandCallbacks()
-{
-  // Attach callback methods
-  cmdMessenger.attach(OnUnknownCommand);
-  cmdMessenger.attach(kFloatAddition, OnFloatAddition);
-}
-
 // ------------------  C A L L B A C K S -----------------------
 
 // Called when a received command has no attached function
@@ -68,6 +58,16 @@ void OnFloatAddition()
   cmdMessenger.sendCmdArg(a+b);
   cmdMessenger.sendCmdArg(a-b);
   cmdMessenger.sendCmdEnd();
+}
+
+// Commands we send from the PC and want to receive on the Arduino.
+// We must define a callback function in our Arduino program for each entry in the list below.
+
+void attachCommandCallbacks()
+{
+  // Attach callback methods
+  cmdMessenger.attach(OnUnknownCommand);
+  cmdMessenger.attach(kFloatAddition, OnFloatAddition);
 }
 
 // ------------------ M A I N  ----------------------
@@ -100,6 +100,13 @@ bool hasExpired(unsigned long &prevTime, unsigned long interval) {
     return false;
 }
 
+// Toggle led state 
+void toggleLed()
+{  
+  ledState = !ledState;
+  digitalWrite(kBlinkLed, ledState?HIGH:LOW);
+}  
+
 // Loop function
 void loop() 
 {
@@ -114,9 +121,3 @@ void loop()
   } 
 }
 
-// Toggle led state 
-void toggleLed()
-{  
-  ledState = !ledState;
-  digitalWrite(kBlinkLed, ledState?HIGH:LOW);
-}  
