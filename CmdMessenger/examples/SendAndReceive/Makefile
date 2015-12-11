@@ -8,13 +8,13 @@
 ### This is the path to where you have created/cloned your project
 PROJECT_DIR       = /home/tsbertalan/sketchbook/gunnar
 
-AVRDUDE_CONF = $(PROJECT_DIR)/avrdude.conf
+AVRDUDE_CONF = $(PROJECT_DIR)/avr/avrdude.conf
 AVRDUDE  = /usr/bin/avrdude
 
 ### ARDMK_DIR
 
 ### Path to the Arduino-Makefile directory.
-ARDMK_DIR         = $(PROJECT_DIR)/Arduino-Makefile
+ARDMK_DIR         = $(PROJECT_DIR)/avr/Arduino-Makefile
 
 ### ARDUINO_DIR
 ### Path to the Arduino application and resources directory.
