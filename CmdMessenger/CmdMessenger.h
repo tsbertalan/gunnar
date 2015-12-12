@@ -47,7 +47,7 @@ public:
     void execute() {
         (_object->*_action)();
     }
-    
+
     bool isNull() {
         return _nullity;
     }
@@ -81,7 +81,7 @@ public:
     void init(Stream & comms, const char fld_separator=',',
               const char cmd_separator=';',
               const char esc_character='/');
-    
+
 private:
     // **** Private variables ***
     bool    startCommand;            // Indicates if sending of a command is underway

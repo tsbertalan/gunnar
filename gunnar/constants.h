@@ -28,7 +28,7 @@ const int turnThresh = 120;
 
 const uint8_t MAXPWMSPEED = 180;  // Depends on battery voltage, really.
 const long SPEEDSCALE = 1024000L; // We need to keep the numerator and denominator similarly scaled.
-    
+
 const double KP = 2.0;
 const double KI = 1.5;
 const double KD = 0.1;

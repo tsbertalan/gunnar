@@ -13,54 +13,47 @@ Adafruit_9DOF                 dof   = Adafruit_9DOF();
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(30301);
 Adafruit_LSM303_Mag_Unified   mag   = Adafruit_LSM303_Mag_Unified(30302);
 
-class AHRS
-{
+class AHRS {
 public:
-    
+
     sensors_event_t accel_event;
     sensors_event_t mag_event;
     sensors_vec_t   orientation;
 
-    void init()
-    {
-        if(!accel.begin())
-        {
+    void init() {
+        if(!accel.begin()) {
             /* There was a problem detecting the LSM303 ... check your connections */
             Serial.println(F("Ooops, no LSM303 detected ... Check your wiring!"));
             while(1);
         }
-        if(!mag.begin())
-        {
+        if(!mag.begin()) {
             /* There was a problem detecting the LSM303 ... check your connections */
             Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
             while(1);
         }
     }
 
-    boolean update()
-    {
+    boolean update() {
         accel.getEvent(&accel_event);
         mag.getEvent(&mag_event);
 
         /* Use the new fusionGetOrientation function to merge accel/mag data. */
         boolean output = dof.fusionGetOrientation(&accel_event, &mag_event, &orientation);
-        if(!output)
-        {
+        if(!output) {
             Serial.println("Error while performing sensor fusion.");
         }
         rotateArray(headingHistories, NUMHEADINGHISTS);
         headingHistories[NUMHEADINGHISTS-1] = orientation.heading;
         return output;
     }
-    
-    double getHeading()
-    {
+
+    double getHeading() {
         return average(headingHistories, NUMHEADINGHISTS);
     }
-   
- 
+
+
 private:
-    double headingHistories[NUMHEADINGHISTS]; 
+    double headingHistories[NUMHEADINGHISTS];
 };
 
 #endif

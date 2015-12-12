@@ -1,7 +1,7 @@
 // *** SendandReceiveArguments ***
 
-// This example expands the previous SendandReceive example. The Arduino will now receive multiple 
-// and sent multiple float values. 
+// This example expands the previous SendandReceive example. The Arduino will now receive multiple
+// and sent multiple float values.
 // It adds a demonstration of how to:
 // - Return multiple types status; It can return an Acknowlegde and Error command
 // - Receive multiple parameters,
@@ -10,7 +10,7 @@
 
 #include <CmdMessenger.h>  // CmdMessenger
 
-// Blinking led variables 
+// Blinking led variables
 unsigned long previousToggleLed = 0;   // Last time the led was toggled
 bool ledState                   = 0;   // Current state of Led
 const int kBlinkLed             = 13;  // Pin of internal Led
@@ -21,92 +21,84 @@ CmdMessenger cmdMessenger = CmdMessenger(Serial);
 // ------------------  C A L L B A C K S -----------------------
 
 // Called when a received command has no attached function
-void OnUnknownCommand()
-{
-  cmdMessenger.sendCmd(kError,"Command without attached callback");
+void OnUnknownCommand() {
+    cmdMessenger.sendCmd(kError,"Command without attached callback");
 }
 
 // Callback function that responds that Arduino is ready (has booted up)
-void OnArduinoReady()
-{
-  cmdMessenger.sendCmd(kAcknowledge,"Arduino ready");
+void OnArduinoReady() {
+    cmdMessenger.sendCmd(kAcknowledge,"Arduino ready");
 }
 
 // Callback function calculates the sum of the two received float values
-void OnFloatAddition()
-{
-  // Retreive first parameter as float
-  float a = cmdMessenger.readFloatArg();
-  
-  // Retreive second parameter as float
-  float b = cmdMessenger.readFloatArg();
-  
-  // Send back the result of the addition
-  //cmdMessenger.sendCmd(kFloatAdditionResult,a + b);
-  cmdMessenger.sendCmdStart(kFloatAdditionResult);
-  cmdMessenger.sendCmdArg(a+b);
-  cmdMessenger.sendCmdArg(a-b);
-  cmdMessenger.sendCmdEnd();
+void OnFloatAddition() {
+    // Retreive first parameter as float
+    float a = cmdMessenger.readFloatArg();
+
+    // Retreive second parameter as float
+    float b = cmdMessenger.readFloatArg();
+
+    // Send back the result of the addition
+    //cmdMessenger.sendCmd(kFloatAdditionResult,a + b);
+    cmdMessenger.sendCmdStart(kFloatAdditionResult);
+    cmdMessenger.sendCmdArg(a+b);
+    cmdMessenger.sendCmdArg(a-b);
+    cmdMessenger.sendCmdEnd();
 }
 
 // Commands we send from the PC and want to receive on the Arduino.
 // We must define a callback function in our Arduino program for each entry in the list below.
 
-void attachCommandCallbacks()
-{
-  // Attach callback methods
-  cmdMessenger.attach(OnUnknownCommand);
-  cmdMessenger.attach(kFloatAddition, OnFloatAddition);
+void attachCommandCallbacks() {
+    // Attach callback methods
+    cmdMessenger.attach(OnUnknownCommand);
+    cmdMessenger.attach(kFloatAddition, OnFloatAddition);
 }
 
 // ------------------ M A I N  ----------------------
 
 // Setup function
-void setup() 
-{
-  // Listen on serial connection for messages from the pc
-  Serial.begin(115200); 
+void setup() {
+    // Listen on serial connection for messages from the pc
+    Serial.begin(115200);
 
-  // Adds newline to every command
-  cmdMessenger.printLfCr();   
+    // Adds newline to every command
+    cmdMessenger.printLfCr();
 
-  // Attach my application's user-defined callback methods
-  attachCommandCallbacks();
+    // Attach my application's user-defined callback methods
+    attachCommandCallbacks();
 
-  // Send the status to the PC that says the Arduino has booted
-  cmdMessenger.sendCmd(kAcknowledge,"Arduino has started!");
+    // Send the status to the PC that says the Arduino has booted
+    cmdMessenger.sendCmd(kAcknowledge,"Arduino has started!");
 
-  // set pin for blink LED
-  pinMode(kBlinkLed, OUTPUT);
+    // set pin for blink LED
+    pinMode(kBlinkLed, OUTPUT);
 }
 
 // Returns if it has been more than interval (in ms) ago. Used for periodic actions
 bool hasExpired(unsigned long &prevTime, unsigned long interval) {
-  if (  millis() - prevTime > interval ) {
-    prevTime = millis();
-    return true;
-  } else     
-    return false;
+    if (  millis() - prevTime > interval ) {
+        prevTime = millis();
+        return true;
+    } else
+        return false;
 }
 
-// Toggle led state 
-void toggleLed()
-{  
-  ledState = !ledState;
-  digitalWrite(kBlinkLed, ledState?HIGH:LOW);
-}  
+// Toggle led state
+void toggleLed() {
+    ledState = !ledState;
+    digitalWrite(kBlinkLed, ledState?HIGH:LOW);
+}
 
 // Loop function
-void loop() 
-{
-  // Process incoming serial data, and perform callbacks
-  cmdMessenger.feedinSerialData();
+void loop() {
+    // Process incoming serial data, and perform callbacks
+    cmdMessenger.feedinSerialData();
 
-  // Toggle LED periodically. If the LED does not toggle every 2000 ms, 
-  // this means that cmdMessenger are taking a longer time than this  
-  if (hasExpired(previousToggleLed,2000)) // Toggle every 2 secs
-  {
-    toggleLed();  
-  } 
+    // Toggle LED periodically. If the LED does not toggle every 2000 ms,
+    // this means that cmdMessenger are taking a longer time than this
+    if (hasExpired(previousToggleLed,2000)) { // Toggle every 2 secs
+        toggleLed();
+    }
 }
 

@@ -11,23 +11,20 @@
 Gunnar gunnar;
 // Interrupt Service Routines
 
-void doEncoder0()
-{
+void doEncoder0() {
     gunnar.encoder0.update();
 }
 
-void doEncoder1()
-{
+void doEncoder1() {
     gunnar.encoder1.update();
 }
 
-void setup()
-{  
+void setup() {
     Serial.begin(BAUDRATE);
     Serial.println("setup()");
     gunnar = Gunnar();  // The constructor is implicitly called anway; this line is pointless.
     gunnar.init();
-    
+
     // Turn on pullup resistors on interrupt lines:
     pinMode(encoder0Int, INPUT_PULLUP);
     pinMode(encoder0Int, INPUT_PULLUP);
@@ -35,7 +32,6 @@ void setup()
     attachInterrupt(1, doEncoder1, CHANGE);
 }
 
-void loop()
-{
+void loop() {
 //     gunnar.loop();
 }

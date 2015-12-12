@@ -5,22 +5,21 @@
 #include <inttypes.h>
 
 #if ARDUINO >= 100
-#include <Arduino.h> 
+#include <Arduino.h>
 #else
-#include <WProgram.h> 
+#include <WProgram.h>
 #endif
 
 
-class DoEvery
-{
+class DoEvery {
 public:
-	DoEvery(long);
-	void reset();
-	bool check();
-	bool before(double);
+    DoEvery(long);
+    void reset();
+    bool check();
+    bool before(double);
 private:
-	unsigned long period;
-	unsigned long lastTime;
+    unsigned long period;
+    unsigned long lastTime;
 };
 
 #endif
