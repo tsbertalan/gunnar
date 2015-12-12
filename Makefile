@@ -8,13 +8,14 @@
 ### This is the path to where you have created/cloned your project
 PROJECT_DIR       = /home/tsbertalan/sketchbook/gunnar
 
-AVRDUDE_CONF = $(PROJECT_DIR)/avrdude.conf
+
+AVRDUDE_CONF = $(PROJECT_DIR)/avr/avrdude.conf
 AVRDUDE  = /usr/bin/avrdude
 
 
 ### ARDMK_DIR
 ### Path to the Arduino-Makefile directory.
-ARDMK_DIR         = $(PROJECT_DIR)/Arduino-Makefile
+ARDMK_DIR         = $(PROJECT_DIR)/avr/Arduino-Makefile
 
 ### ARDUINO_DIR
 ### Path to the Arduino application and resources directory.
@@ -23,7 +24,10 @@ ARDUINO_DIR       = /usr/share/arduino
 
 ### USER_LIB_PATH
 ### Path to where the your project's libraries are stored.
-USER_LIB_PATH    :=  $(PROJECT_DIR)
+USER_LIB_PATH    =  $(PROJECT_DIR)
+
+
+# ARDUINO_LIBS  = gunnar Servo Wire Adafruit_Sensor Adafruit_LSM303_U
 
 ### BOARD_TAG
 ### It must be set to the board you are currently using. (i.e uno, mega2560, etc.)
@@ -82,4 +86,3 @@ go: upload
 
 ### Do not touch - the path to Arduino.mk, inside the ARDMK_DIR
 include $(ARDMK_DIR)/Arduino.mk
-
