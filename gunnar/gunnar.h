@@ -6,75 +6,17 @@
 #include "encoders.h"
 #include "vision.h"
 
-class Gunnar;
-typedef void (Gunnar::* GunnarMemFn) ();
-
-
-class Task {
-public:
-    void init(Gunnar* that, GunnarMemFn action, int frequency, boolean initializeAsActive=true)
-    {
-        active = initializeAsActive;
-        freq = frequency;
-        _action = action;
-        _that = that;
-        lastExecution = (long) micros() / 1000L;
-        Serial.println("initializing task");
-    };
-    
-    void execute(long now) { 
-        (_that->*_action)();
-        lastExecution = now;
-    }
-    
-    long lastExecution;
-    int freq;
-    boolean active;
-    
-private:
-    Gunnar* _that;
-    GunnarMemFn _action;
-};
-
-
-class TaskDriver {
-public:
-    void init(const int ntasks, Task *taskArr[])
-    {
-        Serial.println("initializing taskDriver");   
-        _tasks = taskArr;
-        _ntasks = ntasks;
-    };
-    
-    void run(long duration=0) {
-        // Duration in microseconds. 0 means endless.
-        Serial.println("running taskDriver");
-        startTime = (long) micros();
-        
-        while(true) {
-            for(int i=0; i<_ntasks; i++) {
-                long now = (long) micros() / 1000L;  // ms
-                Task *t = _tasks[i];
-                if(t->active and (now - t->lastExecution > t->freq)) {
-                    t->execute(now);
-                }
-            }
-            
-            if((duration > 0) and ((long) micros() - startTime > duration))
-                break;
-        }
-    }
-    
-private:
-    Task** _tasks;
-    int _ntasks;
-    long startTime;
-};
-
+// For CmdMessenger:
+#include <CmdMessenger.h>
+#include <inttypes.h>
+#include <Arduino.h>
 
 // Consolidate as many globals as possible in a singleton robot.
 class Gunnar {
 public:
+    Gunnar() {
+    }
+    
     void init() {
         for(uint8_t i=0; i<3; i++)
         {
@@ -97,32 +39,30 @@ public:
         encoder1.init(encoder1PinA, encoder1PinB, NULL);
         
         controlledMotors.init(&motor1, &motor2, &encoder0, &encoder1, &sensors);
-        
-        // True black magic:
-        sonarTask.init(this, &Gunnar::checkSonar, sonarPeriod);
-        motorPIDsTask.init(this, &Gunnar::updatePIDs, PIDperiod);
-        ahrsUpdateTask.init(this, &Gunnar::updateAHRS, ahrsPeriod);
-        sendDataTask.init(this, &Gunnar::sendData, sendDataPeriod);
-        checkSerialForCommandsTask.init(this, &Gunnar::checkSerialForCommands, checkSerialForCommandsPeriod);
-                
-        tasks[0] = &sonarTask;
-        tasks[1] = &motorPIDsTask;
-        tasks[2] = &ahrsUpdateTask;
-        tasks[3] = &sendDataTask;
-        tasks[4] = &checkSerialForCommandsTask;
-        
-        taskDriver.init(ntasks, tasks);
-        
-        pinMode(PIN_ACTIVITYSWITCH, INPUT);
-        
         motor1.stop();
         motor2.stop();
+        
+        // Set up message handling.
+        // Attach to the default Serial port.
+        cmdMessenger.init(Serial);
+        
+        // Adds newline to every command
+        cmdMessenger.printLfCr();
+        
+        // Attach actual callbacks to Callback objects, and attach them to the cmdMessenger.
+        setSpeedsCallback.init(this, &Gunnar::setSpeeds);
+        handleSensorRequestCallback.init(this, &Gunnar::handleSensorRequest);
+        
+        cmdMessenger.attach(kSpeedSet, setSpeedsCallback);
+        cmdMessenger.attach(kSensorsRequest, handleSensorRequestCallback);
+        
+        pinMode(PIN_ACTIVITYSWITCH, INPUT);
 
         sensors.init();
     }
     
-    void loop() {
-        taskDriver.run();
+    void loopOnce() {
+        cmdMessenger.feedinSerialData();
     }
     
     void checkSonar() {
@@ -276,40 +216,37 @@ public:
         }
     }
 
-    void sendData() {
-//        if (keyboardControl) {
-//            controlledMotors.printCtrlStatus();
-//        } else {
-            Serial.print("ZZ");  // Print something distinctive to start the data line.
-            Serial.print("#"); Serial.print(millis());
+    // Callback for sending sensor data when requested.
+    void handleSensorRequest() {
+        cmdMessenger.sendCmdStart(kSensorsResponse);
+        cmdMessenger.sendCmdArg(millis());
+        
+        cmdMessenger.sendCmdArg(sensors.getSonarDist());
+        
+        cmdMessenger.sendCmdArg(sensors.ahrs.getHeading());
+        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.heading);
+        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.roll);
+        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.pitch);
 
-            Serial.print("#"); Serial.print(sensors.getSonarDist());
-            
-            Serial.print("#"); Serial.print(sensors.ahrs.getHeading());
-            Serial.print("#"); Serial.print(sensors.ahrs.orientation.heading);
-            Serial.print("#"); Serial.print(sensors.ahrs.orientation.roll);
-            Serial.print("#"); Serial.print(sensors.ahrs.orientation.pitch);
-            
-            Serial.print("#"); Serial.print(sensors.ahrs.orientation.x);
-            Serial.print("#"); Serial.print(sensors.ahrs.orientation.y);
-            Serial.print("#"); Serial.print(sensors.ahrs.orientation.z);
-            
-            Serial.print("#"); Serial.print(sensors.ahrs.orientation.v[0]);
-            Serial.print("#"); Serial.print(sensors.ahrs.orientation.v[1]);
-            Serial.print("#"); Serial.print(sensors.ahrs.orientation.v[2]);
-            
-            Serial.print("#"); Serial.print(encoder0.position);
-            Serial.print("#"); Serial.print(motor1.getSpeed());
-            Serial.print("#"); Serial.print(motor1.getStatus());
-            
-            Serial.print("#"); Serial.print(encoder1.position);
-            Serial.print("#"); Serial.print(motor2.getSpeed());
-            Serial.print("#"); Serial.print(motor2.getStatus());
-            
-            Serial.print("#"); Serial.print(controlledMotors.isTurning());
-            
-            Serial.println("");
-//        }
+        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.x);
+        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.y);
+        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.z);
+        
+        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.v[0]);
+        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.v[1]);
+        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.v[2]);
+        
+        cmdMessenger.sendCmdArg(encoder0.position);
+        cmdMessenger.sendCmdArg(motor1.getSpeed());
+        cmdMessenger.sendCmdArg(motor1.getStatus());
+        
+        cmdMessenger.sendCmdArg(encoder1.position);
+        cmdMessenger.sendCmdArg(motor2.getSpeed());
+        cmdMessenger.sendCmdArg(motor2.getStatus());
+        
+        cmdMessenger.sendCmdArg(controlledMotors.isTurning());
+        
+        cmdMessenger.sendCmdEnd();
     }
     
     void saySpeeds() {
@@ -390,6 +327,23 @@ public:
         }
     }
     
+    // Callback function sets the motor speeds.
+    void setSpeeds() {
+        // Retreive first parameter as float
+        float leftSpeed = cmdMessenger.readFloatArg();
+        
+        // Retreive second parameter as float
+        float rightSpeed = cmdMessenger.readFloatArg();
+        
+        motor1.setSpeed(leftSpeed);
+        motor2.setSpeed(rightSpeed);
+    }
+    
+    // Called when a received command has no attached function
+    void unknownCommandCallback() {
+        cmdMessenger.sendCmd(kError, "Command without attached callback");
+    }
+    
     Encoder encoder0;
     Encoder encoder1;
     Sensors sensors;
@@ -397,12 +351,19 @@ public:
     Motor motor1;
     Motor motor2;
     
-    TaskDriver taskDriver;
-    Task sonarTask;
-    Task motorPIDsTask;
-    Task ahrsUpdateTask;
-    Task sendDataTask;
-    Task checkSerialForCommandsTask;
+    CmdMessenger cmdMessenger;
+    Callback setSpeedsCallback;
+    Callback handleSensorRequestCallback;
+    // This is the list of recognized commands. These can be commands that can either be sent or received.
+    // In order to receive, attach a callback function to these events
+    enum {
+        // Commands
+        kAcknowledge         , // Command to acknowledge that cmd was received
+        kError               , // Command to report errors
+        kSpeedSet            , // Command to set motor speeds
+        kSensorsRequest      , // Command to request sensor data
+        kSensorsResponse     , // Command to report sensor data
+    };
     
 private:
     bool headlightOn;
@@ -410,8 +371,6 @@ private:
     int _lastTurnTime;
 
     Motor* bothMtrs[2];
-    
-    Task* tasks[ntasks];
     
 };
 

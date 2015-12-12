@@ -6,10 +6,11 @@
 #include <Adafruit_L3GD20_U.h>
 #include <gunnar.h>
 #include "constants.h"
+#include <CmdMessenger.h>
 
 Gunnar gunnar;
-
 // Interrupt Service Routines
+
 void doEncoder0()
 {
     gunnar.encoder0.update();
@@ -36,5 +37,5 @@ void setup()
 
 void loop()
 {
-    gunnar.loop();
+//     gunnar.loop();
 }
