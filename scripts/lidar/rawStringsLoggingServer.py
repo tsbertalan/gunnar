@@ -42,7 +42,7 @@ class ReprSavingHandler(Handler):
 
 class PyTableSavingHandler(Handler):
 
-    def __init__(self, fname):
+    def __init__(self, fname, dataShape=(360, 2):
 
         # Open the table file.
         if fname[-3:] != ".h5":
@@ -55,7 +55,10 @@ class PyTableSavingHandler(Handler):
         # Define the data shape.
         atom = tables.UInt32Atom()
         # Make the enlargable array.
-        self.array_c = self.file.createEArray(self.file.root, 'scans', atom, (0, 360, 2), "Scans EArray", expectedrows=100000)
+        dataShape = list(reversed(dataShape))
+        dataShape.append(0)
+        dataShape = tuple(reversed(dataShape))
+        self.array_c = self.file.createEArray(self.file.root, 'scans', atom, dataShape, "Scans EArray", expectedrows=100000)
 
     def enquque(self, data):
         if (
@@ -64,13 +67,15 @@ class PyTableSavingHandler(Handler):
             and len(data.shape) == 2
             and data.shape[1] == 2
             ):
+            
+            # Save the data array.
+            self.array_c.append([data])
+            self.file.flush()
             self.nsaved += 1
             print '\r%09d scans saved.' % self.nsaved,
             stdout.flush()
-            self.array_c.append([data])
-            t = time()
+            #t = time()
             #logging.info('Saving data of shape %s at t=%s.' % (data.shape, t))
-            self.file.flush()
 
     # pytables handles this for us:
     #def __del__(self):
