@@ -1,3 +1,5 @@
 import testing
-testing.makeMakefiles("stop")
-testing.upload("stop")
+sk = testing.Sketch("stop")
+sk.code = "void setup() { ; }; void loop() { ; }"
+sk.makeFiles()
+sk.upload()

@@ -6,7 +6,7 @@
 
 ### PROJECT_DIR
 ### This is the path to where you have created/cloned your project
-PROJECT_DIR       = /home/tsbertalan/sketchbook/gunnar/testSketch
+PROJECT_DIR       = /home/tsbertalan/sketchbook/gunnar/stop
 
 AVRDUDE_CONF = $(PROJECT_DIR)/avr/avrdude.conf
 AVRDUDE  = /usr/bin/avrdude
@@ -24,7 +24,7 @@ ARDUINO_DIR       = /usr/share/arduino
 ### USER_LIB_PATH
 ### Path to where the your project's libraries are stored.
 # USER_LIB_PATH    :=  /home/tsbertalan/sketchbook/gunnar
-USER_LIB_PATH    :=  $(PROJECT_DIR):$(HOME)/sketchbook/libraries
+USER_LIB_PATH    :=  $(HOME)/sketchbook/gunnar/
 
 ### BOARD_TAG
 ### It must be set to the board you are currently using. (i.e uno, mega2560, etc.)

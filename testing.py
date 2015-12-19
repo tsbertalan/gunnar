@@ -14,8 +14,6 @@ def msg(text):
     print ">>>>>>>>>>>>>>>", text, "<<<<<<<<<<<<<<<<<"
 
 
-
-
 #port = "/dev/null"
 msg("port is %s" % port)
 board = "arduino:avr:mega"
@@ -51,15 +49,30 @@ def verify(sketchName):
         return  status
 
 
+def mkdir(fpath, p=False):
+    args = fpath
+    if p:
+        args += ' -p'
+    cmd = "mkdir"
+    return systemOut(cmd, args=args)
+
+
+def mkfile(fpath, content):
+    f = open(fpath, 'w')
+    f.write(content)
+    f.close()
+
+
 def upload(sketchName):
-    
+    print 'Uploading sketch "%s".' % sketchName
     cmds = []
     cmds.append("cd %s/%s/" % (here, sketchName))
     cmds.append("make")
     cmds.append("make upload")
     
-    from os import system
-    system(" && ".join(cmds))
+    fname = "/tmp/uploadSketch.sh"
+    mkfile(fname, " && ".join(cmds))
+    systemOut(["sh", fname])
     
 
 def monitor(testName):
@@ -106,23 +119,28 @@ class VerifyError(RuntimeError):
 
 
 def makeMakefiles(testName):
+    systemOut(["mkdir", "-p", "%s/%s" % (here, testName)])
+    
     template = open(here+"/Makefile.template").read()
-    template = template.format(here + "/testSketch", here)
+    template = template.format(here + "/%s"%testName, here)
     
     f = open(here + "/%s/Makefile"%testName, "w")
     f.write(template)
     f.close()
     
-    systemOut(["cp", "%s/avrdude.conf" % here, "%s/%s/" % (here, testName)])
+    systemOut(["mkdir", "-p", "%s/%s/avr" % (here, testName)])
+    systemOut(["cp", "%s/avr/avrdude.conf" % here, "%s/%s/avr/" % (here, testName)])
+    systemOut(["cp", "-r", "%s/avr/Arduino-Makefile/" % here, "%s/%s/avr/" % (here, testName)])
 
 
 class Sketch:
     '''Contains and places Arduino code for compilation and uploading.'''
     
-    def __init__(self):
+    def __init__(self, testName):
         self.instructions = None
         self.code = None
         self.madeFiles = False
+        self.testName = testName
     
     def getCode(self):
         return self.code
@@ -131,19 +149,21 @@ class Sketch:
         return self.instructions
     
     def makeFiles(self):
-        sketchDir = here+'/testSketch'
+        systemOut(["mkdir", "-p", "%s/%s" % (here, self.testName)])
+        
+        sketchDir = here+'/%s' % self.testName
         if not exists(sketchDir): makedirs(sketchDir)
-        f = open(sketchDir+'/testSketch.ino', 'w')
+        f = open(sketchDir+'/%s.ino'%self.testName, 'w')
         f.write(self.getCode())
         f.close()
         
-        makeMakefiles('testSketch')
+        makeMakefiles(self.testName)
     
     def verify(self):
-        return verify('testSketch')
+        return verify(self.testName)
             
     def upload(self):
-        return upload('testSketch')
+        return upload(self.testName)
 
     def doTest(self, doMonitor=True):
         self.makeFiles()
@@ -151,7 +171,7 @@ class Sketch:
         out = self.upload()
         if doMonitor:
             printInstructions(self.instructions)
-            monitor('testSketch')
+            monitor(self.testName)
             printInstructions(self.instructions)
             monitorPassed = yn("Did the test pass inspection?")
             if not monitorPassed:

@@ -81,7 +81,7 @@ OBJDIR            = $(PROJECT_DIR)/bin/$(BOARD_TAG)/$(CURRENT_DIR)
 
 stop: .FORCE
 	python stop.py
-	
+
 go: upload
 
 ### Do not touch - the path to Arduino.mk, inside the ARDMK_DIR
