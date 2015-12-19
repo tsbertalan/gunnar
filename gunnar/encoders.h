@@ -9,11 +9,9 @@ public:
 
     // initializer : sets pins as inputs and turns on pullup resistors
     void init(uint8_t PinA, uint8_t PinB, Motor* assocMotor) {
-        Serial.println("Initializing encoder.");
         pin_a = PinA;
         pin_b = PinB;
         motor = assocMotor;
-        Serial.println("    Motor reference set.");
 
         // set pin a and b to be input
         pinMode(pin_a, INPUT_PULLUP);
@@ -22,7 +20,6 @@ public:
 //         // and turn on pullup resistors
 //         digitalWrite(pin_a, HIGH);
 //         digitalWrite(pin_b, HIGH);
-        Serial.println("    Encoder initialized.");
     };
 
     // Call this from your interrupt function.

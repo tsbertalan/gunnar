@@ -38,7 +38,8 @@ class CmdMessenger(object):
     _max_callbacks = MAXCALLBACKS
     _timeout = DEFAULT_TIMEOUT
 
-    def __init__(self, flobject, fld_separator=",", cmd_separator=";", esc_character="/", readmeth=None):
+    def __init__(self, flobject, fld_separator=",", cmd_separator=";", esc_character="/", readmeth=None, cmdNames=None):
+        self.commandNames = cmdNames
         self._file = flobject
         self._fld_sep = fld_separator
         self._cmd_sep = cmd_separator
@@ -255,6 +256,12 @@ class CmdMessenger(object):
         as arguments to the file-like object. If the keyword argument
         flush is True (default), the file-like object will also be flushed.
         """
+        if self.commandNames is not None:
+            msgType = self.commandNames[msgid]
+        else:
+            msgType = msgid
+        print "Sending command of type %s with args and kwargs:" % msgType
+        print args, kwargs
         self._file.write(str(msgid))
         for a in args:
             self._file.write(self._fld_sep)

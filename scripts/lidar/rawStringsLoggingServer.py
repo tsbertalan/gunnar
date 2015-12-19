@@ -6,7 +6,7 @@ import logging
 from time import time, sleep
 
 import numpy as np
-import tables
+import tables  # apt-get installed version 2.3.1, which wasn't new enough. "pip install --upgrade tables" updated to 3.2.2.
 
 from server import Server
 from parseLidar import LidarParser
@@ -42,7 +42,7 @@ class ReprSavingHandler(Handler):
 
 class PyTableSavingHandler(Handler):
 
-    def __init__(self, fname, dataShape=(360, 2):
+    def __init__(self, fname, dataShape=(360, 2)):
 
         # Open the table file.
         if fname[-3:] != ".h5":

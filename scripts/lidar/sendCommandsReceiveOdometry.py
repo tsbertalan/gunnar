@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import random
 import sys
-import serialf
+import serial
 import time
 
 import numpy as np
@@ -32,17 +32,15 @@ class GunnarCommunicator(object):
         self.handler = PyTableSavingHandler(fname, dataShape=(nfields,))
         
         # Make sure this matches the baudrate on the Arduino.
-        self.baud = 115200
+        self.baud = 19200
         
         self.commands = [
-                         # Outgoing:
-                         'acknowledge',
-                         'speedSet',
-                         'sensorsRequest',
-                         
-                         # Incoming:
-                         'error',
+                         'acknowledge',    # outgoing
+                         'error',          
+                         'speedSet',       # outgoing
+                         'sensorsRequest', # outgoing
                          'sensorsResponse',
+                         'acknowledgeResponse',
                          ]
 
         try:
@@ -53,11 +51,12 @@ class GunnarCommunicator(object):
             raise SystemExit('Could not open serial port: %s' % e)
         else:
             print 'Serial port %s sucessfully opened.' % self.port_name
-            self.messenger = CmdMessenger(self.serial_port)
+            self.messenger = CmdMessenger(self.serial_port, cmdNames = self.commands)
             # attach callbacks
             self.messenger.attach(func=self.onError, msgid=self.commands.index('error'))
             self.messenger.attach(func=self.onSensorsResponse,
                                   msgid=self.commands.index('sensorsResponse'))
+            self.messenger.attach(func=self.onError, msgid=None)
 
             # send a command that the arduino will acknowledge
             self.acknowledge()
@@ -76,7 +75,7 @@ class GunnarCommunicator(object):
         """Main loop to send and receive data from the Arduino
         """
         self.running = True
-        timeout = .1
+        timeout = 4
         t0 = time.time()
         while self.running:
             if time.time() - t0 > timeout:
@@ -91,20 +90,24 @@ class GunnarCommunicator(object):
             # Check to see if any data has been received
             self.messenger.feed_in_data()
             
-    ######################i######### C O M M A N D S ###########################
+    ############################### C O M M A N D S ###########################
     def acknowledge(self, wait=True):
         self.messenger.send_cmd(self.commands.index('acknowledge'))
         if wait:
             # Wait until the arduino sends an acknowledgement back
-            self.messenger.wait_for_ack(ackid=self.commands.index('acknowledge'))
+            self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'))
 
     def sensorsRequest(self):
         self.messenger.send_cmd(self.commands.index('sensorsRequest'))
+        # This doesn't work:
+#        self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'),
+#                                    msgid=self.commands.index('sensorsResponse')
+#            )
         
     def speedSet(self, left, right):
         self.messenger.send_cmd(self.commands.index('speedSet'), left, right)
 
-    ####################### R E S P O N S E   C A L L B A C K S ################
+    ####################### R E S P O N S E   C A L L B A C K S ###############
     def onError(self, received_command, *args, **kwargs):
         """Callback function to handle errors
         """
@@ -113,7 +116,13 @@ class GunnarCommunicator(object):
     def onSensorsResponse(self, received_command, *args, **kwargs):
         """Callback to handle the float addition response
         """
-        print "Got %s, args=%s, kwargs=%s." % (received_command, args, kwargs)
+        print "Got %s." % (self.commands[received_command], )
+        #print "Got %s, args=%s, kwargs=%s." % (received_command, args, kwargs)
+        try:
+            arr = [float(x) for x in args[0]]
+            print "data:", arr
+        except Error as e:
+            print "Failed with", e
         print
         
         ## Save the data in our HDF5 file.

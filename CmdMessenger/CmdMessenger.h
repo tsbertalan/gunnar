@@ -39,7 +39,11 @@ class Gunnar;
 typedef void (Gunnar::* ObjectMemFn) (void);
 class Callback {
 public:
+    Callback() {
+        _nullity = true;
+    }
     void init(Gunnar* gunnarp, ObjectMemFn action) {
+        _nullity = false;
         _action = action;
         _object = gunnarp;
     };
@@ -53,7 +57,7 @@ public:
     }
 
 private:
-    bool _nullity = true;
+    bool _nullity;
     Gunnar* _object;
     ObjectMemFn _action;
 };

@@ -49,15 +49,19 @@ public:
         cmdMessenger.printLfCr();
 
         // Attach actual callbacks to Callback objects, and attach them to the cmdMessenger.
+        ackCallback.init(this, &Gunnar::acknowledge);
         setSpeedsCallback.init(this, &Gunnar::setSpeeds);
         handleSensorRequestCallback.init(this, &Gunnar::handleSensorRequest);
 
+        cmdMessenger.attach(kAcknowledge, ackCallback);
         cmdMessenger.attach(kSpeedSet, setSpeedsCallback);
         cmdMessenger.attach(kSensorsRequest, handleSensorRequestCallback);
 
         pinMode(PIN_ACTIVITYSWITCH, INPUT);
 
         sensors.init();
+
+        acknowledge();
     }
 
     void loopOnce() {
@@ -73,6 +77,10 @@ public:
     }
 
     // Callback for sending sensor data when requested.
+    void acknowledge() {
+        cmdMessenger.sendCmd(kAcknowledgeResponse);
+    }
+
     void handleSensorRequest() {
         updateAHRS();
         cmdMessenger.sendCmdStart(kSensorsResponse);
@@ -133,6 +141,7 @@ public:
     CmdMessenger cmdMessenger;
     Callback setSpeedsCallback;
     Callback handleSensorRequestCallback;
+    Callback ackCallback;
     // This is the list of recognized commands. These can be commands that can either be sent or received.
     // In order to receive, attach a callback function to these events
     enum {
@@ -142,6 +151,7 @@ public:
         kSpeedSet            , // Command to set motor speeds
         kSensorsRequest      , // Command to request sensor data
         kSensorsResponse     , // Command to report sensor data
+        kAcknowledgeResponse , // Command to respond to an ack request.
     };
 
 private:

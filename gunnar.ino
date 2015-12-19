@@ -21,8 +21,6 @@ void doEncoder1() {
 
 void setup() {
     Serial.begin(BAUDRATE);
-    Serial.println("setup()");
-    gunnar = Gunnar();  // The constructor is implicitly called anway; this line is pointless.
     gunnar.init();
 
     // Turn on pullup resistors on interrupt lines:
@@ -33,5 +31,5 @@ void setup() {
 }
 
 void loop() {
-//     gunnar.loop();
+    gunnar.loopOnce();
 }

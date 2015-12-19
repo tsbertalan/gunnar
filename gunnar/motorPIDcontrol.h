@@ -20,7 +20,6 @@ public:
         pinMode(encoder0PinB, INPUT);
         fakeAngleSetPoint = 0;
         sensors = sensorsp;
-        Serial.println("initializing motors");
         leftPID.init(&monitoredLeft,  &leftMotorControlledSpeed,  &leftMotorSetPoint,
                      KP, KI, KD, DIRECT);
         rightPID.init(&monitoredRight, &rightMotorControlledSpeed, &rightMotorSetPoint,
@@ -113,20 +112,12 @@ public:
             double currHeading = sensors->ahrs.getHeading();
             boolean rightTurn = angle > 0;
             _resetEncoders();
-            Serial.print("Turning ");
-            Serial.print(angle);
-            Serial.println(" degrees.");
 
             double newHeading = fmod(
                                     180.0 + currHeading + (double) angle,
                                     360.0
                                 ) - 180.0;
 
-            Serial.print("(To heading ");
-            Serial.print((int) newHeading);
-            Serial.print(" from heading ");
-            Serial.print((int) currHeading);
-            Serial.println(".)");
 
             if(rightTurn) {
                 // Right turn. Right tread should go backwards.
