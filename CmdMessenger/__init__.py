@@ -233,7 +233,10 @@ class CmdMessenger(object):
         for i in xrange(0, len(types)):
             if not types[i]:
                 continue
-            arglist[i] = types[i](arglist[i])
+            try:
+                arglist[i] = types[i](arglist[i])
+            except ValueError:
+                arglist[i] = arglist[i]  # Leave as a raw bytestring.
         return arglist
 
     def escape(self, string):
@@ -260,8 +263,9 @@ class CmdMessenger(object):
             msgType = self.commandNames[msgid]
         else:
             msgType = msgid
-        print "Sending command of type %s with args and kwargs:" % msgType
-        print args, kwargs
+        print "Sending %s command." % msgType
+        if len(args) > 0 or len(kwargs) > 0:
+            print "Data is", args, kwargs
         self._file.write(str(msgid))
         for a in args:
             self._file.write(self._fld_sep)

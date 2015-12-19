@@ -15,6 +15,7 @@ from rawStringsLoggingServer import PyTableSavingHandler
 class GunnarCommunicator(object):
 
     def __init__(self, fname="data/gunnarCommunicator.h5"):
+        self.constructionTime = time.time()
         self.running = False
         
         # Create a handler object for saving data.
@@ -75,7 +76,7 @@ class GunnarCommunicator(object):
         """Main loop to send and receive data from the Arduino
         """
         self.running = True
-        timeout = 4
+        self.timeout = timeout = .04
         t0 = time.time()
         while self.running:
             if time.time() - t0 > timeout:
@@ -99,10 +100,10 @@ class GunnarCommunicator(object):
 
     def sensorsRequest(self):
         self.messenger.send_cmd(self.commands.index('sensorsRequest'))
-        # This doesn't work:
-#        self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'),
-#                                    msgid=self.commands.index('sensorsResponse')
-#            )
+        ## This doesn't work:
+        #self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'),
+                                    #msgid=self.commands.index('sensorsResponse')
+            #)
         
     def speedSet(self, left, right):
         self.messenger.send_cmd(self.commands.index('speedSet'), left, right)
@@ -111,19 +112,26 @@ class GunnarCommunicator(object):
     def onError(self, received_command, *args, **kwargs):
         """Callback function to handle errors
         """
-        print 'Error:', args[0][0]
+        print 'Error:', args
 
+    nresp = 0.
     def onSensorsResponse(self, received_command, *args, **kwargs):
         """Callback to handle the float addition response
         """
-        print "Got %s." % (self.commands[received_command], )
-        #print "Got %s, args=%s, kwargs=%s." % (received_command, args, kwargs)
         try:
-            arr = [float(x) for x in args[0]]
-            print "data:", arr
-        except Error as e:
-            print "Failed with", e
-        print
+            from struct import unpack#, calcsize
+            types = 'LffffffLLlHH?'
+            #s = calcsize(types)
+            s = 45
+            byteString = args[0][-1]
+            if len(byteString) >= s:
+                arr = unpack(types, byteString[:s])
+                elapsed = time.time() - self.constructionTime
+                print 'Got response data. Average respone speed is %.1f Hz. (%.1f requested; %d baud).' % (self.nresp / elapsed, 1./self.timeout, self.baud)
+                self.nresp += 1
+                #print "Response data:", arr
+        except Exception as e:
+            print "Failed with %s: %s" % (type(e), e)
         
         ## Save the data in our HDF5 file.
         #data = np.empty((self.nfields,))

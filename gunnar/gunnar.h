@@ -11,6 +11,16 @@
 #include <inttypes.h>
 #include <Arduino.h>
 
+struct SensorResponse {
+    unsigned long ms;
+    float heading, roll, pitch;
+    float x, y, z;
+    unsigned long enc1pos, enc2pos;
+    signed long enc1spd, enc2spd;
+    unsigned int enc1stat, enc2stat;
+    bool isTurning;
+};
+
 // Consolidate as many globals as possible in a singleton robot.
 class Gunnar {
 public:
@@ -82,35 +92,37 @@ public:
     }
 
     void handleSensorRequest() {
+//         acknowledge();
+
         updateAHRS();
+        // one byte
         cmdMessenger.sendCmdStart(kSensorsResponse);
-        cmdMessenger.sendCmdArg(millis());
+        
+        // Assemble the response struct (45 bytes).
+        SensorResponse response;
+        response.ms = millis();
+        response.heading = sensors.ahrs.orientation.heading;
+        response.roll= sensors.ahrs.orientation.roll;
+        response.pitch = sensors.ahrs.orientation.pitch;
+        
+        response.x = sensors.ahrs.orientation.x;
+        response.y= sensors.ahrs.orientation.y;
+        response.z = sensors.ahrs.orientation.z;
+        
+        response.enc1pos = encoder0.position;
+        response.enc2pos = encoder1.position;
+        
+        response.enc1spd = motor1.getSpeedSigned();
+        response.enc2spd = motor2.getSpeedSigned();
+        
+        response.enc1stat = motor1.getStatus();
+        response.enc2stat = motor2.getStatus();
+        
+        response.isTurning = controlledMotors.isTurning();
+        
+        cmdMessenger.sendCmdBinArg<SensorResponse>(response);
 
-        cmdMessenger.sendCmdArg(sensors.getSonarDist());
-
-        cmdMessenger.sendCmdArg(sensors.ahrs.getHeading());
-        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.heading);
-        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.roll);
-        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.pitch);
-
-        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.x);
-        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.y);
-        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.z);
-
-        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.v[0]);
-        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.v[1]);
-        cmdMessenger.sendCmdArg(sensors.ahrs.orientation.v[2]);
-
-        cmdMessenger.sendCmdArg(encoder0.position);
-        cmdMessenger.sendCmdArg(motor1.getSpeed());
-        cmdMessenger.sendCmdArg(motor1.getStatus());
-
-        cmdMessenger.sendCmdArg(encoder1.position);
-        cmdMessenger.sendCmdArg(motor2.getSpeed());
-        cmdMessenger.sendCmdArg(motor2.getStatus());
-
-        cmdMessenger.sendCmdArg(controlledMotors.isTurning());
-
+        // Send the closing byte.
         cmdMessenger.sendCmdEnd();
     }
 

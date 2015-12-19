@@ -130,9 +130,8 @@ private:
     template < class T >
     void writeBin(const T & value) {
         const byte *bytePointer = (const byte *)(const void *)&value;
-        for (unsigned int i = 0; i < sizeof(value); i++) {
-            printEsc(*bytePointer);
-            bytePointer++;
+        for (unsigned int i = 0; i < sizeof(T); i++) {
+            comms->write(*bytePointer++);
         }
     }
 
