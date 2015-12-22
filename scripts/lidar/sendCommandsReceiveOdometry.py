@@ -21,10 +21,9 @@ class GunnarCommunicator(object):
         # Create a handler object for saving data.
         nfields = (
               1  # time (milliseconds)
-            + 1  # sonar
-            + 4  # heading and euler angles (redundant)
+            #+ 1  # sonar
+            + 3  # orientation heading, roll, pitch
             + 3  # orientation x,y,z
-            + 3  # velocity vx,vy,vz
             + 3  # motor 1 ticks, speed, and status
             + 3  # motor 2 ticks, speed, and status
             + 1  # whether motor PID controller is in turning mode (obsolete)
@@ -71,9 +70,11 @@ class GunnarCommunicator(object):
     def statusMessage(self, args):
         if isinstance(args, tuple):
             self._statusMessage = ' '.join(['%s' % (s,) for s in args])
-            for i in range(1, len(self.statusHistory)):  # Keep a scrolling history of status messages.
-                self.statusHistory[i-1] = self.statusHistory[i]
-            self.statusHistory[i] = self._statusMessage
+            lines = self._statusMessage.split('\n')
+            for newLine in lines:
+                for i in range(1, len(self.statusHistory)):  # Keep a scrolling history of status messages.
+                    self.statusHistory[i-1] = self.statusHistory[i]
+                self.statusHistory[i] = newLine
         else:
             self.statusMessage = (args,)
 
@@ -120,9 +121,9 @@ class GunnarCommunicator(object):
         """
         try:
             from struct import unpack#, calcsize
-            types = 'LffffffLLlHH?'
+            types = 'LffffffLLllHH?'
             #s = calcsize(types)
-            s = 45
+            s = 49
             byteString = args[0][-1]
             if len(byteString) >= s:
                 arr = unpack(types, byteString[:s])
@@ -130,14 +131,19 @@ class GunnarCommunicator(object):
                 self.statusMessage =  'Got response data: %s.' % (arr,)
                 self.nresp += 1
                 #self.statusMessage =  "Response data:", arr
+                
+                # Save the data in our HDF5 file.
+                data = np.empty((self.nfields,))
+                assert len(arr) == self.nfields, (len(arr), self.nfields)
+                data[:] = arr
+                self.statusMessage = 'Saving data of shape %s to HDF5.' % (data.shape,)
+                self.handler.enquque(data)
+            
         except Exception as e:
-            self.statusMessage =  "Failed with %s: %s" % (type(e), e)
-        
-        ## Save the data in our HDF5 file.
-        #data = np.empty((self.nfields,))
-        #assert len(args[0]) == self.nfields
-        #data[:] = args[0]
-        #self.handler.enquque(data)
+            from traceback import format_exception
+            from sys import exc_info
+            tb = ''.join(['!! ' + l for l in format_exception(*exc_info())])
+            self.statusMessage =  "Failed with %s: %s" % (type(e), e) + '\n' + tb
 
 
 if __name__ == '__main__':

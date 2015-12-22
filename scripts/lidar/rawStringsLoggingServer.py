@@ -55,6 +55,7 @@ class PyTableSavingHandler(Handler):
         # Define the data shape.
         atom = tables.UInt32Atom()
         # Make the enlargable array.
+        self.dataShape = dataShape
         dataShape = list(reversed(dataShape))
         dataShape.append(0)
         dataShape = tuple(reversed(dataShape))
@@ -63,9 +64,7 @@ class PyTableSavingHandler(Handler):
     def enquque(self, data):
         if (
             isinstance(data, np.ndarray)
-            and data.size > 0
-            and len(data.shape) == 2
-            and data.shape[1] == 2
+            and data.shape == self.dataShape
             ):
             
             # Save the data array.
