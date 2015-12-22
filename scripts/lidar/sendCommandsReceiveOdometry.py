@@ -29,7 +29,12 @@ class GunnarCommunicator(object):
             + 1  # whether motor PID controller is in turning mode (obsolete)
             )
         self.nfields = nfields
-        self.handler = PyTableSavingHandler(fname, dataShape=(nfields,))
+        import tables
+        self.handler = PyTableSavingHandler(fname, dataShape=(nfields,), 
+                                            printFn=lambda s: setattr(self, 'statusMessage', s),
+                                            dataName='sensorData',
+                                            AtomClass=tables.Float64Atom,
+                                            )
         
         # Make sure this matches the baudrate on the Arduino.
         self.baud = 19200
@@ -128,7 +133,6 @@ class GunnarCommunicator(object):
             if len(byteString) >= s:
                 arr = unpack(types, byteString[:s])
                 elapsed = time.time() - self.constructionTime
-                self.statusMessage =  'Got response data: %s.' % (arr,)
                 self.nresp += 1
                 #self.statusMessage =  "Response data:", arr
                 
@@ -136,7 +140,7 @@ class GunnarCommunicator(object):
                 data = np.empty((self.nfields,))
                 assert len(arr) == self.nfields, (len(arr), self.nfields)
                 data[:] = arr
-                self.statusMessage = 'Saving data of shape %s to HDF5.' % (data.shape,)
+                self.statusMessage = 'Saving data of shape %s to HDF5: %s' % (data.shape, data)
                 self.handler.enquque(data)
             
         except Exception as e:

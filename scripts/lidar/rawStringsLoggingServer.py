@@ -1,5 +1,7 @@
 # Log data from Neato LIDAR via socket server
 
+def print_function(s):
+    print s
 from threading import Thread, Event
 from sys import stdout
 import logging
@@ -42,7 +44,8 @@ class ReprSavingHandler(Handler):
 
 class PyTableSavingHandler(Handler):
 
-    def __init__(self, fname, dataShape=(360, 2)):
+    def __init__(self, fname, dataShape=(360, 2), printFn=print_function, dataName='scans', AtomClass=tables.UInt32Atom):
+        self.printFn = printFn
 
         # Open the table file.
         if fname[-3:] != ".h5":
@@ -53,13 +56,14 @@ class PyTableSavingHandler(Handler):
         self.nsaved = 0
 
         # Define the data shape.
-        atom = tables.UInt32Atom()
+        atom = AtomClass()
         # Make the enlargable array.
         self.dataShape = dataShape
         dataShape = list(reversed(dataShape))
         dataShape.append(0)
         dataShape = tuple(reversed(dataShape))
-        self.array_c = self.file.createEArray(self.file.root, 'scans', atom, dataShape, "Scans EArray", expectedrows=100000)
+        self.array_c = self.file.createEArray(self.file.root, dataName, atom, dataShape,
+                                              dataName + " EArray", expectedrows=100000)
 
     def enquque(self, data):
         if (
@@ -71,8 +75,7 @@ class PyTableSavingHandler(Handler):
             self.array_c.append([data])
             self.file.flush()
             self.nsaved += 1
-            print '\r%09d scans saved.' % self.nsaved,
-            stdout.flush()
+            self.printFn('\r%09d scans saved (new scan: %s).' % (self.nsaved, data))
             #t = time()
             #logging.info('Saving data of shape %s at t=%s.' % (data.shape, t))
 
