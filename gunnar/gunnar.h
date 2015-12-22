@@ -154,8 +154,11 @@ public:
     Callback setSpeedsCallback;
     Callback handleSensorRequestCallback;
     Callback ackCallback;
-    // This is the list of recognized commands. These can be commands that can either be sent or received.
-    // In order to receive, attach a callback function to these events
+    // This is the list of recognized commands.
+    // These can be commands that can either be sent or received.
+    // In order to receive, attach a callback function to these events.
+    // This enum must be the same length and order as the 'commands' list
+    // in the Python client code.
     enum {
         // Commands
         kAcknowledge         , // Command to acknowledge that cmd was received

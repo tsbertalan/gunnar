@@ -14,9 +14,9 @@ from rawStringsLoggingServer import PyTableSavingHandler
 
 class GunnarCommunicator(object):
 
-    def __init__(self, fname="data/gunnarCommunicator.h5"):
+    def __init__(self, fname="data/gunnarCommunicator.h5", logLength=28):
+        self.statusHistory = [''] * logLength
         self.constructionTime = time.time()
-        self.running = False
         
         # Create a handler object for saving data.
         nfields = (
@@ -51,7 +51,7 @@ class GunnarCommunicator(object):
         except (serial.SerialException, IndexError) as e:
             raise SystemExit('Could not open serial port: %s' % e)
         else:
-            print 'Serial port %s sucessfully opened.' % self.port_name
+            self.statusMessage =  'Serial port %s sucessfully opened.' % self.port_name
             self.messenger = CmdMessenger(self.serial_port, cmdNames = self.commands)
             # attach callbacks
             self.messenger.attach(func=self.onError, msgid=self.commands.index('error'))
@@ -61,7 +61,21 @@ class GunnarCommunicator(object):
 
             # send a command that the arduino will acknowledge
             self.acknowledge()
-            print 'Arduino ready.'
+            self.statusMessage =  'Arduino ready.'
+        
+    @property
+    def statusMessage(self):
+        return self._statusMessage
+    
+    @statusMessage.setter
+    def statusMessage(self, args):
+        if isinstance(args, tuple):
+            self._statusMessage = ' '.join(['%s' % (s,) for s in args])
+            for i in range(1, len(self.statusHistory)):  # Keep a scrolling history of status messages.
+                self.statusHistory[i-1] = self.statusHistory[i]
+            self.statusHistory[i] = self._statusMessage
+        else:
+            self.statusMessage = (args,)
 
     def list_usb_ports(self):
         """ Use the grep generator to get a list of all USB ports.
@@ -69,28 +83,13 @@ class GunnarCommunicator(object):
         ports =  [port for port in list_ports.grep('usb')]
         return ports
 
-    def stop(self):
-        self.running = False
+    def loopOnce(self):
+        # Request sensor data.
+        self.sensorsRequest()
 
-    def run(self):
-        """Main loop to send and receive data from the Arduino
-        """
-        self.running = True
-        self.timeout = timeout = .04
-        t0 = time.time()
-        while self.running:
-            if time.time() - t0 > timeout:
-                lastT0 = t0
-                t0 = time.time()
-                ## Command both motor velocities to be set to zero.
-                #self.speedSet(0, 0)
-                
-                # Request sensor data.
-                self.sensorsRequest()
+        # Check to see if any data has been received
+        self.messenger.feed_in_data()
 
-            # Check to see if any data has been received
-            self.messenger.feed_in_data()
-            
     ############################### C O M M A N D S ###########################
     def acknowledge(self, wait=True):
         self.messenger.send_cmd(self.commands.index('acknowledge'))
@@ -106,13 +105,14 @@ class GunnarCommunicator(object):
             #)
         
     def speedSet(self, left, right):
+        self.statusMessage = 'Setting motor speeds to left=%f, right=%f.' % (left, right)
         self.messenger.send_cmd(self.commands.index('speedSet'), left, right)
 
     ####################### R E S P O N S E   C A L L B A C K S ###############
     def onError(self, received_command, *args, **kwargs):
         """Callback function to handle errors
         """
-        print 'Error:', args
+        self.statusMessage =  'Error:', args
 
     nresp = 0.
     def onSensorsResponse(self, received_command, *args, **kwargs):
@@ -127,11 +127,11 @@ class GunnarCommunicator(object):
             if len(byteString) >= s:
                 arr = unpack(types, byteString[:s])
                 elapsed = time.time() - self.constructionTime
-                print 'Got response data. Average respone speed is %.1f Hz. (%.1f requested; %d baud).' % (self.nresp / elapsed, 1./self.timeout, self.baud)
+                self.statusMessage =  'Got response data: %s.' % (arr,)
                 self.nresp += 1
-                #print "Response data:", arr
+                #self.statusMessage =  "Response data:", arr
         except Exception as e:
-            print "Failed with %s: %s" % (type(e), e)
+            self.statusMessage =  "Failed with %s: %s" % (type(e), e)
         
         ## Save the data in our HDF5 file.
         #data = np.empty((self.nfields,))
@@ -141,12 +141,7 @@ class GunnarCommunicator(object):
 
 
 if __name__ == '__main__':
+    from time import sleep
+    
     gunnarCommunicator = GunnarCommunicator()
-
-    try:
-        print 'Press Ctrl+C to exit...'
-        print
-        gunnarCommunicator.run()
-    except KeyboardInterrupt:
-        gunnarCommunicator.stop()
-        print 'Exiting...'
+    gunnarCommunicator.loopOnce()

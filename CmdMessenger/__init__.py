@@ -263,9 +263,6 @@ class CmdMessenger(object):
             msgType = self.commandNames[msgid]
         else:
             msgType = msgid
-        print "Sending %s command." % msgType
-        if len(args) > 0 or len(kwargs) > 0:
-            print "Data is", args, kwargs
         self._file.write(str(msgid))
         for a in args:
             self._file.write(self._fld_sep)
