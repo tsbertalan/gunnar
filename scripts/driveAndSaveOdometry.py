@@ -110,12 +110,12 @@ class Controller(object):
                 elif key == ord(' '):
                     self.gunnar.stop()
                     self.updateText('Space')
+                sleep(.1)
+                self.updateText('speeds');
+                self.updateText('status');
+                self.gunnar.loopOnce()
             except KeyboardInterrupt:
-                break
-            sleep(.1)
-            self.updateText('speeds');
-            self.updateText('status');
-            self.gunnar.loopOnce()
+                self.gunnar.communicator.statusMessage = 'Press q to quit.'
         self.gunnar.stop()
         curses.endwin()
 
