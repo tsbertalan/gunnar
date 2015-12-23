@@ -23,10 +23,8 @@ class GunnarCommunicator(object):
               1  # time (milliseconds)
             #+ 1  # sonar
             + 3  # orientation heading, roll, pitch
-            + 3  # orientation x,y,z
             + 3  # motor 1 ticks, speed, and status
             + 3  # motor 2 ticks, speed, and status
-            + 1  # whether motor PID controller is in turning mode (obsolete)
             )
         self.nfields = nfields
         import tables
@@ -125,10 +123,10 @@ class GunnarCommunicator(object):
         """Callback to handle the float addition response
         """
         try:
-            from struct import unpack#, calcsize
-            types = 'LffffffLLllHH?'
-            #s = calcsize(types)
-            s = 49
+            from struct import unpack, calcsize
+            types = 'LfffLLllHH'
+            s = calcsize(types)
+            #s = 49
             byteString = args[0][-1]
             if len(byteString) >= s:
                 arr = unpack(types, byteString[:s])

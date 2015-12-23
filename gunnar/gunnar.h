@@ -14,11 +14,9 @@
 struct SensorResponse {
     unsigned long ms;
     float heading, roll, pitch;
-    float x, y, z;
     unsigned long enc1pos, enc2pos;
     signed long enc1spd, enc2spd;
     unsigned int enc1stat, enc2stat;
-    bool isTurning;
 };
 
 // Consolidate as many globals as possible in a singleton robot.
@@ -105,10 +103,6 @@ public:
         response.roll= sensors.ahrs.orientation.roll;
         response.pitch = sensors.ahrs.orientation.pitch;
         
-        response.x = sensors.ahrs.orientation.x;
-        response.y= sensors.ahrs.orientation.y;
-        response.z = sensors.ahrs.orientation.z;
-        
         response.enc1pos = encoder0.position;
         response.enc2pos = encoder1.position;
         
@@ -117,8 +111,6 @@ public:
         
         response.enc1stat = motor1.getStatus();
         response.enc2stat = motor2.getStatus();
-        
-        response.isTurning = controlledMotors.isTurning();
         
         cmdMessenger.sendCmdBinArg<SensorResponse>(response);
 
