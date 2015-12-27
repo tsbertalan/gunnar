@@ -55,7 +55,7 @@ public:
             if(newStatus == 2) // 10
                 position++;
             else {
-                if(newStatus == 1)
+                if(newStatus == 1) // 01
                     position--;
             }
             break;
@@ -63,7 +63,7 @@ public:
             if(newStatus == 0)  // 00
                 position++;
             else {
-                if(newStatus == 3)
+                if(newStatus == 3)  // 11
                     position--;
             }
             break;
@@ -71,7 +71,7 @@ public:
             if(newStatus == 3)  // 11
                 position++;
             else {
-                if(newStatus == 0)
+                if(newStatus == 0)  // 00
                     position--;
             }
             break;
@@ -79,7 +79,7 @@ public:
             if(newStatus == 1) // 01
                 position++;
             else {
-                if(newStatus == 3)
+                if(newStatus == 2) // 10
                     position--;
             }
             break;
