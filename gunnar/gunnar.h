@@ -1,10 +1,11 @@
 #ifndef GUNNAR_H
 #define GUNNAR_H
+#define DEBUGGUNNAR
 #include "Arduino.h"
 #include "motorPIDcontrol.h"
 #include "constants.h"
 #include "encoders.h"
-#include "vision.h"
+#include "sensors.h"
 
 // For CmdMessenger:
 #include <CmdMessenger.h>
@@ -53,7 +54,7 @@ public:
         // Attach to the default Serial port.
         cmdMessenger.init(Serial);
 
-        // Adds newline to every command
+        // Adds newline to every command  TODO: This is useless when mixed with binary messages.
         cmdMessenger.printLfCr();
 
         // Attach actual callbacks to Callback objects, and attach them to the cmdMessenger.
@@ -66,10 +67,7 @@ public:
         cmdMessenger.attach(kSensorsRequest, handleSensorRequestCallback);
 
         pinMode(PIN_ACTIVITYSWITCH, INPUT);
-
         sensors.init();
-
-        acknowledge();
     }
 
     void loopOnce() {
@@ -90,8 +88,6 @@ public:
     }
 
     void handleSensorRequest() {
-//         acknowledge();
-
         updateAHRS();
         // one byte
         cmdMessenger.sendCmdStart(kSensorsResponse);
@@ -158,7 +154,8 @@ public:
         kSpeedSet            , // Command to set motor speeds
         kSensorsRequest      , // Command to request sensor data
         kSensorsResponse     , // Command to report sensor data
-        kAcknowledgeResponse , // Command to respond to an ack request.
+        kAcknowledgeResponse , // Command to respond to an ack request
+        kMsg, // Command to send a string debug message
     };
 
 private:

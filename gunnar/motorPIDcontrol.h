@@ -5,7 +5,7 @@
 #include "encoders.h"
 #include "Arduino.h"
 #include "motors.h"
-#include "vision.h"
+#include "sensors.h"
 
 class ControlledMotors {
 public:

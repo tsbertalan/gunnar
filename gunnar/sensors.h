@@ -1,5 +1,5 @@
-#ifndef VISION_H
-#define VISION_H
+#ifndef SENSORS_H
+#define SENSORS_H
 #include <Servo.h>
 #include "constants.h"
 #include "Arduino.h"
