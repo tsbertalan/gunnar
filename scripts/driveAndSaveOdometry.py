@@ -1,5 +1,6 @@
 from sys import stdin
 from time import sleep
+import logging
 import curses
 from sendCommandsReceiveOdometry import GunnarCommunicator
 
@@ -7,9 +8,11 @@ from sendCommandsReceiveOdometry import GunnarCommunicator
 class Gunnar(object):
     
     def __init__(self):
+        logging.debug('Begin Gunnar init.')
         self._spds = [0, 0]
         self.robotSpeedsStr = ''
         self.communicator = GunnarCommunicator()
+        logging.debug('End Gunnar init.')
     
     def forward(self, inc=4):
         self.incSpds(inc, inc)
@@ -51,7 +54,10 @@ class Gunnar(object):
 WINDOWHEIGHT = 40
 class Controller(object):
         
-    def __init__(self):
+    def __init__(self, sensorDataRate=2.0):
+        self.sensorDataRate=sensorDataRate
+        logging.basicConfig(filename='drive.log', level=logging.DEBUG)
+        logging.debug('Begin Contrller init.')
         self.stdscr = curses.initscr()
         curses.cbreak()
         self.stdscr.keypad(1)
@@ -61,6 +67,7 @@ class Controller(object):
         for s in self.textLocations:
             self.updateText(s)
         self.stdscr.nodelay(True)  # Make getch non-blocking.
+        logging.debug('End Contrller init.')
         
     textLocations = {
         'Up': [2, 20],
@@ -72,22 +79,32 @@ class Controller(object):
         'status': [WINDOWHEIGHT - 30, 1],
         }
     
+    def blankLine(self, lineNo):
+        self.stdscr.addstr(lineNo, 0, ' '*160)
+    
+    def writeRC(self, r, c, text, blank=True):
+        if blank:
+            self.blankLine(r)
+        self.stdscr.addstr(r, c, text)
+    
     def updateText(self, s):
         if s in self.textLocations:
             if s == 'status':
                 firstRow,c = self.textLocations[s]
                 for i in range(len(self.gunnar.communicator.statusHistory)):
-                    self.stdscr.addstr(
+                    self.writeRC(
                         firstRow+i, c,
-                        str(self.gunnar.communicator.statusHistory[i])
+                        str(self.gunnar.communicator.statusHistory[i]),
                         )
             else:
+                blank = s not in 'Right Left Space'
+#                blank = not (s == 'Right' or s == 'Space' or s == 'Left')
                 r, c = self.textLocations[s]
                 if s == 'speeds':
                     text = 'Speeds: ' + self.gunnar.robotSpeedsStr
                 else:
                     text = s
-                self.stdscr.addstr(r, c, text)
+                self.writeRC(r, c, text, blank=blank)
         
     def run(self):
         key = ''
@@ -110,7 +127,7 @@ class Controller(object):
                 elif key == ord(' '):
                     self.gunnar.stop()
                     self.updateText('Space')
-                sleep(.1)
+                sleep(1./self.sensorDataRate)
                 self.updateText('speeds');
                 self.updateText('status');
                 self.gunnar.loopOnce()

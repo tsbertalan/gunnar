@@ -75,7 +75,7 @@ class PyTableSavingHandler(Handler):
             self.array_c.append([data])
             self.file.flush()
             self.nsaved += 1
-            self.printFn('\r%09d scans saved (new scan: %s).' % (self.nsaved, data))
+            self.printFn('\r%09d scans saved.' % (self.nsaved,))
             #t = time()
             #logging.info('Saving data of shape %s at t=%s.' % (data.shape, t))
 
