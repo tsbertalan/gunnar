@@ -195,11 +195,12 @@ class CmdMessenger(object):
         is provided and is a list of primitives/callables, it will convert
         its respective argument to that type.
         """
+        cmds = self._file_buffer.split(self._cmd_sep)
         cmd = command.split(self._fld_sep)
         #print "COMMAND", cmd
 
         for a in cmd:
-            # Unsplit escaped separators
+            # Unsplit escaped separators. This code is a disaster. TODO: Can I remove all this escaping nonsense?
             while a.endswith(self._esc_char):
                     i = cmds.index(a)
                     cmds.pop(i)
