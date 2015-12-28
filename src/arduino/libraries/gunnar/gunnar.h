@@ -15,9 +15,12 @@
 struct SensorResponse {
     unsigned long ms;
     float heading, roll, pitch;
-    unsigned long enc1pos, enc2pos;
+    signed long enc1pos, enc2pos;
     signed long enc1spd, enc2spd;
     unsigned int enc1stat, enc2stat;
+    float accelX, accelY, accelZ;
+    float magX, magY, magZ;
+    float gyroX, gyroY, gyroZ;
 };
 
 // Consolidate as many globals as possible in a singleton robot.
@@ -107,6 +110,18 @@ public:
         
         response.enc1stat = motor1.getStatus();
         response.enc2stat = motor2.getStatus();
+        
+        response.accelX = sensors.ahrs.accel_event.acceleration.x;
+        response.accelY = sensors.ahrs.accel_event.acceleration.y;
+        response.accelZ = sensors.ahrs.accel_event.acceleration.z;
+        
+        response.magX = sensors.ahrs.mag_event.magnetic.x;
+        response.magY = sensors.ahrs.mag_event.magnetic.y;
+        response.magZ = sensors.ahrs.mag_event.magnetic.z;
+        
+        response.gyroX = sensors.ahrs.gyro_event.gyro.x;
+        response.gyroY = sensors.ahrs.gyro_event.gyro.y;
+        response.gyroZ = sensors.ahrs.gyro_event.gyro.z;
         
         cmdMessenger.sendCmdBinArg<SensorResponse>(response);
 

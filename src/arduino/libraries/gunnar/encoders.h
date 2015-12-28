@@ -123,10 +123,10 @@ public:
     }
 
     volatile long trueUpdateDelay;
-    long volatile position;
+    signed long volatile position;
 
 private:
-    long volatile ticks;
+    signed long volatile ticks;
     Motor* motor;
     volatile long updateDelay;
     volatile long lastUpdateTime;

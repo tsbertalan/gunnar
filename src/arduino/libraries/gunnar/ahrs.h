@@ -12,12 +12,14 @@
 Adafruit_9DOF                 dof   = Adafruit_9DOF();
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(30301);
 Adafruit_LSM303_Mag_Unified   mag   = Adafruit_LSM303_Mag_Unified(30302);
+Adafruit_L3GD20_Unified       gyro  = Adafruit_L3GD20_Unified(303023);
 
 class AHRS {
 public:
 
     sensors_event_t accel_event;
     sensors_event_t mag_event;
+    sensors_event_t gyro_event;
     sensors_vec_t   orientation;
 
     void init() {
@@ -36,6 +38,7 @@ public:
     boolean update() {
         accel.getEvent(&accel_event);
         mag.getEvent(&mag_event);
+        gyro.getEvent(&gyro_event);
 
         /* Use the new fusionGetOrientation function to merge accel/mag data. */
         boolean output = dof.fusionGetOrientation(&accel_event, &mag_event, &orientation);

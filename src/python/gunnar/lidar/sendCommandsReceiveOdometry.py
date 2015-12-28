@@ -1,9 +1,11 @@
 #!/usr/bin/python
+import logging
 import random
 import sys
 import serial
+from struct import unpack, calcsize
 import time
-import logging
+
 
 import numpy as np
 
@@ -20,24 +22,36 @@ class GunnarCommunicator(object):
         logging.debug('Begin GunnarCommunicator init.')
         self.statusHistory = [''] * logLength
         self.constructionTime = time.time()
-        
-        # Create a handler object for saving data.
-        nfields = (
-              1  # time (milliseconds)
-            #+ 1  # sonar
-            + 3  # orientation heading, roll, pitch
-            + 3  # motor 1 ticks, speed, and status
-            + 3  # motor 2 ticks, speed, and status
-            )
+
+        # Define the ordering and sizes of data in incoming sensor packets.
         self.sensorFields = [
             'ms',
             'heading', 'roll', 'pitch',
-            'enc1pos,', 'enc2pos',
+            'enc1pos', 'enc2pos',
             'enc1spd', 'enc2spd',
             'enc1stat', 'enc2stat',
+            'accelX', 'accelY', 'accelZ',
+            'magX', 'magY', 'magZ',
+            'gyroX', 'gyroY', 'gyroZ',
             ]
-        self.nfields = nfields
-        assert len(self.sensorFields) == nfields
+        # L : unsigned long
+        # l : signed long
+        # f : float / double
+        # H : bool
+        self.types = (
+            'L'
+            'fff'
+            'll'
+            'll'
+            'HH'
+            'fff'
+            'fff'
+            'fff'
+            )
+        self.sensorDataSize = calcsize(self.types)
+        self.nfields = nfields = len(self.sensorFields)
+        
+        # Create a handler object for saving data.
         logging.debug('Make a PyTable saving object.')
         self.handler = PyTableSavingHandler(fname, dataShape=(nfields,), 
                                             printFn=lambda s: setattr(self, 'statusMessage', s),
@@ -136,17 +150,15 @@ class GunnarCommunicator(object):
     def onError(self, received_command, *args, **kwargs):
         """Callback function to handle errors
         """
-        self.statusMessage =  'Error:', args
+        self.statusMessage = 'Got unrecognized data from Arduino.'
 
     nresp = 0.
     def onSensorsResponse(self, received_command, *args, **kwargs):
         """Callback to handle the float addition response
         """
+        s = self.sensorDataSize
+        types = self.types
         try:
-            from struct import unpack, calcsize
-            types = 'LfffLLllHH'
-            s = calcsize(types)
-            #s = 49
             byteString = args[0][-1]
             if len(byteString) >= s:
                 arr = unpack(types, byteString[:s])
@@ -159,11 +171,27 @@ class GunnarCommunicator(object):
                 assert len(arr) == self.nfields, (len(arr), self.nfields)
                 data[:] = arr
                 self.statusMessage = 'Saving data of shape %s to HDF5.' % (data.shape,)
+                
+                # Construct a sensor status message.
                 m = ' '.join([
                         '%s=%s' % (k, v)
                         for (k,v) in zip(self.sensorFields, data)
                     ])
-                self.statusMessage = m
+                # Ensure each line of the sensor status message is close to 80 chars.
+                statements = m.split()
+                segments = []
+                segmentSize = 79
+                segment = ''
+                for statement in statements:
+                    if len(segment) < segmentSize:
+                        segment += ' ' + statement
+                        m = m[segmentSize:]
+                    else:
+                        segments.append(segment)
+                        segment = statement
+                if segment != '':
+                    segments.append(segment)
+                self.statusMessage = '\n '.join(segments)
                 self.statusMessage = ' '.join(['%s=%s'%(k,v) for (k,v) in zip(self.sensorFields[4:6], data[4:6])])
                 
                 self.handler.enquque(data)
