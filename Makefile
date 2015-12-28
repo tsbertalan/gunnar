@@ -86,3 +86,7 @@ go: upload
 
 ### Do not touch - the path to Arduino.mk, inside the ARDMK_DIR
 include $(ARDMK_DIR)/Arduino.mk
+
+cleanPyc:
+	find . -name "*.pyc" -type f -delete
+	find . -name "*.pyo" -type f -delete
