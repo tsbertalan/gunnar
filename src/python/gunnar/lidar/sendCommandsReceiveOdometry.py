@@ -7,7 +7,7 @@ import logging
 
 import numpy as np
 
-from CmdMessenger import CmdMessenger
+from gunnar.io.serialComm import CmdMessenger
 from serial.tools import list_ports
 
 from rawStringsLoggingServer import PyTableSavingHandler
