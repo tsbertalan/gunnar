@@ -56,8 +56,8 @@ class Controller(object):
         
     def __init__(self, sensorDataRate=2.0):
         self.sensorDataRate=sensorDataRate
-        logging.basicConfig(filename='drive.log', level=logging.DEBUG)
-        logging.debug('Begin Contrller init.')
+        logging.basicConfig(filename='data/drive.log', level=logging.DEBUG)
+        logging.debug('Begin Controller init.')
         self.stdscr = curses.initscr()
         curses.cbreak()
         self.stdscr.keypad(1)
@@ -67,7 +67,7 @@ class Controller(object):
         for s in self.textLocations:
             self.updateText(s)
         self.stdscr.nodelay(True)  # Make getch non-blocking.
-        logging.debug('End Contrller init.')
+        logging.debug('End Controller init.')
         
     textLocations = {
         'Up': [2, 20],
@@ -97,14 +97,12 @@ class Controller(object):
                         str(self.gunnar.communicator.statusHistory[i]),
                         )
             else:
-                blank = s not in 'Right Left Space'
-#                blank = not (s == 'Right' or s == 'Space' or s == 'Left')
                 r, c = self.textLocations[s]
                 if s == 'speeds':
                     text = 'Speeds: ' + self.gunnar.robotSpeedsStr
                 else:
                     text = s
-                self.writeRC(r, c, text, blank=blank)
+                self.writeRC(r, c, text, blank=(s not in 'Right Left Space'))
         
     def run(self):
         key = ''
