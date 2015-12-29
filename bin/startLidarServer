@@ -1,0 +1,4 @@
+#!/bin/bash
+REPO=$HOME/sketchbook/gunnar/
+source $REPO/bin/setPath.sh
+python $REPO/src/python/gunnar/lidar/rawStringsLoggingServer.py
