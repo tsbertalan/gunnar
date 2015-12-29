@@ -1,13 +1,11 @@
-# server.py
-
+from array import array
+from collections import deque
+import logging
 import sys
 import socket
 import select
-import traceback
-import logging
-from collections import deque
-from array import array
 from time import sleep
+import traceback
 
 import numpy as np
 
@@ -163,6 +161,42 @@ class Server(object):
 
     def stop(self):
         self.server_socket.close()
+
+
+class Client(object):
+    def __init__(self, host, port, timeout=2):
+        self.nsent = 0
+        self.host = host
+        self.port = port
+
+        self.s = s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(timeout)
+
+        # connect to remote host
+        try:
+            s.connect((host, port))
+        except Exception:
+            traceback.print_exc()
+            print 'Unable to connect'
+            sys.exit()
+
+        print 'Connected to remote host. You can start sending messages'
+        sys.stdout.flush()
+
+        self.messages = deque()
+
+    def send(self, obj):
+        data = str(obj)
+        self.nsent += 1
+        print "sending message %d: object of type %s, len %d" % (self.nsent, type(obj), len(data))
+        print len(data)
+        self.s.send(data)
+
+
+class Message(object):
+    def __init__(self, source, content):
+        self.source = source
+        self.content = content
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)

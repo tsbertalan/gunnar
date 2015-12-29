@@ -9,7 +9,7 @@ screen -list
 sleep 8
 
 echo "Starting LIDAR client on "`hostname`"."
-screen -dmS lidarClientGunnar python $HOME/sketchbook/gunnar/src/python/gunnar/lidar/lidarClient.py $HOST
+screen -dmS lidarClientGunnar python $HOME/sketchbook/gunnar/src/python/gunnar/lidar/rawStringsClient.py $HOST
 screen -list
 sleep 8
 

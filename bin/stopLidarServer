@@ -3,6 +3,8 @@ HOST=sigurd.tomsb.net
 if [ $(hostname) = "ubuntu" ]
 then
     ssh $HOST $HOME/sketchbook/gunnar/bin/stopLidarServer
+    screen -X -S lidarClient quit
+    screen -X -S lidarServer quit
 else
     export PATH=$PATH:$HOME/bin
     killgrep loggingServer

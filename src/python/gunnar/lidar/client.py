@@ -1,59 +1,47 @@
-# client.py
+# Log data from Neato LIDAR
+# based on code from Nicolas "Xevel" Saugnier
+# requires pyserial
 
+
+from array import array
 import sys
-import socket
+import serial
 from time import sleep
-import select
-from time import time
-from collections import deque
-import traceback
 
-from dill import dumps, loads
-import numpy as np
+from gunnar.io.network import Client
 
 
-class Client(object):
-    def __init__(self, host, port, timeout=2):
-        self.nsent = 0
-        self.host = host
-        self.port = port
+def mainSendLidarToServer():
+    com_port = "/dev/ttyUSB0"  # example: 5 == "COM6" == "/dev/tty5"
+    baudrate = 115200
+    ser = serial.Serial(com_port, baudrate)
 
-        self.s = s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(timeout)
+    def sendData(hostname, port):
+        client = Client(hostname, port, timeout=10)
+        print "Connected to %s:%d. Will begin sending data. Ctrl+C to quit." % (hostname, port)
+        sleep(1)
+        BUFLEN = 512
+        buf = array('c', ['a']*BUFLEN)
 
-        # connect to remote host
-        try:
-            s.connect((host, port))
-        except Exception:
-            traceback.print_exc()
-            print 'Unable to connect'
-            sys.exit()
+        while True:
+            try:
+                for i in range(BUFLEN):
+                    buf[i] = ser.read(1)
+                print "Sending buffer."
+                client.send(buf.tostring())
+            except KeyboardInterrupt:
+                break
 
-        print 'Connected to remote host. You can start sending messages'
-        sys.stdout.flush()
+    hostname = 'localhost'
+    port = 9009
+    if len(sys.argv) > 1:
+        print sys.argv
+        hostname = sys.argv[1]
+        if len(sys.argv) > 2:
+            port = int(sys.argv[2])
 
-        self.messages = deque()
-
-    def send(self, obj):
-        data = str(obj)
-        self.nsent += 1
-        print "sending message %d: object of type %s, len %d" % (self.nsent, type(obj), len(data))
-        print len(data)
-        self.s.send(data)
-
-
-class Message(object):
-    def __init__(source, content):
-        self.source = source
-        self.content = content
+    sendData(hostname, port)
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print "USAGE:", sys.argv[0], "HOST", "PORT"
-        from sys import exit; exit()
-
-    client = Client(sys.argv[1], int(sys.argv[2]))
-    sleep(1.0)
-    client.send("hello")
-
+if __name__=='__main__':
+    mainSendLidarToServer()
