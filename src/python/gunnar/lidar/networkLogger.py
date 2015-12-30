@@ -1,6 +1,5 @@
 # Log data from Neato LIDAR via socket server
 
-from array import array
 import logging
 from threading import Thread
 from time import sleep
@@ -9,7 +8,7 @@ import serial
 
 from gunnar.io.network import Server, Client
 from gunnar.io.disk import PyTableSavingHandler as SavingHandler
-from gunnar.lidar.parseLidar import LidarParser, CharStream
+from gunnar.lidar import LidarParser, CharStream
 
 
 class Watcher():

@@ -9,7 +9,7 @@ import traceback
 
 import numpy as np
 
-from gunnar.lidar.parseLidar import CharStream
+from gunnar.lidar import CharStream
 
 
 Instance = type(object())

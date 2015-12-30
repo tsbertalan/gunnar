@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import tables  # apt-get installed version 2.3.1, which wasn't new enough. "pip install --upgrade tables" updated to 3.2.2.
 
-from gunnar.lidar.parseLidar import LidarParser
+from gunnar.lidar import LidarParser
 
 def print_function(s):
     print s

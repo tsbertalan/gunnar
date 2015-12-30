@@ -11,7 +11,7 @@ import numpy as np
 from visual import points, curve, label, vector, ring, scene, cos, pi, sin, color
 
 from gunnar.io.network import Server
-from parseLidar import LidarParser
+from gunnar.lidar import LidarParser
 from gunnar.lidar.networkLogger import Watcher
 
 class Visualizer:
