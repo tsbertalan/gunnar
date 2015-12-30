@@ -10,30 +10,28 @@ import math
 import numpy as np
 from visual import points, curve, label, vector, ring, scene, cos, pi, sin, color
 
-from server import Server
+from gunnar.io.network import Server
 from parseLidar import LidarParser
-from collections import deque
-from gunnar.lidar.lidarLogger import Watcher
-
-
+from gunnar.lidar.logger import Watcher
 
 class Visualizer:
 
-    def __init__(self, parser):
-        self.parser = parser
-        self.lidarData = [[] for i in range(360)]  # A list of 360 elements Angle, Distance , quality
+    def __init__(self):
+        self.server = Server()
+        self.watcher = Watcher()
+        self.parser = LidarParser(self.server, exitTimeCallback=self.watcher.exitNowCallback)
+        
+        self.lidarData = [[]]*360  # A list of 360 elements Angle, Distance , quality
         offset = self.offset = 140
-        init_level = 0
-        index = 0
 
         # sample and intensity points
-        self.point = points(pos=[(0, 0, 0) for i in range(360)], size=5, color=(0 , 1, 0))
-        self.pointb = points(pos=[(0, 0, 0) for i in range(360)], size=5, color=(0.4, 0, 0))
-        self.point2 = points(pos=[(0, 0, 0) for i in range(360)], size=3, color=(1 , 1, 0))
-        self.point2b = points(pos=[(0, 0, 0) for i in range(360)], size=3, color=(0.4, 0.4, 0))
+        self.point = points(pos=[(0, 0, 0)]*360, size=5, color=(0 , 1, 0))
+        self.pointb = points(pos=[(0, 0, 0)]*360, size=5, color=(0.4, 0, 0))
+        self.point2 = points(pos=[(0, 0, 0)]*360, size=3, color=(1 , 1, 0))
+        self.point2b = points(pos=[(0, 0, 0)]*360, size=3, color=(0.4, 0.4, 0))
 
         # lines
-        self.outer_line = curve (pos=[(0, 0, 0) for i in range(360)], size=5, color=(1 , 0, 0))
+        self.outer_line = curve (pos=[(0, 0, 0)]*360, size=5, color=(1 , 0, 0))
         self.lines = [curve(pos=[(offset * cos(i * pi / 180.0), 0, offset * -sin(i * pi / 180.0)), (offset * cos(i * pi / 180.0), 0, offset * -sin(i * pi / 180.0))], color=[(0.1, 0.1, 0.2), (1, 0, 0)]) for i in range(360)]
         self.zero_intensity_ring = ring(pos=(0, 0, 0), axis=(0, 1, 0), radius=offset - 1, thickness=1, color=color.yellow)
 
@@ -46,7 +44,6 @@ class Visualizer:
         self.use_intensity = True
 
         self.scans = []  # Save all the gathered scans.
-
 
     def update_view(self, angle, dist_mm, quality):
         """Updates the view of a sample.
@@ -104,32 +101,32 @@ class Visualizer:
             s = scene.kb.getkey()  # get keyboard info
 
             if s == "o":  # Toggle outer line
-                use_outer_line = not self.use_outer_line
+                self.use_outer_line = not self.use_outer_line
             elif s == "l":  # Toggle rays
-                use_lines = not self.use_lines
+                self.use_lines = not self.use_lines
             elif s == "p":  # Toggle points
-                use_points = not self.use_points
+                self.use_points = not self.use_points
             elif s == "i":  # Toggle intensity
-                use_intensity = not self.use_intensity
-                self.zero_intensity_ring.visible = use_intensity
+                self.use_intensity = not self.use_intensity
+                self.zero_intensity_ring.visible = self.use_intensity
             elif s == "j":  # Toggle rpm
                 self.label_speed.visible = not self.label_speed.visible
             elif s == "k":  # Toggle errors
                 self.label_errors.visible = not self.label_errors.visible
 
+    def main(self):
+        
+        threads = []
+        for target in self.server.serve, self.parser.parse, visualizer.read_Lidar:
+            threads.append(Thread(target=target))
+            threads[-1].start()
+            sleep(.1)
+    
+        self.watcher.watch()
+        
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-
-    watcher = Watcher()
-    server = Server()
-    parser = LidarParser(server, exitTimeCallback=watcher.exitNowCallback)
-    visualizer = Visualizer(parser)
-
-    threads = []
-    for target in server.serve, parser.parse, visualizer.read_Lidar:
-        threads.append(Thread(target=target))
-        threads[-1].start()
-        sleep(.1)
-
-    watcher.watch()
+    visualizer = Visualizer()
+    visualizer.main()
+    

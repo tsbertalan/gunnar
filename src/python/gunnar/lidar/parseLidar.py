@@ -4,12 +4,11 @@ Created on Nov 29, 2015
 @author: tsbertalan
 '''
 
-import time, math, logging
+import time, logging
 from collections import deque
 from time import sleep
 
 import numpy as np
-
 
 
 def checksum(data):
@@ -41,7 +40,7 @@ def compute_speed(data):
 class LidarParser:
 
     def __init__(self, server, exitTimeCallback):
-        self.lidarData = [[] for i in range(360)]  # A list of 360 elements Angle, Distance , quality
+        self.lidarData = [[]]*360  # A list of 360 elements Angle, Distance , quality
         self.dataArrs = deque()
         self.init_level = 0
         self.server = server
@@ -52,11 +51,11 @@ class LidarParser:
 
     def pop(self):
         maxIter = 100
-        for iter in range(maxIter):
+        for i in range(maxIter):
             if len(self.dataArrs) > 0:
                 break
             else:
-                logging.debug("Parser has no data yet (attempt %d of %d)" % (iter, maxIter))
+                logging.debug("Parser has no data yet (attempt %d of %d)" % (i, maxIter))
                 sleep(1)  # Block this thread until we have data.
         return self.dataArrs.popleft()
 
