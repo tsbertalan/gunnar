@@ -7,10 +7,12 @@ from sys import argv
 
 import tables
 
-if len(argv) > 1:
-    fname = argv[1]
+if len(argv) != 2:
+    from sys import exit
+    from os.path import basename
+    exit("USAGE: %s H5FILEPATH" % basename(argv[0]))
 else:
-    fname = 'data.h5'
+    fname = argv[1]
 
 f = tables.openFile(fname, 'r')
 data = f.getNode('/scans')
