@@ -7,6 +7,7 @@ Created on Nov 29, 2015
 import time, logging
 from collections import deque
 from time import sleep
+import serial
 
 import numpy as np
 
@@ -43,6 +44,18 @@ class CharStream(object):
         from gunnar.utils import VirtualClassError
         raise VirtualClassError(self)
 
+
+class LidarSerialConnection(CharStream):
+    
+    def __init__(self,
+                 com_port="/dev/ttyUSB0",
+                 baudrate=115200,
+                 ):
+        self.ser = serial.Serial(com_port, baudrate)
+        
+    def getChar(self, numChars=1):
+        return self.ser.read(numChars)
+    
 
 class LidarParser:
 

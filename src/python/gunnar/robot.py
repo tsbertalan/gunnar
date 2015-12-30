@@ -194,7 +194,7 @@ class GunnarCommunicator(object):
                 self.statusMessage = '\n '.join(segments)
                 self.statusMessage = ' '.join(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
                 
-                self.handler.enquque(data)
+                self.handler.enqueue(data)
             
         except Exception as e:
             from traceback import format_exception

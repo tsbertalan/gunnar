@@ -21,7 +21,7 @@ class ReprSavingHandler(Handler):
         self.f.write('from numpy import array, dstack\n')
         self.f.write('data = dstack((\n')
 
-    def enquque(self, data):
+    def enqueue(self, data):
         if (
             isinstance(data, np.ndarray)
             and data.size > 0
@@ -59,7 +59,7 @@ class PyTableSavingHandler(Handler):
         self.array_c = self.file.createEArray(self.file.root, dataName, atom, dataShape,
                                               dataName + " EArray", expectedrows=100000)
 
-    def enquque(self, data):
+    def enqueue(self, data):
         if (
             isinstance(data, np.ndarray)
             and data.shape == self.dataShape
@@ -82,9 +82,9 @@ class PyTableSavingLidarcharHandler(PyTableSavingHandler):
         self.parser = LidarParser()
         super(PyTableSavingLidarcharHandler, self).__init__(*args)
 
-    def enquque(self, line):
+    def enqueue(self, line):
         self.parser.readLine(line)
         logging.info("Got line of length %d." % len(line))
         if len(self.parser) > 0:
-            super(PyTableSavingLidarcharHandler, self).enquque(self.parser.pop())
+            super(PyTableSavingLidarcharHandler, self).enqueue(self.parser.pop())
 

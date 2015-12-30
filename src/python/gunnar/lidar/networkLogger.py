@@ -4,11 +4,10 @@ import logging
 from threading import Thread
 from time import sleep
 import sys
-import serial
 
 from gunnar.io.network import Server, Client
 from gunnar.io.disk import PyTableSavingHandler as SavingHandler
-from gunnar.lidar import LidarParser, CharStream
+from gunnar.lidar import LidarParser, LidarSerialConnection
 
 
 class Watcher():
@@ -52,9 +51,9 @@ class LidarLoggerServer(object):
             if self.watcher.exitNowCallback():
                 break
             if len(self.parser) > 0:
-                self.handler.enquque(self.parser.pop())
+                self.handler.enqueue(self.parser.pop())
     
-    def waitForConnections(self):
+    def main(self):
         threads = []
         for target in self.server.serve, self.parser.parse, self.watchForNewParsedArrays:
             threads.append(Thread(target=target))
@@ -63,21 +62,10 @@ class LidarLoggerServer(object):
         self.watcher.watch()
 
 
-class LidarSerialConnection(CharStream):
-    
-    def __init__(self,
-                 com_port="/dev/ttyUSB0",  # example: 5 == "COM6" == "/dev/tty5"
-                 baudrate=115200,
-                 ):
-        self.ser = serial.Serial(com_port, baudrate)
-        
-    def getChar(self, numChars=1):
-        return self.ser.read(numChars)
-        
-    
 class LidarLoggerClient(LidarSerialConnection):
     
     def sendData(self, hostname, port, bufSize=512):
+        print 'Attempting to connect to host %s on port %d ...' %  (hostname, port)
         client = Client(hostname, port, timeout=10)
         print "Connected to %s:%d. Will begin sending data. Ctrl+C to quit." % (hostname, port)
         sleep(1)
@@ -86,7 +74,7 @@ class LidarLoggerClient(LidarSerialConnection):
             try:
                 buf = self.getChar(bufSize)
                 print "Sending buffer."
-                client.send(buf.tostring())
+                client.send(buf)
             except KeyboardInterrupt:
                 break
     
