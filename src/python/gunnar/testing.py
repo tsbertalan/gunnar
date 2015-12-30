@@ -39,7 +39,7 @@ def stripOutput(stdout):
 def verify(sketchName):
     return False
     cmd = "arduino --port %s --board %s" % (port, board)
-    cmd += " --verify %s/%s/%s.ino"  % (here, sketchName, sketchName)
+    cmd += " --verify %s/%s/%s.ino" % (here, sketchName, sketchName)
     
     stdout, status = systemOut(cmd.split(' '), sayCmd=False, giveStatus=True)
     if status:
@@ -93,8 +93,8 @@ def printInstructions(instructions):
 def yn(prompt):
     '''stackoverflow.com/questions/3041986
     raw_input returns the empty string for "enter"'''
-    yes = set(['yes','y', 'ye'])
-    no = set(['no','n'])
+    yes = set(['yes', 'y', 'ye'])
+    no = set(['no', 'n'])
     print prompt
     while True:
         choice = raw_input().lower()
@@ -121,10 +121,10 @@ class VerifyError(RuntimeError):
 def makeMakefiles(testName):
     systemOut(["mkdir", "-p", "%s/%s" % (here, testName)])
     
-    template = open(here+"/Makefile.template").read()
-    template = template.format(here + "/%s"%testName, here)
+    template = open(here + "/Makefile.template").read()
+    template = template.format(here + "/%s" % testName, here)
     
-    f = open(here + "/%s/Makefile"%testName, "w")
+    f = open(here + "/%s/Makefile" % testName, "w")
     f.write(template)
     f.close()
     
@@ -151,9 +151,9 @@ class Sketch:
     def makeFiles(self):
         systemOut(["mkdir", "-p", "%s/%s" % (here, self.testName)])
         
-        sketchDir = here+'/%s' % self.testName
+        sketchDir = here + '/%s' % self.testName
         if not exists(sketchDir): makedirs(sketchDir)
-        f = open(sketchDir+'/%s.ino'%self.testName, 'w')
+        f = open(sketchDir + '/%s.ino' % self.testName, 'w')
         f.write(self.getCode())
         f.close()
         
@@ -699,7 +699,7 @@ void loop() {
 }'''
         sk.doTest(doMonitor=False)
         
-if __name__=="__main__":
+if __name__ == "__main__":
     if False:
         sk = Sketch()
         sk.code = baseCode + '''

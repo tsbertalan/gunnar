@@ -68,7 +68,7 @@ class Server(CharStream):
         if nchars == 1:
             return self.getOneChar()
         else:
-            chars = array('c', ['a']*nchars)
+            chars = array('c', ['a'] * nchars)
             for i in range(nchars):
                 chars[i] = self.getOneChar()
             return chars

@@ -53,7 +53,7 @@ class GunnarCommunicator(object):
         
         # Create a handler object for saving data.
         logging.debug('Make a PyTable saving object.')
-        self.handler = PyTableSavingHandler(fname, dataShape=(nfields,), 
+        self.handler = PyTableSavingHandler(fname, dataShape=(nfields,),
                                             printFn=lambda s: setattr(self, 'statusMessage', s),
                                             dataName='sensorData',
                                             AtomClass=tables.Float64Atom,
@@ -80,9 +80,9 @@ class GunnarCommunicator(object):
         except (serial.SerialException, IndexError) as e:
             raise SystemExit('Could not open serial port %s: %s' % (self.port_name, e))
         else:
-            m = self.statusMessage =  'Serial port %s sucessfully opened.' % self.port_name
+            m = self.statusMessage = 'Serial port %s sucessfully opened.' % self.port_name
             logging.debug(m)
-            self.messenger = CmdMessenger(self.serial_port, cmdNames = self.commands)
+            self.messenger = CmdMessenger(self.serial_port, cmdNames=self.commands)
             # attach callbacks
             self.messenger.attach(func=self.onError, msgid=self.commands.index('error'))
             self.messenger.attach(func=self.onSensorsResponse,
@@ -93,7 +93,7 @@ class GunnarCommunicator(object):
             # Send a command that the arduino will acknowledge.
             time.sleep(1.0);  # Give the Arduino time to initialize first.
             self.acknowledge()
-            m = self.statusMessage =  'Arduino ready.'
+            m = self.statusMessage = 'Arduino ready.'
             logging.debug(m)
         
     @property
@@ -107,7 +107,7 @@ class GunnarCommunicator(object):
             lines = self._statusMessage.split('\n')
             for newLine in lines:
                 for i in range(1, len(self.statusHistory)):  # Keep a scrolling history of status messages.
-                    self.statusHistory[i-1] = self.statusHistory[i]
+                    self.statusHistory[i - 1] = self.statusHistory[i]
                 self.statusHistory[i] = newLine
         else:
             self.statusMessage = (args,)
@@ -115,7 +115,7 @@ class GunnarCommunicator(object):
     def list_usb_ports(self):
         """ Use the grep generator to get a list of all USB ports.
         """
-        ports =  [port for port in list_ports.grep('usb')]
+        ports = [port for port in list_ports.grep('usb')]
         return ports
 
     def loopOnce(self):
@@ -175,7 +175,7 @@ class GunnarCommunicator(object):
                 # Construct a sensor status message.
                 m = ' '.join([
                         '%s=%s' % (k, v)
-                        for (k,v) in zip(self.sensorFields, data)
+                        for (k, v) in zip(self.sensorFields, data)
                     ])
                 # Ensure each line of the sensor status message is close to 80 chars.
                 statements = m.split()
@@ -192,7 +192,7 @@ class GunnarCommunicator(object):
                 if segment != '':
                     segments.append(segment)
                 self.statusMessage = '\n '.join(segments)
-                self.statusMessage = ' '.join(['%s=%s'%(k,v) for (k,v) in zip(self.sensorFields[4:6], data[4:6])])
+                self.statusMessage = ' '.join(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
                 
                 self.handler.enquque(data)
             
@@ -200,7 +200,7 @@ class GunnarCommunicator(object):
             from traceback import format_exception
             from sys import exc_info
             tb = ''.join(['!! ' + l for l in format_exception(*exc_info())])
-            self.statusMessage =  "Failed with %s: %s" % (type(e), e) + '\n' + tb
+            self.statusMessage = "Failed with %s: %s" % (type(e), e) + '\n' + tb
 
     def logMessage(self, received_command, *args, **kwargs):
         '''Callback to log string messages sent by for debugging.'''

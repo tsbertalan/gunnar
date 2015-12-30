@@ -48,22 +48,21 @@ class LidarParser:
 
     def __init__(self, server, exitTimeCallback):
         assert isinstance(server, CharStream)
-        self.lidarData = [[]]*360  # A list of 360 elements Angle, Distance , quality
+        self.lidarData = [[]] * 360  # A list of 360 elements Angle, Distance , quality
         self.dataArrs = deque()
         self.init_level = 0
         self.server = server
-        self.exitTimeCallback=exitTimeCallback
+        self.exitTimeCallback = exitTimeCallback
 
     def __len__(self):
         return len(self.dataArrs)
 
-    def pop(self):
-        maxIter = 100
-        for i in range(maxIter):
+    def pop(self, maxAttempts=100):
+        for i in range(maxAttempts):
             if len(self.dataArrs) > 0:
                 break
             else:
-                logging.debug("Parser has no data yet (attempt %d of %d)" % (i, maxIter))
+                logging.debug("Parser has no data yet (attempt %d of %d)" % (i, maxAttempts))
                 sleep(1)  # Block this thread until we have data.
         return self.dataArrs.popleft()
 
@@ -92,7 +91,6 @@ class LidarParser:
                     break
             if not ragged:
                 dataArr = np.vstack(self.lidarData)
-                #logging.debug("Stacked data is of shape %s." % (dataArr.shape,))
                 if dataArr.size > 0:
                     self.dataArrs.append(dataArr)
         except ValueError as e:  # Data is likely ragged (not all filled).
@@ -185,21 +183,21 @@ class LidarParser:
 
                 # verify that the received checksum is equal to the one computed from the data
                 if checksum(all_data) == incoming_checksum:
-                    #speed_rpm = compute_speed(b_speed)
-                    self.savePacketQuarter(index*4+0, b_data0)
-                    self.savePacketQuarter(index*4+1, b_data1)
-                    self.savePacketQuarter(index*4+2, b_data2)
-                    self.savePacketQuarter(index*4+3, b_data3)
+                    # speed_rpm = compute_speed(b_speed)
+                    self.savePacketQuarter(index * 4 + 0, b_data0)
+                    self.savePacketQuarter(index * 4 + 1, b_data1)
+                    self.savePacketQuarter(index * 4 + 2, b_data2)
+                    self.savePacketQuarter(index * 4 + 3, b_data3)
                 else:
                     # the checksum does not match, something went wrong...
                     nb_errors += 1
                     logging.debug("Checksum errors!")
 
                     # "saveScan" data in error state.
-                    self.savePacketQuarter(index*4+0, [0, 0x80, 0, 0])
-                    self.savePacketQuarter(index*4+1, [0, 0x80, 0, 0])
-                    self.savePacketQuarter(index*4+2, [0, 0x80, 0, 0])
-                    self.savePacketQuarter(index*4+3, [0, 0x80, 0, 0])
+                    self.savePacketQuarter(index * 4 + 0, [0, 0x80, 0, 0])
+                    self.savePacketQuarter(index * 4 + 1, [0, 0x80, 0, 0])
+                    self.savePacketQuarter(index * 4 + 2, [0, 0x80, 0, 0])
+                    self.savePacketQuarter(index * 4 + 3, [0, 0x80, 0, 0])
                 self.init_level = 0  # reset and wait for the next packet
 
             else:  # default, should never happen...

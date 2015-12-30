@@ -24,7 +24,7 @@ class Robot(object):
             
         # Make a new serial port object with the default parameters from some tutorial.
         self.serial = serial.Serial(
-                                    port = serialPath,
+                                    port=serialPath,
                                     baudrate=baudRate,
                                     parity=serial.PARITY_NONE,
                                     stopbits=serial.STOPBITS_ONE,

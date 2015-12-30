@@ -21,17 +21,17 @@ class Visualizer:
         self.watcher = Watcher()
         self.parser = LidarParser(self.server, exitTimeCallback=self.watcher.exitNowCallback)
         
-        self.lidarData = [[]]*360  # A list of 360 elements Angle, Distance , quality
+        self.lidarData = [[]] * 360  # A list of 360 elements Angle, Distance , quality
         offset = self.offset = 140
 
         # sample and intensity points
-        self.point = points(pos=[(0, 0, 0)]*360, size=5, color=(0 , 1, 0))
-        self.pointb = points(pos=[(0, 0, 0)]*360, size=5, color=(0.4, 0, 0))
-        self.point2 = points(pos=[(0, 0, 0)]*360, size=3, color=(1 , 1, 0))
-        self.point2b = points(pos=[(0, 0, 0)]*360, size=3, color=(0.4, 0.4, 0))
+        self.point = points(pos=[(0, 0, 0)] * 360, size=5, color=(0 , 1, 0))
+        self.pointb = points(pos=[(0, 0, 0)] * 360, size=5, color=(0.4, 0, 0))
+        self.point2 = points(pos=[(0, 0, 0)] * 360, size=3, color=(1 , 1, 0))
+        self.point2b = points(pos=[(0, 0, 0)] * 360, size=3, color=(0.4, 0.4, 0))
 
         # lines
-        self.outer_line = curve (pos=[(0, 0, 0)]*360, size=5, color=(1 , 0, 0))
+        self.outer_line = curve (pos=[(0, 0, 0)] * 360, size=5, color=(1 , 0, 0))
         self.lines = [curve(pos=[(offset * cos(i * pi / 180.0), 0, offset * -sin(i * pi / 180.0)), (offset * cos(i * pi / 180.0), 0, offset * -sin(i * pi / 180.0))], color=[(0.1, 0.1, 0.2), (1, 0, 0)]) for i in range(360)]
         self.zero_intensity_ring = ring(pos=(0, 0, 0), axis=(0, 1, 0), radius=offset - 1, thickness=1, color=color.yellow)
 

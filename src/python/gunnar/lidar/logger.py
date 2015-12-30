@@ -6,7 +6,6 @@ from threading import Thread
 from time import sleep
 import sys
 import serial
-from time import sleep
 
 from gunnar.io.network import Server, Client
 from gunnar.io.disk import PyTableSavingHandler as SavingHandler
@@ -68,8 +67,8 @@ class LidarLoggerServer(object):
 class LidarLoggerClient(object):
     
     def __init__(self,
-                 com_port = "/dev/ttyUSB0",  # example: 5 == "COM6" == "/dev/tty5"
-                 baudrate = 115200,
+                 com_port="/dev/ttyUSB0",  # example: 5 == "COM6" == "/dev/tty5"
+                 baudrate=115200,
                  ):
         self.ser = serial.Serial(com_port, baudrate)
     
@@ -78,7 +77,7 @@ class LidarLoggerClient(object):
         print "Connected to %s:%d. Will begin sending data. Ctrl+C to quit." % (hostname, port)
         sleep(1)
         BUFLEN = 512
-        buf = array('c', ['a']*BUFLEN)
+        buf = array('c', ['a'] * BUFLEN)
 
         while True:
             try:
