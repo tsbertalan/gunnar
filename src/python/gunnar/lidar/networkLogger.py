@@ -9,7 +9,7 @@ import serial
 
 from gunnar.io.network import Server, Client
 from gunnar.io.disk import PyTableSavingHandler as SavingHandler
-from gunnar.lidar.parseLidar import LidarParser
+from gunnar.lidar.parseLidar import LidarParser, CharStream
 
 
 class Watcher():
@@ -64,25 +64,28 @@ class LidarLoggerServer(object):
         self.watcher.watch()
 
 
-class LidarLoggerClient(object):
+class LidarSerialConnection(CharStream):
     
     def __init__(self,
                  com_port="/dev/ttyUSB0",  # example: 5 == "COM6" == "/dev/tty5"
                  baudrate=115200,
                  ):
         self.ser = serial.Serial(com_port, baudrate)
+        
+    def getChar(self, numChars=1):
+        return self.ser.read(numChars)
+        
     
-    def sendData(self, hostname, port):
+class LidarLoggerClient(LidarSerialConnection):
+    
+    def sendData(self, hostname, port, bufSize=512):
         client = Client(hostname, port, timeout=10)
         print "Connected to %s:%d. Will begin sending data. Ctrl+C to quit." % (hostname, port)
         sleep(1)
-        BUFLEN = 512
-        buf = array('c', ['a'] * BUFLEN)
 
         while True:
             try:
-                for i in range(BUFLEN):
-                    buf[i] = self.ser.read(1)
+                buf = self.getChar(bufSize)
                 print "Sending buffer."
                 client.send(buf.tostring())
             except KeyboardInterrupt:
