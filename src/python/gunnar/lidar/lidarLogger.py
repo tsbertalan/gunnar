@@ -6,10 +6,11 @@ from time import sleep
 
 from gunnar.io.network import Server
 from gunnar.io.disk import PyTableSavingHandler as SavingHandler
-from parseLidar import LidarParser
+from gunnar.lidar.parseLidar import LidarParser
 
 
 class Watcher():
+    '''Watch for an exit command, to stop the server.'''
 
     def __init__(self):
         self.exitNow = False
@@ -35,26 +36,30 @@ class Watcher():
         return self.exitNow
 
 
-if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.INFO)
-
-    watcher = Watcher()
-    server = Server(exitTimeCallback=watcher.exitNowCallback)
-    parser = LidarParser(server, exitTimeCallback=watcher.exitNowCallback)
-    handler = SavingHandler('data')
-    def watchForNewParsedArrays():
+class LidarLogger(object):
+    def __init__(self):
+        logging.getLogger().setLevel(logging.INFO)
+    
+        self.watcher = Watcher()
+        self.server = Server(exitTimeCallback=self.watcher.exitNowCallback)
+        self.parser = LidarParser(self.server, exitTimeCallback=self.watcher.exitNowCallback)
+        self.handler = SavingHandler('data')
+        
+    def watchForNewParsedArrays(self):
         while True:
             sleep(0.00001)  # do not hog the processor power
-            if watcher.exitNowCallback():
+            if self.watcher.exitNowCallback():
                 break
-            if len(parser) > 0:
-                handler.enquque(parser.pop())
+            if len(self.parser) > 0:
+                self.handler.enquque(self.parser.pop())
+    
+    
+    
+    def waitForConnections(self):
+        threads = []
+        for target in self.server.serve, self.parser.parse, self.watchForNewParsedArrays:
+            threads.append(Thread(target=target))
+            threads[-1].start()
+            sleep(.1)
+        self.watcher.watch()
 
-
-    threads = []
-    for target in server.serve, parser.parse, watchForNewParsedArrays:
-        threads.append(Thread(target=target))
-        threads[-1].start()
-        sleep(.1)
-
-    watcher.watch()

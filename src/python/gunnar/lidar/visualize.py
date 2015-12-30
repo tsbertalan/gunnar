@@ -13,7 +13,7 @@ from visual import points, curve, label, vector, ring, scene, cos, pi, sin, colo
 from server import Server
 from parseLidar import LidarParser
 from collections import deque
-from rawStringsLoggingServer import Watcher
+from gunnar.lidar.lidarLogger import Watcher
 
 
 

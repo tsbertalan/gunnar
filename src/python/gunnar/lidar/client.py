@@ -10,13 +10,15 @@ from time import sleep
 
 from gunnar.io.network import Client
 
-
-def mainSendLidarToServer():
-    com_port = "/dev/ttyUSB0"  # example: 5 == "COM6" == "/dev/tty5"
-    baudrate = 115200
-    ser = serial.Serial(com_port, baudrate)
-
-    def sendData(hostname, port):
+class LidarLoggerClient(object):
+    
+    def __init__(self,
+                 com_port = "/dev/ttyUSB0",  # example: 5 == "COM6" == "/dev/tty5"
+                 baudrate = 115200,
+                 ):
+        self.ser = serial.Serial(com_port, baudrate)
+    
+    def sendData(self, hostname, port):
         client = Client(hostname, port, timeout=10)
         print "Connected to %s:%d. Will begin sending data. Ctrl+C to quit." % (hostname, port)
         sleep(1)
@@ -26,22 +28,24 @@ def mainSendLidarToServer():
         while True:
             try:
                 for i in range(BUFLEN):
-                    buf[i] = ser.read(1)
+                    buf[i] = self.ser.read(1)
                 print "Sending buffer."
                 client.send(buf.tostring())
             except KeyboardInterrupt:
                 break
-
-    hostname = 'localhost'
-    port = 9009
-    if len(sys.argv) > 1:
-        print sys.argv
-        hostname = sys.argv[1]
-        if len(sys.argv) > 2:
-            port = int(sys.argv[2])
-
-    sendData(hostname, port)
+    
+    def main(self):
+        hostname = 'localhost'
+        port = 9009
+        if len(sys.argv) > 1:
+            print sys.argv
+            hostname = sys.argv[1]
+            if len(sys.argv) > 2:
+                port = int(sys.argv[2])
+    
+        self.sendData(hostname, port)
 
 
 if __name__=='__main__':
-    mainSendLidarToServer()
+    client = LidarLoggerClient()
+    client.main()
