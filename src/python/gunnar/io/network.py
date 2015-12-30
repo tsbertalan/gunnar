@@ -9,6 +9,8 @@ import traceback
 
 import numpy as np
 
+from gunnar.lidar.parseLidar import CharStream
+
 
 Instance = type(object())
 
@@ -28,7 +30,7 @@ def typeData(data):
     return "%s: '%s'" % (type(data), dataStr)
 
 
-class Server(object):
+class Server(CharStream):
 
     def removeSocket(self, sock):
         if sock in self.SOCKET_LIST:

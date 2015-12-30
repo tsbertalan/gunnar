@@ -37,9 +37,17 @@ def compute_speed(data):
     return speed_rpm
 
 
+class CharStream(object):
+    
+    def getChar(self, numChars=1):
+        from gunnar.utils import VirtualClassError
+        raise VirtualClassError(self)
+
+
 class LidarParser:
 
     def __init__(self, server, exitTimeCallback):
+        assert isinstance(server, CharStream)
         self.lidarData = [[]]*360  # A list of 360 elements Angle, Distance , quality
         self.dataArrs = deque()
         self.init_level = 0
