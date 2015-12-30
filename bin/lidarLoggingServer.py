@@ -3,7 +3,7 @@ Created on Dec 29, 2015
 
 @author: tsbertalan
 '''
-from gunnar.lidar.lidarLogger import LidarLogger
+from gunnar.lidar.logger import LidarLoggerServer
 
-logger = LidarLogger()
+logger = LidarLoggerServer()
 logger.waitForConnections()
