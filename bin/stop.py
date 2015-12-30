@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''Upload a dummy sketch to the Arduino, to stop the motors etc.'''
 from gunnar import testing
 sk = testing.Sketch("stop")

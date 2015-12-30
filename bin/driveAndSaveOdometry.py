@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from time import sleep
 import logging
 import curses
