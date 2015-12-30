@@ -12,7 +12,7 @@ import numpy as np
 from gunnar.io.usb import CmdMessenger
 from serial.tools import list_ports
 
-from rawStringsLoggingServer import PyTableSavingHandler
+from gunnar.io.disk import PyTableSavingHandler
 
 
 class GunnarCommunicator(object):
