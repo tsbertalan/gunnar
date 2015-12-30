@@ -2,6 +2,10 @@
 Created on Nov 29, 2015
 
 @author: tsbertalan
+
+Load sensor data saved in an HDF5 file, and make some sort of a plot out of it.
+Coincidentally, the data gets put in a (series of) numpy array(s), which might
+be useful.
 '''
 from sys import argv
 

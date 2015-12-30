@@ -2,6 +2,9 @@
 Created on Nov 29, 2015
 
 @author: tsbertalan
+
+Make a movie from an HDF5 file full of LIDAR scans. Coincidentally, the data is
+loaded into a NumPy array--that might be useful. 
 '''
 from sys import argv
 
@@ -10,7 +13,10 @@ import tables
 if len(argv) != 2:
     from sys import exit
     from os.path import basename
-    exit("USAGE: %s H5FILEPATH" % basename(argv[0]))
+    exit("USAGE: %s H5FILEPATH" % basename(argv[0])
+         +'\n'+
+         '    Make a movie from an HDF5 file full of LIDAR scans.'
+         )
 else:
     fname = argv[1]
 

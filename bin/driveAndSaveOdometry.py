@@ -1,8 +1,7 @@
-from sys import stdin
 from time import sleep
 import logging
 import curses
-from gunnar.lidar.sendCommandsReceiveOdometry import GunnarCommunicator
+from gunnar.robot import GunnarCommunicator
 
 
 class Gunnar(object):

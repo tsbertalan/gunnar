@@ -1,4 +1,8 @@
 #!/bin/sh
+#
+# From Gunnar, kill server processes on HOST and close background client/server
+# Screens.
+#
 HOST=sigurd.tomsb.net
 if [ $(hostname) = "ubuntu" ]
 then

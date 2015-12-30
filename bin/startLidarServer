@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# Start LIDAR logging server.
+#
 REPO=$HOME/sketchbook/gunnar/
 source $REPO/bin/setPath.sh
 python $REPO/bin/lidarLoggingServer.py
