@@ -12,7 +12,7 @@ from visual import points, curve, label, vector, ring, scene, cos, pi, sin, colo
 
 from gunnar.io.network import Server
 from parseLidar import LidarParser
-from gunnar.lidar.logger import Watcher
+from gunnar.lidar.networkLogger import Watcher
 
 class Visualizer:
 
