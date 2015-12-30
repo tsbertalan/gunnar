@@ -23,41 +23,47 @@ data = f.getNode('/sensorData')
 print 'Loaded data with shape %s.' % (data.shape,)
 
 # Data order is defined by the struct "SensorResponse" in gunnar/gunnar.h .
-assert data.shape[1] == 10
-keys = (
-    'ms', 
-    'heading', 'roll', 'pitch',
-    'encoder 1 position', 'encoder 2 position',
-    'encoder 1 speed', 'encoder 2 speed',
-    'motor 1 status', 'motor 2 status',
-    )
-
+keys = [
+'ms',
+'heading', 'roll', 'pitch',
+'enc1pos', 'enc2pos',
+'enc1spd', 'enc2spd',
+'enc1stat', 'enc2stat',
+'accelX', 'accelY', 'accelZ',
+'magX', 'magY', 'magZ',
+'gyroX', 'gyroY', 'gyroZ',
+]
+assert data.shape[1] == len(keys), data.shape
+\
 unpacked = {keys[i]: data[:, i] for i in range(data.shape[1])}
 
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 
-# Plot 3D data.
-fig = plt.figure(figsize=(16,9))
-fig.suptitle('angular data')
-ax = fig.add_subplot(211, projection='3d')
-ax.plot(unpacked['heading'], unpacked['roll'], unpacked['pitch'], c='k')
-ax.scatter(unpacked['heading'], unpacked['roll'], unpacked['pitch'], c=unpacked['ms'], lw=0, cmap='hot')
-ax.set_xlabel('heading'); ax.set_ylabel('roll'); ax.set_zlabel('pitch')
+# Attempt to integrate the IMU heading data and encoder odometry data.
+x0 = np.array([0, 0])
+thetas = unpacked['heading'] * np.pi / 180.0
+odometer = unpacked['enc1pos']
+stepSizes = odometer[1:] - odometer[:-1]
+xs = [x0]
+for theta, rt in zip(thetas, stepSizes):
+    xt = xs[-1]
+    xtp1 = xt + rt * np.array([np.cos(theta),
+                               np.sin(theta)])
+    xs.append(xtp1)
+xs = np.vstack(xs)
 
-for i in range(3):
-    ax = fig.add_subplot(6,1,i+4)
-    ax.plot(unpacked['ms'], [unpacked['heading'],
-                             unpacked['roll'],
-                             unpacked['pitch'],
-                             ][i])
-    if i != 2:
-        ax.set_xticks([])
-    else:
-        ax.set_xlabel('time [ms]')
-    ax.set_ylabel(['heading', 'roll', 'pitch'][i])
-fig.tight_layout()
+# Plot odometry.
+fig = plt.figure(figsize=(16,9))
+fig.suptitle('integrated odometry and IMU heading')
+ax = fig.add_subplot(111)
+xy = xs[:, 0], xs[:, 1]
+ax.plot(*xy, c='k')
+ax.scatter(*xy, c=unpacked['ms'], lw=0, cmap='hot')
+ax.set_xlabel('x'); ax.set_ylabel('y')
+ax.quiver(xy[0], xy[1], np.cos(thetas), np.sin(thetas),
+          unpacked['ms'], cmap='hot')
 
 # Plot all data over time.
 fig = plt.figure(figsize=(16,9))
@@ -67,23 +73,13 @@ for i in range(1, len(keys)):
     y = unpacked[key]
     ax = fig.add_subplot(len(keys)-1, 1, i)
     ax.plot(x, y)
-    ax.set_ylabel(key)
+    ax.set_ylabel(key+'       .', rotation=12)
+    ax.set_yticks([])
     if i != len(keys)-1:
         ax.set_xticks([])
     else:
         ax.set_xlabel('time [ms]')
-        
-
-# Plot 2D data with heading.
-fig, ax = plt.subplots(figsize=(16,9))
-ax.plot(unpacked['heading'], unpacked['roll'], c='k')
-h = unpacked['heading']
-ax.quiver(unpacked['heading'], unpacked['roll'], np.cos(h), np.sin(h),
-          unpacked['ms'], cmap='hot')
-ax.set_xlabel('heading'); ax.set_ylabel('roll')
+fig.tight_layout()
+fig.subplots_adjust(hspace=0)   
 
 plt.show()
-
-
-
-
