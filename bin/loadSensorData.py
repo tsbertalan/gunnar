@@ -85,6 +85,11 @@ for i in range(1, len(keys)):
     else:
         ax.set_xlabel('time [ms]')
 fig.tight_layout()
-fig.subplots_adjust(hspace=0)   
+fig.subplots_adjust(hspace=0)
+   
+from scipy.io import savemat
+unpacked['integratedPositions'] = xs
+savemat(fname.replace('.h5', '')+'.mat', unpacked)
 
 plt.show()
+

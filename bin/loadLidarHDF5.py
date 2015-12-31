@@ -8,21 +8,27 @@ Make a movie from an HDF5 file full of LIDAR scans. Coincidentally, the data is
 loaded into a NumPy array--that might be useful. 
 '''
 from sys import argv
+import numpy as np
 
 import tables
 
-if len(argv) != 2:
-    from sys import exit
-    from os.path import basename
-    exit("USAGE: %s H5FILEPATH" % basename(argv[0])
-         +'\n'+
-         '    Make a movie from an HDF5 file full of LIDAR scans.'
-         )
+if True:
+    if len(argv) != 2:
+        from sys import exit
+        from os.path import basename
+        exit("USAGE: %s H5FILEPATH" % basename(argv[0])
+             +'\n'+
+             '    Make a movie from an HDF5 file full of LIDAR scans.'
+             )
+    else:
+        fname = argv[1]
 else:
-    fname = argv[1]
+    fname = '../data/localLogger.h5'    
 
 f = tables.openFile(fname, 'r')
 data = f.getNode('/scans')
+from scipy.io import savemat
+savemat(fname.replace('.h5', '')+'.mat', {'lidarScans': np.asarray(data).astype(np.float64)})
 
 print 'Loaded data with %d rows, each with %d columns of %d elements.' % data.shape
 
