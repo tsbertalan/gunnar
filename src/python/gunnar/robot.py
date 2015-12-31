@@ -21,7 +21,6 @@ class GunnarCommunicator(object):
         import tables
         logging.debug('Begin GunnarCommunicator init.')
         self.statusHistory = [''] * logLength
-        self.constructionTime = time.time()
 
         # Define the ordering and sizes of data in incoming sensor packets.
         self.sensorFields = [
@@ -162,7 +161,6 @@ class GunnarCommunicator(object):
             byteString = args[0][-1]
             if len(byteString) >= s:
                 arr = unpack(types, byteString[:s])
-                elapsed = time.time() - self.constructionTime
                 self.nresp += 1
                 #self.statusMessage =  "Response data:", arr
                 
@@ -171,30 +169,30 @@ class GunnarCommunicator(object):
                 assert len(arr) == self.nfields, (len(arr), self.nfields)
                 data[:] = arr
                 self.statusMessage = 'Saving data of shape %s to HDF5.' % (data.shape,)
-                
-                # Construct a sensor status message.
-                m = ' '.join([
-                        '%s=%s' % (k, v)
-                        for (k, v) in zip(self.sensorFields, data)
-                    ])
-                # Ensure each line of the sensor status message is close to 80 chars.
-                statements = m.split()
-                segments = []
-                segmentSize = 79
-                segment = ''
-                for statement in statements:
-                    if len(segment) < segmentSize:
-                        segment += ' ' + statement
-                        m = m[segmentSize:]
-                    else:
-                        segments.append(segment)
-                        segment = statement
-                if segment != '':
-                    segments.append(segment)
-                self.statusMessage = '\n '.join(segments)
-                self.statusMessage = ' '.join(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
-                
                 self.handler.enqueue(data)
+                
+#                 # Construct a sensor status message.
+#                 m = ' '.join([
+#                         '%s=%s' % (k, v)
+#                         for (k, v) in zip(self.sensorFields, data)
+#                     ])
+#                 # Ensure each line of the sensor status message is close to 80 chars.
+#                 statements = m.split()
+#                 segments = []
+#                 segmentSize = 79
+#                 segment = ''
+#                 for statement in statements:
+#                     if len(segment) < segmentSize:
+#                         segment += ' ' + statement
+#                         m = m[segmentSize:]
+#                     else:
+#                         segments.append(segment)
+#                         segment = statement
+#                 if segment != '':
+#                     segments.append(segment)
+#                 self.statusMessage = '\n '.join(segments)
+#                 self.statusMessage = ' '.join(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
+                
             
         except Exception as e:
             from traceback import format_exception

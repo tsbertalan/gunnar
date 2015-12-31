@@ -8,15 +8,17 @@ Load sensor data saved in an HDF5 file, and make some sort of a plot out of it.
 Coincidentally, the data gets put in a (series of) numpy array(s), which might
 be useful.
 '''
-from sys import argv
-
 import tables
 
-if len(argv) > 1:
-    fname = argv[1]
+if True:
+    from sys import argv
+    if len(argv) > 1:
+        fname = argv[1]
+    else:
+        from sys import exit
+        exit('USAGE: %s H5FILEPATH' % argv[0])
 else:
-    from sys import exit
-    exit('USAGE: %s H5FILEPATH' % argv[0])
+    fname = '../data/gunnarCommunicator.h5'
 
 f = tables.openFile(fname, 'r')
 data = f.getNode('/sensorData')
@@ -25,14 +27,14 @@ print 'Loaded data with shape %s.' % (data.shape,)
 
 # Data order is defined by the struct "SensorResponse" in gunnar/gunnar.h .
 keys = [
-'ms',
-'heading', 'roll', 'pitch',
-'enc1pos', 'enc2pos',
-'enc1spd', 'enc2spd',
-'enc1stat', 'enc2stat',
-'accelX', 'accelY', 'accelZ',
-'magX', 'magY', 'magZ',
-'gyroX', 'gyroY', 'gyroZ',
+    'ms',
+    'heading', 'roll', 'pitch',
+    'enc1pos', 'enc2pos',
+    'enc1spd', 'enc2spd',
+    'enc1stat', 'enc2stat',
+    'accelX', 'accelY', 'accelZ',
+    'magX', 'magY', 'magZ',
+    'gyroX', 'gyroY', 'gyroZ',
 ]
 assert data.shape[1] == len(keys), data.shape
 \
@@ -64,7 +66,9 @@ ax.plot(*xy, c='k')
 ax.scatter(*xy, c=unpacked['ms'], lw=0, cmap='hot')
 ax.set_xlabel('x'); ax.set_ylabel('y')
 ax.quiver(xy[0], xy[1], np.cos(thetas), np.sin(thetas),
-          unpacked['ms'], cmap='hot')
+          unpacked['ms'], cmap='hot',
+          linewidths=(0.5,), edgecolors=('k'),
+          )
 
 # Plot all data over time.
 fig = plt.figure(figsize=(16,9))

@@ -54,7 +54,7 @@ class Gunnar(object):
 WINDOWHEIGHT = 40
 class Controller(object):
         
-    def __init__(self, sensorDataRate=2.0):
+    def __init__(self, sensorDataRate=10.0):
         self.sensorDataRate=sensorDataRate
         logging.basicConfig(filename='data/drive.log', level=logging.DEBUG)
         logging.debug('Begin Controller init.')
