@@ -3,17 +3,29 @@ Created on Dec 30, 2015
 
 @author: tsbertalan
 '''
-from gunnar.lidar import LidarSerialConnection, LidarParser
-from gunnar.io.disk import PyTableSavingHandler
 from threading import Thread
 from time import sleep, time
+
+import tables
+
+from gunnar.io.disk import PyTableSavingHandler
+from gunnar.lidar import LidarSerialConnection, LidarParser
 
 class LocalLogger(object):
     
     def __init__(self, fpath='data/localLogger.h5'):
         self.conn = LidarSerialConnection()
         self.parser = LidarParser(self.conn, exitTimeCallback=self._isItTimeToStop)
-        self.handler = PyTableSavingHandler(fpath)
+        self.handler = PyTableSavingHandler(fpath,
+                                            dataShapes=(
+                                                        (360, 2),
+                                                        (1,)
+                                                        ),
+                                            AtomClasses=(
+                                                         tables.UIntAtom,
+                                                         tables.FloatAtom,
+                                                         )
+                                            )
         self.threads = [
                         Thread(target=f)
                         for f in (

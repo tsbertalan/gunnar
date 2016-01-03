@@ -26,11 +26,16 @@ else:
     fname = '../data/localLogger.h5'    
 
 f = tables.openFile(fname, 'r')
-data = f.getNode('/scans')
+scans = f.getNode('/data0_Uint32Atom')
+times = f.getNode('/data1_Float64Atom')
+times -= min(times)
 from scipy.io import savemat
-savemat(fname.replace('.h5', '')+'.mat', {'lidarScans': np.asarray(data).astype(np.float64)})
+savemat(fname.replace('.h5', '')+'.mat', {
+                                          'lidarScans': np.asarray(scans).astype(np.float64),
+                                          'times': np.asarray(times).astype(np.float64),
+                                          })
 
-print 'Loaded data with %d rows, each with %d columns of %d elements.' % data.shape
+print 'Loaded scans with %d rows, each with %d columns of %d elements.' % scans.shape
 
 
 import numpy as np
@@ -54,7 +59,7 @@ def run(row):
     distance = row[:, 0]
     thetas = np.linspace(0, np.pi*2, 360)
     quality  = row[:, 1]
-    ax.set_rlim([0, data[:, :, 0].max()])
+    ax.set_rlim([0, scans[:, :, 0].max()])
 
     if False:
         ok = quality > 1
@@ -74,8 +79,8 @@ def run(row):
         return line,
 
 def data_gen():
-    for i in range(data.shape[0]):
-        yield data[i]
+    for i in range(scans.shape[0]):
+        yield scans[i]
 
 if not saveVideo:
     ani = animation.FuncAnimation(fig, run, data_gen, blit=True, interval=200, repeat=True)
@@ -93,7 +98,7 @@ else:
         bar = ProgressBar(widgets=["Making %s. " % movieFname, ETA(), Bar()])
         bar.start()
         for i, row in enumerate(data_gen()):
-            bar.update(float(i) / data.shape[0] * 100)
+            bar.update(float(i) / scans.shape[0] * 100)
             run(row)
             writer.grab_frame()
         bar.finish()

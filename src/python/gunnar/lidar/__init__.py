@@ -105,7 +105,9 @@ class LidarParser:
             if not ragged:
                 dataArr = np.vstack(self.lidarData)
                 if dataArr.size > 0:
-                    self.dataArrs.append(dataArr)
+                    self.dataArrs.append((
+                                          dataArr, np.array([time.time(),])
+                                          ))
         except ValueError as e:  # Data is likely ragged (not all filled).
             logging.debug("Got a ValueError.")
             raise e
