@@ -2,8 +2,9 @@
 from time import sleep
 import logging
 import curses
-from gunnar.robot import GunnarCommunicator
 
+from gunnar.robot import GunnarCommunicator
+from gunnar.lidar.localLogger import LocalLogger
 
 class Gunnar(object):
     
@@ -67,6 +68,9 @@ class Controller(object):
         for s in self.textLocations:
             self.updateText(s)
         self.stdscr.nodelay(True)  # Make getch non-blocking.
+        
+        # Make a lidar logging object.
+        self.lidarLogger = LocalLogger(printFn=self.printStatusMessage)
         logging.debug('End Controller init.')
         
     textLocations = {
@@ -78,6 +82,9 @@ class Controller(object):
         'speeds': [WINDOWHEIGHT, 0],
         'status': [WINDOWHEIGHT - 30, 1],
         }
+    
+    def printStatusMessage(self, *msgArgs):
+        self.gunnar.communicator.statusMessage = ' '.join(msgArgs)
     
     def blankLine(self, lineNo):
         self.stdscr.addstr(lineNo, 0, ' '*160)
@@ -104,7 +111,8 @@ class Controller(object):
                     text = s
                 self.writeRC(r, c, text, blank=(s not in 'Right Left Space'))
         
-    def run(self):
+    def main(self):
+        self.lidarLogger.startThreads()
         key = ''
         while key != ord('q'):
             try:
@@ -130,12 +138,13 @@ class Controller(object):
                 self.updateText('status');
                 self.gunnar.loopOnce()
             except KeyboardInterrupt:
-                self.gunnar.communicator.statusMessage = 'Press q to quit.'
+                self.printStatusMessage('Press q to quit.')
         self.gunnar.stop()
+        self.lidarLogger.stopThreads(32)
         curses.endwin()
 
             
 if __name__ == "__main__":
     controller = Controller()
-    controller.run()
+    controller.main()
     

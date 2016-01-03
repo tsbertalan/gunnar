@@ -10,7 +10,7 @@ class VirtualClassError(NotImplementedError):
         super(VirtualClassError, self).__init__(text)
 
 
-def print_function(*args):
+def printFnMulticall(*args):
     for arg in args:
         print arg,
     print

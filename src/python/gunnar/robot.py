@@ -52,10 +52,9 @@ class GunnarCommunicator(object):
         
         # Create a handler object for saving data.
         logging.debug('Make a PyTable saving object.')
-        self.handler = PyTableSavingHandler(fname, dataShape=(nfields,),
-                                            printFn=lambda s: setattr(self, 'statusMessage', s),
-                                            dataName='sensorData',
-                                            AtomClass=tables.Float64Atom,
+        self.handler = PyTableSavingHandler(fname, dataShapes=((nfields,),),
+                                            printFn=False,
+                                            AtomClasses=(tables.FloatAtom,),
                                             )
         
         # Make sure this matches the baudrate on the Arduino.
@@ -110,6 +109,9 @@ class GunnarCommunicator(object):
                 self.statusHistory[i] = newLine
         else:
             self.statusMessage = (args,)
+            
+    def printStatusMessage(self, *msg):
+        self.statusMessage = ' '.join(msg)
 
     def list_usb_ports(self):
         """ Use the grep generator to get a list of all USB ports.
@@ -141,8 +143,9 @@ class GunnarCommunicator(object):
             #)
         
     def speedSet(self, left, right):
-        logging.debug('Sending speedSet(%s, %s) command.' % (left, right))
-        self.statusMessage = 'Setting motor speeds to left=%f, right=%f.' % (left, right)
+        msg = 'Sending speedSet(%s, %s) command.' % (left, right)
+        logging.debug(msg)
+        self.statusMessage = msg
         self.messenger.send_cmd(self.commands.index('speedSet'), left, right)
 
     ####################### R E S P O N S E   C A L L B A C K S ###############
@@ -168,8 +171,7 @@ class GunnarCommunicator(object):
                 data = np.empty((self.nfields,))
                 assert len(arr) == self.nfields, (len(arr), self.nfields)
                 data[:] = arr
-                self.statusMessage = 'Saving data of shape %s to HDF5.' % (data.shape,)
-                self.handler.enqueue(data)
+                self.handler.enqueue((data,))
                 
 #                 # Construct a sensor status message.
 #                 m = ' '.join([
@@ -191,7 +193,10 @@ class GunnarCommunicator(object):
 #                 if segment != '':
 #                     segments.append(segment)
 #                 self.statusMessage = '\n '.join(segments)
-#                 self.statusMessage = ' '.join(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
+                self.statusMessage = ' '.join(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
+            else:
+                self.statusMessage = 'byteString of length %d is not long enough (%d).' % (len(byteString), s)
+
                 
             
         except Exception as e:

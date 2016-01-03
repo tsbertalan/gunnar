@@ -11,6 +11,7 @@ from sys import argv
 import numpy as np
 
 import tables
+from time import sleep
 
 if True:
     if len(argv) != 2:
@@ -29,11 +30,16 @@ f = tables.openFile(fname, 'r')
 scans = f.getNode('/data0_Uint32Atom')
 times = f.getNode('/data1_Float64Atom')
 times -= min(times)
+dtimes = times[1:] - times[:-1]
+dt = np.mean(dtimes)
 from scipy.io import savemat
-savemat(fname.replace('.h5', '')+'.mat', {
-                                          'lidarScans': np.asarray(scans).astype(np.float64),
-                                          'times': np.asarray(times).astype(np.float64),
-                                          })
+matData = {
+           'lidarScans': np.asarray(scans).astype(np.float64),
+           'lidarTimes': np.asarray(times).astype(np.float64),
+           }
+print 'Saving MAT file with variable names: %s.' % ', '.join(matData.keys())
+savemat(fname.replace('.h5', '')+'.mat', matData)
+sleep(4) 
 
 print 'Loaded scans with %d rows, each with %d columns of %d elements.' % scans.shape
 
@@ -42,6 +48,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 fig, ax = plt.subplots(subplot_kw={'polar': True}, figsize=(16,9))
+fig.suptitle('average dt=%.2f [s]' % dt)
 tdata, rdata = np.linspace(0, np.pi*2, 360), [0]*360
 
 
@@ -83,13 +90,13 @@ def data_gen():
         yield scans[i]
 
 if not saveVideo:
-    ani = animation.FuncAnimation(fig, run, data_gen, blit=True, interval=200, repeat=True)
+    ani = animation.FuncAnimation(fig, run, data_gen, blit=True, interval=1000*dt, repeat=True)
     plt.show()
 else:
     FFMpegWriter = animation.writers['ffmpeg']
     metadata = dict(title='Movie Test', artist='Matplotlib',
             comment='Movie support!')
-    writer = FFMpegWriter(fps=15, metadata=metadata)
+    writer = FFMpegWriter(fps=1./dt, metadata=metadata)
 
     dpi = 300
     movieFname = fname+"-color-d.mp4"

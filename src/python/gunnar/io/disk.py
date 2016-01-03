@@ -4,7 +4,7 @@ import numpy as np
 import tables  # apt-get installed version 2.3.1, which wasn't new enough. "pip install --upgrade tables" updated to 3.2.2.
 
 from gunnar.lidar import LidarParser
-from gunnar.utils import print_function
+from gunnar.utils import printFnMulticall
 
 
 class Handler(object):
@@ -37,7 +37,7 @@ class Handler(object):
 
 class PyTableSavingHandler(Handler):
 
-    def __init__(self, fname, dataShapes=((360, 2),), printFn=print_function, AtomClasses=(tables.UIntAtom,)):
+    def __init__(self, fname, dataShapes=((360, 2),), printFn=printFnMulticall, AtomClasses=(tables.UIntAtom,)):
         self.printFn = printFn
 
         # Open the table file.
@@ -88,7 +88,8 @@ class PyTableSavingHandler(Handler):
                     array_c.append([data])
                     self.file.flush()
                     self.nsaved += 1
-                    self.printFn('\r%09d scans saved.' % (self.nsaved,))
+                    if self.printFn:
+                        self.printFn('\r%09d data rows of %d arrays saved.' % (self.nsaved, len(self.dataShapes)))
                 else:
                     raise ValueError('Array had shape %s instead of the expected %s.' % (data.shape, dataShape))
         else:
@@ -97,7 +98,8 @@ class PyTableSavingHandler(Handler):
     # PyTables handles this for us at program exit, but this is useful
     # for interactive sessions.
     def __del__(self):
-        self.printFn('Closing file %s.' % self.fname)
+        if self.printFn:
+            self.printFn('Closing file %s.' % self.fname)
         self.file.close()
 
 

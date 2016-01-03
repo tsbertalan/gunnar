@@ -10,7 +10,7 @@ be useful.
 '''
 import tables
 
-if True:
+if False:
     from sys import argv
     if len(argv) > 1:
         fname = argv[1]
@@ -21,7 +21,7 @@ else:
     fname = '../data/gunnarCommunicator.h5'
 
 f = tables.openFile(fname, 'r')
-data = f.getNode('/sensorData')
+data = f.getNode('/data0_Float64Atom')
 
 print 'Loaded data with shape %s.' % (data.shape,)
 
@@ -37,7 +37,6 @@ keys = [
     'gyroX', 'gyroY', 'gyroZ',
 ]
 assert data.shape[1] == len(keys), data.shape
-\
 unpacked = {keys[i]: data[:, i] for i in range(data.shape[1])}
 
 import numpy as np
@@ -56,6 +55,14 @@ for theta, rt in zip(thetas, stepSizes):
                                np.sin(theta)])
     xs.append(xtp1)
 xs = np.vstack(xs)
+
+mult = (
+        12.0 / 3143  # feet / tick
+        * 12.0 / 1   # inches / foot
+        * 2.54 / 1   # cm / inch
+        * 10 / 1     # mm / cm
+        )
+xs *= mult
 
 # Plot odometry.
 fig = plt.figure(figsize=(16,9))
