@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Display Data from Neato LIDAR via socket server
 # based on code from Nicolas "Xevel" Saugnier
 # requires vpython
