@@ -1,6 +1,6 @@
 from subprocess import Popen, PIPE
 
-baudRate = 9600
+baudRate = 19200
 
 
 def systemOut(cmdList, sayCmd=True, giveStatus=False):
