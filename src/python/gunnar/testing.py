@@ -3,15 +3,17 @@ from os import system, makedirs
 from os.path import dirname, abspath, exists
 from time import sleep
 import unittest
-import serialFinder
-from config import baudRate, systemOut
+import gunnar
+from gunnar import serialFinder
+from gunnar.config import baudRate, systemOut
 port = serialFinder.port
 
-here = dirname(abspath(__file__))
+here = gunnar.__path__[0]
 
 
 def msg(text):
     print ">>>>>>>>>>>>>>>", text, "<<<<<<<<<<<<<<<<<"
+msg('Working directory is %s.' % here)
 
 
 #port = "/dev/null"
@@ -122,15 +124,15 @@ def makeMakefiles(testName):
     systemOut(["mkdir", "-p", "%s/%s" % (here, testName)])
     
     template = open(here + "/Makefile.template").read()
-    template = template.format(here + "/%s" % testName, here)
+    template = template.format(here + "/%s" % testName, baudRate)
     
     f = open(here + "/%s/Makefile" % testName, "w")
     f.write(template)
     f.close()
     
     systemOut(["mkdir", "-p", "%s/%s/avr" % (here, testName)])
-    systemOut(["cp", "%s/avr/avrdude.conf" % here, "%s/%s/avr/" % (here, testName)])
-    systemOut(["cp", "-r", "%s/avr/Arduino-Makefile/" % here, "%s/%s/avr/" % (here, testName)])
+    systemOut(["cp", "%s/../../arduino/avr/avrdude.conf" % here, "%s/%s/avr/" % (here, testName)])
+    systemOut(["cp", "-r", "%s/../../arduino/avr/Arduino-Makefile/" % here, "%s/%s/avr/" % (here, testName)])
 
 
 class Sketch:
@@ -171,7 +173,6 @@ class Sketch:
         out = self.upload()
         if doMonitor:
             printInstructions(self.instructions)
-            monitor(self.testName)
             printInstructions(self.instructions)
             monitorPassed = yn("Did the test pass inspection?")
             if not monitorPassed:
@@ -179,13 +180,15 @@ class Sketch:
         return out
  
 includes = '''
+#include <Arduino.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
 #include <Adafruit_L3GD20_U.h>
 #include <Adafruit_9DOF.h>
 #include <Wire.h>
 #include <Servo.h>
-#include <gunnar.h>'''
+#include <gunnar.h>
+#include <CmdMessenger.h>'''
 baseCode = includes + '''
 Gunnar gunnar;
 
@@ -216,7 +219,7 @@ class TestGunnar(unittest.TestCase):
     '''Upload various sketches. Manually check the behavior.'''
 
     def test_positionPID(self):
-        sk = Sketch()
+        sk = Sketch('test_positionPID')
         sk.code = includes + '''
 Gunnar gunnar;
 
@@ -234,7 +237,7 @@ void doEncoder1()
 // Test the motors, encoders, and PID control of position.
 void setup() {
     
-    Serial.begin(9600);
+    Serial.begin(%d);
     gunnar.init();
     gunnar.sonarTask.active = false;
     
@@ -271,7 +274,7 @@ void loop()
     sayPosition();
     gunnar.controlledMotors.stop();
     delay(3000);
-}'''
+}''' % baudRate
         sk.instructions = '''
 0. Ensure that green activity switch is on.
 1. Motors will run by control to several positions,
@@ -285,7 +288,7 @@ void loop()
         sk.doTest()
         
     def test_daguMotorBoard(self):
-        sk = Sketch()
+        sk = Sketch('test_daguMotorBoard')
         sk.code = includes + '''
 const int daguPwmPin1 = 11;
 const int daguPwmPin2 = 12;
@@ -298,7 +301,7 @@ const int daguCurPin2 = A1;
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(%d);
     Serial.println("dagu motor board test");
     pinMode(daguPwmPin1, OUTPUT);
     pinMode(daguPwmPin2, OUTPUT);
@@ -352,7 +355,7 @@ void loop()
 {
     rampUpDown(HIGH);
     rampUpDown(LOW);
-}'''
+}''' % baudRate 
         sk.instructions = '''
 1. Let motors ramp up, then down twice.
 2. Motors should go in opposite directions from each other at the same time.
@@ -360,13 +363,14 @@ void loop()
         sk.doTest()
         
     def test_motorObjectMovement(self):
-        sk = Sketch()
+        sk = Sketch('test_motorObjectMovement')
         sk.code = includes + r'''
 Gunnar gunnar;
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(%d);
+    Serial.println("Begin test %s.");
     gunnar.init();
 }
 
@@ -382,7 +386,7 @@ void ramp(int start, int end)
         {
             gunnar.motor1.setSpeed(i);
             gunnar.motor2.setSpeed(i);
-            interruptibleDelay(4);
+            interruptibleDelay(42);
         }
     }
     else
@@ -391,7 +395,7 @@ void ramp(int start, int end)
         {
             gunnar.motor1.setSpeed(i);
             gunnar.motor2.setSpeed(i);
-            interruptibleDelay(4);
+            interruptibleDelay(42);
         }
     }
     
@@ -407,129 +411,98 @@ void loop()
     gunnar.motor1.stop();
     gunnar.motor2.stop();
     delay(3000);
-}'''
+}''' % (baudRate, sk.testName)
         sk.instructions = '''
 1. Motors should ramp to a fast forward speed, then back to 0.
 2. Motors should ramp to a slow reverse speed, then back to 0.
 3. Repeats after a 3 second delay.'''
         sk.doTest()
         
+    def test_interrupts(self):
+        sk = Sketch('test_interrupts')
+        sk.code = '''
+int pin = 13;
+volatile int state = LOW;
+
+void blink() {
+    state = !state;
+}
+
+void setup() {
+    Serial.begin(%d);
+    Serial.print("Setup ... ");
+    pinMode(pin, OUTPUT);
+    pinMode(2, INPUT_PULLUP);
+    pinMode(3, INPUT_PULLUP);
+    attachInterrupt(0, blink, CHANGE);
+    attachInterrupt(1, blink, CHANGE);
+    Serial.println("complete.");
+}
+
+long now;
+long nextNow;
+
+void loop() {
+    now = micros();
+    if(now > nextNow) {
+        blink();
+        nextNow = now + 4000000;
+    }
+    digitalWrite(pin, state);
+}''' % (baudRate,)
+        sk.instructions = '''
+1. Status light should blink slowly, every 4 seconds.
+2. Status light should blink rapidly (300Hz) when the wheels are turned.'''
+        sk.doTest()
+        
     def test_encodersNoMotors(self):
-        sk = Sketch()
+        sk = Sketch('test_encodersNoMotors')
         sk.code = includes + '''
-// GLOBALS
 Encoder encoder0;
 Encoder encoder1;
 
-void doEncoder0()
-{
+void doEncoder0() {
     encoder0.update();
 }
 
-void doEncoder1()
-{
+void doEncoder1() {
     encoder1.update();
 }
 
-const boolean explore = false;
-// Test the motors and encoders.
 void setup() {
-    if(explore) // TODO: This is cruft.
-    {
-        Serial.begin(9600);
-            
-        boolean a = LOW;
-        boolean b = LOW;
+    Serial.begin(%d);
+    Serial.println("Gunnar boot: %s.");
+    
+    encoder0.init(encoder0PinA, encoder0PinB, NULL);
+    encoder1.init(encoder1PinA, encoder1PinB, NULL);
         
-        uint8_t newStatus = a + 2*b;
-        
-        // backward looks like 0, 1, 2, 3
-        // forward  looks like 0, 3, 2, 1
-        
-        int position = 0;
-        uint8_t waveStatus = 2;
-        
-        switch(waveStatus)
-        {
-            case 0 :
-                Serial.println("case 0");
-                if(newStatus == 1)
-                    position--;
-                else
-                    position++;
-                break;
-            case 1 :
-                Serial.println("case 1");
-                if(newStatus == 2)
-                    position--;
-                else
-                    position++;
-                break;
-            case 2 :
-                Serial.println("case 2");
-                if(newStatus == 3)
-                    position--;
-                else
-                    position++;
-                break;
-            case 3 :
-                Serial.println("case 3");
-                if(newStatus == 1)
-                    position--;
-                else
-                    position++;
-                break;
-            default :
-                break; // Should never reach here.
-        }
-        
-        Serial.print("newStatus=");
-        Serial.println(newStatus);
-        Serial.print("position=");
-        Serial.println(position);
-    }
-    else
-    {
-        Serial.begin(9600);
-        
-        encoder0.init(encoder0PinA, encoder0PinB, NULL);
-        encoder1.init(encoder1PinA, encoder1PinB, NULL);
-            
-        // Turn on pullup resistors on interrupt lines:
-        pinMode(encoder0Int, INPUT_PULLUP);
-        pinMode(encoder1Int, INPUT_PULLUP);
-        attachInterrupt(0, doEncoder0, CHANGE);
-        attachInterrupt(1, doEncoder1, CHANGE);
-        
-        pinMode(PIN_ACTIVITYSWITCH, INPUT);
-    }
+    // Turn on pullup resistors on interrupt lines:
+    pinMode(encoder0Int, INPUT_PULLUP);
+    pinMode(encoder1Int, INPUT_PULLUP);
+    attachInterrupt(0, doEncoder0, CHANGE);
+    attachInterrupt(1, doEncoder1, CHANGE);
+    
+    pinMode(PIN_ACTIVITYSWITCH, INPUT);
 }
 
-
-void loop()
-{
-    if(explore)
-    {
-    }
-    else
-    {
-        Serial.print(micros());
-        Serial.print(", ");
-        Serial.print(encoder0.getSpeed());
-        Serial.print(", ");
-        Serial.print(encoder1.getSpeed());
-        Serial.print(", ");
+long now;
+long nextTime;
+void loop() {
+    now = micros();
+    if(now > nextTime) {
+        nextTime = now + 500000;
+        Serial.print(now);
+        Serial.print(", positions: (");
         Serial.print(encoder0.position);
         Serial.print(", ");
         Serial.print(encoder1.position);
+        Serial.print("), ticks: (");
+        Serial.print(encoder0.ticks);
         Serial.print(", ");
-        Serial.print(encoder0.trueUpdateDelay);
-        Serial.print(", ");
-        Serial.print(encoder1.trueUpdateDelay);
-        Serial.println("");
-        delayMicroseconds(1000000);
+        Serial.print(encoder1.ticks);
+        Serial.println(")");
     }
-}'''
+}''' % (baudRate, sk.testName)
         sk.instructions = '''
 1. Push left and right treads independently forward and back.
 2. Verify that the proper columns in the serial output go up and then go back down.
@@ -537,7 +510,7 @@ void loop()
         sk.doTest()
                 
     def test_servos(self):
-        sk = Sketch()
+        sk = Sketch('test_servos')
         sk.code = includes + '''
 Servo tiltServo; 
 Servo panServo;
@@ -599,7 +572,7 @@ void loop()
         sk.doTest()
         
     def test_servoObjects(self):
-        sk = Sketch()
+        sk = Sketch('test_servoObjects')
         sk.code = baseCode + '''
 void loop() 
 { 
@@ -622,7 +595,7 @@ void loop()
         sk.doTest()
 
     def test_servoCenter(self):
-        sk = Sketch()
+        sk = Sketch('test_servoCenter')
         sk.code = includes + '''
 Servo tiltServo; 
 Servo panServo;
@@ -656,7 +629,7 @@ void loop()
         sk.doTest()
         
     def test_turn(self):
-        sk = Sketch()
+        sk = Sketch('test_turn')
         sk.code = baseCode + '''
 void loop()
 { 
@@ -689,7 +662,7 @@ void loop()
         
     @classmethod
     def tearDownClass(cls):
-        sk = Sketch()
+        sk = Sketch('tearDownClass')
         sk.code = '''void setup() {                
   ;
 }

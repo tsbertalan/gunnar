@@ -17,7 +17,7 @@ monitor:
 	$(GUNNAR_MAKE) monitor
 
 stop: .FORCE
-	python stop.py
+	python bin/stop.py
 
 go: upload
 

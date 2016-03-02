@@ -16,11 +16,11 @@ const int TILTOFFSET = 10; // Larger is further down.
 const uint8_t encoder0Int = 2; // interrupt pin 0 = digial pin 2
 const uint8_t encoder1Int = 3; // interrupt pin 1 = digial pin 3
 
-const uint8_t encoder0PinA = 34;
-const uint8_t encoder0PinB = 36;
+const uint8_t encoder0PinA = 4;
+const uint8_t encoder0PinB = 5;
 
-const uint8_t encoder1PinA = 35;
-const uint8_t encoder1PinB = 37;
+const uint8_t encoder1PinA = 6;
+const uint8_t encoder1PinB = 7;
 
 // Other constants:
 const uint8_t minimumSensableDistance = 30; // [cm]
@@ -37,7 +37,7 @@ const double KD = 0.1;
 // Dagu5 motor driver pins:
 //Motor A
 const uint8_t motorPinPwmA = 11; // Speed control
-const uint8_t motorPinDirA = 44; // Direction
+const uint8_t motorPinDirA = 22; // Direction
 const uint8_t motorPinCurA = A0; // Current monitoring
 
 //Motor B

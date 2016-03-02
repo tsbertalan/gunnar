@@ -4,9 +4,10 @@
 ### to https://github.com/sudar/Arduino-Makefile/blob/master/arduino-mk-vars.md
 ### Original project where this Makefile comes from: https://github.com/WeAreLeka/Bare-Arduino-Project
 
-### PROJECT_DIR
 ### This is the path to where you have created/cloned your project
-PROJECT_DIR       = {0}
+REPO_DIR       = $(HOME)/sketchbook/gunnar
+PROJECT_DIR = {0}
+
 
 AVRDUDE_CONF = $(PROJECT_DIR)/avr/avrdude.conf
 AVRDUDE  = /usr/bin/avrdude
@@ -23,8 +24,7 @@ ARDUINO_DIR       = /usr/share/arduino
 
 ### USER_LIB_PATH
 ### Path to where the your project's libraries are stored.
-# USER_LIB_PATH    :=  {1}
-USER_LIB_PATH    :=  $(HOME)/sketchbook/gunnar/
+USER_LIB_PATH = $(REPO_DIR)/src/arduino/libraries
 
 ### BOARD_TAG
 ### It must be set to the board you are currently using. (i.e uno, mega2560, etc.)
@@ -32,7 +32,7 @@ BOARD_TAG         = mega2560
 
 ### MONITOR_BAUDRATE
 ### It must be set to Serial baudrate value you are using.
-MONITOR_BAUDRATE  = 9600
+MONITOR_BAUDRATE  = {1}
 
 ### AVR_TOOLS_DIR
 ### Path to the AVR tools directory such as avr-gcc, avr-g++, etc.
@@ -53,7 +53,8 @@ AVRDUDE          = /usr/bin/avrdude
 ### CXXFLAGS_STD
 ### Set the C++ standard to be used during compilation. Documentation (https://github.com/WeAreLeka/Arduino-Makefile/blob/std-flags/arduino-mk-vars.md#cxxflags_std)
 #CXXFLAGS_STD      = -std=gnu++11
-CXXFLAGS_STD      = -std=c++0x
+# Ignore warnings, since the Arduino libraries are filled with them, and -isystem doesn't seem to work.
+CXXFLAGS_STD      = -std=c++0x -w
 
 ### CXXFLAGS
 ### Flags you might want to set for debugging purpose. Comment to stop.
