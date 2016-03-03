@@ -221,76 +221,82 @@ class TestGunnar(unittest.TestCase):
     def test_daguMotorBoard(self):
         sk = Sketch('test_daguMotorBoard')
         sk.code = includes + '''
-const int daguPwmPin1 = 11;
-const int daguPwmPin2 = 12;
-
-const int daguDirPin1 = 44;
-const int daguDirPin2 = 45;
-
-const int daguCurPin1 = A0;
-const int daguCurPin2 = A1;
-
+#include "constants.h"
 void setup()
 {
     Serial.begin(%d);
     Serial.println("dagu motor board test");
-    pinMode(daguPwmPin1, OUTPUT);
-    pinMode(daguPwmPin2, OUTPUT);
-    pinMode(daguDirPin1, OUTPUT);
-    pinMode(daguDirPin2, OUTPUT);
-    pinMode(daguCurPin1, INPUT);
-    pinMode(daguCurPin2, INPUT);
+    pinMode(motorPinPwmA, OUTPUT);
+    pinMode(motorPinPwmB, OUTPUT);
+    pinMode(motorPinDirA, OUTPUT);
+    pinMode(motorPinDirB, OUTPUT);
+    pinMode(motorPinCurA, INPUT);
+    pinMode(motorPinCurB, INPUT);
+}
+
+void printSpd(uint8_t speed) {
+    Serial.print(speed);
+    Serial.print(" currents=(");
+    Serial.print(analogRead(motorPinCurA));
+    Serial.print(", ");
+    Serial.print(analogRead(motorPinCurB));
+    Serial.println(")");
+}
+
+void printDir(boolean direction) {
+    if(direction) {
+        Serial.print("forward ");
+    } else {
+        Serial.print("backward ");
+    }
 }
 
 void rampUpDown(boolean direction)
 {
     
     Serial.print("Writing "); Serial.print(direction);
-    Serial.print(" to pin "); Serial.print(daguDirPin1); Serial.println(".");
+    Serial.print(" to pin "); Serial.print(motorPinDirA); Serial.println(".");
     Serial.print("Writing "); Serial.print(direction);
-    Serial.print(" to pin "); Serial.print(daguDirPin2); Serial.println(".");
+    Serial.print(" to pin "); Serial.print(motorPinDirB); Serial.println(".");
 
-    digitalWrite(daguDirPin1, direction);
-    digitalWrite(daguDirPin2, direction);
+    digitalWrite(motorPinDirA, direction);
+    digitalWrite(motorPinDirB, direction);
     
     uint8_t speed;
 
     for(speed=0; speed<255; speed++)
     {
-        Serial.print("increasing: ");
-        Serial.print(speed);
-        Serial.print(" ");
-        Serial.print(analogRead(daguCurPin1));
-        Serial.print(" ");
-        Serial.println(analogRead(daguCurPin2));
-        analogWrite(daguPwmPin1, speed);
-        analogWrite(daguPwmPin2, speed);
+        if(! (speed %% 20) ) {
+            printDir(direction);
+            Serial.print("increasing: speed=");
+            printSpd(speed);
+        }
+        analogWrite(motorPinPwmA, speed);
+        analogWrite(motorPinPwmB, speed);
         delay(4);
     }
     
     for(speed=254; speed>=1; speed--)
     {
-        Serial.print("decreasing: ");
-        Serial.print(speed);
-        Serial.print(" ");
-        Serial.print(analogRead(daguCurPin1));
-        Serial.print(" ");
-        Serial.println(analogRead(daguCurPin2));
-        analogWrite(daguPwmPin1, speed);
-        analogWrite(daguPwmPin2, speed);
+        if(! (speed %% 20) ) {
+            printDir(direction);
+            Serial.print("decreasing: speed=");
+            printSpd(speed);
+        }
+        analogWrite(motorPinPwmA, speed);
+        analogWrite(motorPinPwmB, speed);
         delay(4);
     }  
 }
 
 void loop()
 {
-    rampUpDown(HIGH);
-    rampUpDown(LOW);
+    rampUpDown(true);
+    rampUpDown(false);
 }''' % baudRate 
         sk.instructions = '''
 1. Let motors ramp up, then down twice.
-2. Motors should go in opposite directions from each other at the same time.
-3. Each motor should go first in one direction, then the other.'''
+2. Each motor should go first in one direction, then the other.'''
         sk.doTest()
         
     def test_motorObjectMovement(self):

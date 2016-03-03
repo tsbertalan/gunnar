@@ -42,7 +42,7 @@ const uint8_t motorPinCurA = A0; // Current monitoring
 
 //Motor B
 const uint8_t motorPinPwmB = 12; // Speed control
-const uint8_t motorPinDirB = 45; // Direction
+const uint8_t motorPinDirB = 23; // Direction
 const uint8_t motorPinCurB = A1; // Current monitoring
 
 const uint8_t TURNSIGNALLEFTPIN = 52;
