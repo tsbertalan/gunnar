@@ -83,8 +83,10 @@ private:
             // Since both motors are wired the same, but face different
             // sides of the vehicle, the sense of "forward" is different
             // for both.
+            // ... is how it should be, but somehow my wiring is s.t. this is
+            // not necessary.
             if(_which == MOTORLEFT) {
-                digitalWrite(motorPinDirA, status==MOTORFORWARD);
+                digitalWrite(motorPinDirA, status==MOTORBACKWARD);
             } else {
                 digitalWrite(motorPinDirB, status==MOTORBACKWARD);
             }
