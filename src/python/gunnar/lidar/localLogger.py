@@ -3,7 +3,6 @@ Created on Dec 30, 2015
 
 @author: tsbertalan
 '''
-from threading import Thread
 from time import sleep, time
 
 import tables
@@ -11,6 +10,7 @@ import tables
 from gunnar.io.disk import PyTableSavingHandler
 from gunnar.lidar import LidarSerialConnection, LidarParser
 from gunnar.utils import printFnMulticall
+from multiprocessing import Process  # TODO: This might be preventing clean exit of the CLUI.
 
 class LocalLogger(object):
     
@@ -29,11 +29,11 @@ class LocalLogger(object):
                                                          ),
                                             printFn=printFn,
                                             )
-        self.threads = [
-                        Thread(target=f)
+        self.processes = [
+                        Process(target=f)
                         for f in (
-                                  self.parser.parse,
-                                  self._packData
+                                  self.parser.parse,  # Reads LIDAR data from USB.
+                                  self._packData  # Periodically puts that data in an HDF5 file. 
                                   )
                         ]
         self.stopNow = False
@@ -51,16 +51,16 @@ class LocalLogger(object):
                 self.handler.enqueue(self.parser.pop())
                 
     def startThreads(self):
-        for thread in self.threads:
-            thread.start()
+        for process in self.processes:
+            process.start()
             
     def stopThreads(self, timeout=10.0):
         self.printFn('Stopping Lidar logger with thread timeout %s.' % timeout)
         self.stopNow = True
         startTime = time()
         while True:
-            if True not in [t.isAlive() for t in self.threads]:
-                # If no threads are still alive, we're done here.
+            if True not in [t.is_alive() for t in self.processes]:
+                # If no processes are still alive, we're done here.
                 break
             else:
                 # Otherwise, give them a little time to see the stop flag. 
@@ -76,7 +76,7 @@ class LocalLogger(object):
             try:
                 sleep(1)
             except KeyboardInterrupt:
-                print "Caught KeyboardInterrupt. Stopping logging threads."
+                print "Caught KeyboardInterrupt. Stopping logging processes."
                 self.stopThreads()
                 break
                 
