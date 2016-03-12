@@ -8,6 +8,10 @@ Load sensor data saved in an HDF5 file, and make some sort of a plot out of it.
 Coincidentally, the data gets put in a (series of) numpy array(s), which might
 be useful.
 '''
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d
+
 import tables
 
 if False:
@@ -39,9 +43,9 @@ keys = [
 assert data.shape[1] == len(keys), data.shape
 unpacked = {keys[i]: data[:, i] for i in range(data.shape[1])}
 
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
+# Remove discontinuities larger than pi in the sensor fusion orientation data.
+for key in 'heading', 'roll', 'pitch':
+    unpacked[key] = np.unwrap(unpacked[key] * np.pi / 180.) * 180. / np.pi
 
 # Attempt to integrate the IMU heading data and encoder odometry data.
 x0 = np.array([0, 0])
