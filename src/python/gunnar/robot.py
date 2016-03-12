@@ -72,7 +72,9 @@ class GunnarCommunicator(object):
 
         try:
             # Try to open a USB port.
-            self.port_name = self.list_usb_ports()[-1][0]
+            ports = [p[0] for p in self.list_usb_ports()]
+            logging.debug('USB ports available are %s.' % (ports,))
+            self.port_name = ports[-1]
             logging.debug('Trying to open USB port at %s.' % self.port_name)
             self.serial_port = serial.Serial(self.port_name, self.baud, timeout=0)
         except (serial.SerialException, IndexError) as e:
