@@ -50,7 +50,7 @@ class CmdMessenger(object):
         else:
             self._read = readmeth
 
-        if self._file.closed:
+        if hasattr(self._file, 'closed') and self._file.closed:
             raise IOError("The file-like object is closed.")
 
     def attach(self, func, msgid=None):
