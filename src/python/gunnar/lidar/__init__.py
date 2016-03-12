@@ -5,7 +5,7 @@ Created on Nov 29, 2015
 '''
 
 import time, logging
-from collections import deque
+from multiprocessing import Queue  # TODO: This might be preventing clean exit of the CLUI.
 from time import sleep
 import serial
 
@@ -62,22 +62,17 @@ class LidarParser:
     def __init__(self, server, exitTimeCallback):
         assert isinstance(server, CharStream)
         self.lidarData = [[]] * 360  # A list of 360 elements Angle, Distance , quality
-        self.dataArrs = deque()
+        self.dataArrs = Queue()
         self.init_level = 0
         self.server = server
         self.exitTimeCallback = exitTimeCallback
 
     def __len__(self):
-        return len(self.dataArrs)
+        return int(self.dataArrs.qsize())
 
-    def pop(self, maxAttempts=100):
-        for i in range(maxAttempts):
-            if len(self.dataArrs) > 0:
-                break
-            else:
-                logging.debug("Parser has no data yet (attempt %d of %d)" % (i, maxAttempts))
-                sleep(1)  # Block this thread until we have data.
-        return self.dataArrs.popleft()
+    def pop(self):
+        return self.dataArrs.get()
+            
 
     def savePacketQuarter(self, angle, data):
         """Save a sample.
@@ -105,7 +100,7 @@ class LidarParser:
             if not ragged:
                 dataArr = np.vstack(self.lidarData)
                 if dataArr.size > 0:
-                    self.dataArrs.append((
+                    self.dataArrs.put((
                                           dataArr, np.array([time.time(),])
                                           ))
         except ValueError as e:  # Data is likely ragged (not all filled).
