@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 
-# Some commands need to be run *not* as root. Run them as 
-# userdo "COMMAND ARGS"
-# (quoted and escaped, unfortunately)
-function userdo { 
-    sudo su vagrant --login --shell=/bin/bash --command "source ~/.profile ; $1"
-}
+
 
 # The httpredir.debian.org "magic" mirror which debian64 uses is buggy.
 # We might need to hit it multiple times. Fortunately, a successful
@@ -36,22 +31,40 @@ aptinst ros-kinetic-desktop-full python-rosinstall
 
 ## Initialize rosdep
 sudo rosdep init
-userdo "echo \"source /opt/ros/kinetic/setup.bash\" >> ~/.profile"
-userdo "rosdep update"
+echo "source /opt/ros/kinetic/setup.bash" >> ~/.profile
+rosdep update
 
 ## Environment setup
-userdo "source ~/.profile"
+source ~/.profile
 
 
 
 
 #### ARDUINO BUILDER ####
-aptinst golang-go mercurial vim
-userdo "git clone https://github.com/arduino/arduino-builder.git ~/arduinoBuilder"
-userdo "mkdir -p ~/gocode"
-userdo "mkdir -p ~/bin"
-userdo "echo export GOPATH=\$HOME/arduinoBuilder >> ~/.profile"
-userdo "go get github.com/go-errors/errors"
-userdo "go get github.com/stretchr/testify"
-userdo "go get github.com/jstemmer/go-junit-report"
-userdo "go build arduino.cc/arduino-builder; mv arduino-builder ~/bin"
+# aptinst golang-go mercurial vim arduino arduino-core
+# git clone https://github.com/arduino/arduino-builder.git ~/arduinoBuilder
+# mkdir -p ~/gocode
+# mkdir -p ~/bin
+# echo "export GOPATH=\$HOME/arduinoBuilder" >> ~/.profile
+# source ~/.profile
+# go get github.com/go-errors/errors
+# go get github.com/stretchr/testify
+# go get github.com/jstemmer/go-junit-report
+# go build arduino.cc/arduino-builder; mv arduino-builder ~/bin
+
+# Install unmentioned dependencies.
+# aptinst libpococrypto9-dbg libpocodata9-dbg libpocomysql9-dbg \
+#     libpoconet9-dbg libpoconetssl9-dbg libpocoodbc9-dbg libpocosqlite9-dbg \
+#     libpocozip9-dbg
+# # Fix the broken libgif-dev install.
+# # https://bugs.launchpad.net/ubuntu/+source/graphviz/+bug/1398037
+# sudo ln -s `locate libgif.a | tail -n 1` /usr/lib/libgif.a
+# sudo ln -s `locate libgif.a | tail -n 1` /usr/lib/libgif.la
+# sudo ln -s `locate libgif.so.4.1.6 | tail -n 1` /usr/lib/libgif.so.4.1.6
+
+
+
+
+#### ARDUINO-MK ####
+# arduino-builder seems to be plagued with bugs at the moment. We keep to the old ways.
+sudo apt-get install -y arduino arduino-core arduino-mk

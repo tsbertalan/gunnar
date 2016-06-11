@@ -1,11 +1,12 @@
 ### DISCLAIMER
-### For detailed explanations about all of the available options, please refer
-### to https://github.com/sudar/Arduino-Makefile/blob/master/arduino-mk-vars.md
-### Original project where this Makefile comes from: https://github.com/WeAreLeka/Bare-Arduino-Project
+# For detailed explanations about all of the available options, please refer
+# to https://github.com/sudar/Arduino-Makefile/blob/master/arduino-mk-vars.md
+# Original project where this Makefile comes from:
+# https://github.com/WeAreLeka/Bare-Arduino-Project
 
 ### REPO_DIR
-### This is the path to where you have created/cloned your project
-REPO_DIR       = /home/tsbertalan/sketchbook/gunnar
+### This is the path to where you have created/cloned the project.
+REPO_DIR       = $(HOME)/sketchbook/gunnar
 PROJECT_DIR = $(REPO_DIR)/src/arduino/sketches/gunnar
 
 
@@ -23,7 +24,7 @@ ARDMK_DIR         = $(REPO_DIR)/src/arduino/avr/Arduino-Makefile
 ARDUINO_DIR       = /usr/share/arduino
 
 ### USER_LIB_PATH
-### Path to where the your project's libraries are stored.
+### Path to where the the project's libraries are stored.
 USER_LIB_PATH = $(REPO_DIR)/src/arduino/libraries
 
 ### BOARD_TAG
@@ -60,7 +61,7 @@ CXXFLAGS_STD      = -std=c++0x
 #CXXFLAGS         += -pedantic -Wall -Wextra
 
 ### MONITOR_PORT
-### The port your board is connected to. Using an '*' tries all the ports and finds the right one.
+### The port the board is connected to. Using an '*' tries all the ports and finds the right one.
 #MONITOR_PORT      = /dev/tty.usbmodem*
 MONITOR_PORT      = $(shell ls /dev/ttyACM* 2> /dev/null)
 

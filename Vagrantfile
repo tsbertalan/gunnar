@@ -21,7 +21,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # end
 
   # Run provisioning script.
-  config.vm.provision :shell, path: "bin/bootstrap.sh"
+  config.vm.provision :shell, path: "bin/vagrantbootstrap.sh"
 
   # Name the VM.
   config.vm.define "gunnar" do |gunnar|
