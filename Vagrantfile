@@ -11,6 +11,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "debian/jessie64"
+  # Use the version with Virtualbox Guess Additions.
+  config.vm.box_version = "= 8.1.0"
 
   config.vm.provider "virtualbox" do |vb|
   #   # Don't boot with headless mode
