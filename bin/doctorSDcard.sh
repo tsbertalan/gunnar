@@ -1,25 +1,29 @@
 #!/bin/bash
 # Configuration is set in the file bootParams.
 set -e
+export nargs=$#
 function retAbrt {
-    echo "Return to continue; Ctrl+C to abort."; read
-    }
-function par {
-    `dirname $0`/bootParams $1
-    }
+    if [[ "$nargs" -ge 3 ]]
+    then
+        echo Non-interactive mode. Continuing.
+    else
+        echo "Return to continue; Ctrl+C to abort."; read
+    fi
+}
+
+
+bp=$1
+user=$2
+server=sigurd.tomsb.net
+serverUser=tsbertalan
+port=19898
 
 echo Continuing with these parameters:
-`dirname $0`/bootParams print
+    echo Base dir: $bp
+    echo SBC user: $user
+    echo SSH target: $serverUser@$server:$port
 echo Proceed?
 retAbrt
-
-bp=$( par bp )
-user=$( par user )
-server=$( par server )
-serverUser=$( par serverUser)
-port=$( par port )
-
-
 
 ## Generate SSH key files and install.
 ssh-keygen -t rsa -N "" -f /tmp/id_rsa
@@ -35,6 +39,7 @@ mv /tmp/id_rsa.pub $bp/home/$user/.ssh/
 
 
 ## Make ping.sh script to keep connection alive (I hope).
+echo "Make ping script."
 mkdir -p $bp
 cat << EOF > $bp/etc/cron.hourly/pingServer.sh
 #!/bin/bash
@@ -51,21 +56,36 @@ chmod +x $bp/etc/cron.hourly/pingServer.sh
 
 
 ## Make boot install script, to be run exactly once.
+desc="Install some things on first boot."
+echo "Make script for: $desc"
 cat << EOF >> $bp/etc/init.d/bootInstall
 #!/bin/bash
+### BEGIN INIT INFO
+# Provides:          bootInstall
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop:
+# Short-Description: $desc
+# Description: $desc
+### END INIT INFO
 set -e
 if [ -f /etc/bootInstall_semaphore ]
 then
-    echo "bootInstall has run before."
+    echo "bootInstall has run before. Not running on this boot."
 else
-    apt-get install -y screen vim git
+    apt-get clean
+    apt-get update
+    apt-get clean
+    apt-get install -y --force-yes screen vim git
     chmod 700 /home/$user/.ssh
-    chown $user:$user /home/$user/.ssh
+    chown -R $user:$user /home/$user/.ssh
     chmod 700 /home/$user/.ssh/
     chmod 600 /home/$user/.ssh/id_rsa*
+    touch /var/spool/cron/crontabs/$user
     chown $user:$user /var/spool/cron/crontabs/$user
     chmod 600 /var/spool/cron/crontabs/$user
-    chown $user:crontab /var/spool/cron/crontab/$user
+    chown $user:crontab /var/spool/cron/crontabs/$user
     # If the script has gotten to this point, we've succeeded. Touch a semaphore.
     touch /etc/bootInstall_semaphore
 fi
@@ -78,10 +98,23 @@ cd $bp/etc/rc2.d && \
 
 
 ## Make script to start screen tunnel at boot.
+desc="Start screen tunnel at boot."
+echo "Make script for: $desc"
 reverseCmd="ssh -o \"StrictHostKeyChecking no\" -tR $port:localhost:22 $serverUser@$server watch date"
 cat << EOF >> $bp/etc/init.d/screenTunnel
-/usr/bin/screen -dmS tunnel-screen $reverseCmd
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          screenTunnel
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop:
+# Short-Description: $desc
+# Description: $desc
+### END INIT INFO
+su vagrant --command='/usr/bin/screen -dmS tunnel-screen $reverseCmd'
 EOF
+chmod +x $bp/etc/init.d/screenTunnel
 # Run at boot.
 cd $bp/etc/rc2.d && \
     ln -s ../init.d/screenTunnel ./S99screenTunnel
@@ -89,13 +122,17 @@ cd $bp/etc/rc2.d && \
 
 
 ## Make WIFI defaults configuration file.
-mkdir -p $bp/etc/wpa_supplicant
-cat << EOF >> $bp/etc/wpa_supplicant/wpa_supplicant.conf
+echo "Make WIFI defaults file."
+wpadir=$bp/etc/wpa_supplicant/
+mkdir -p $wpadir
+cat << EOF >> $wpadir/wpa_supplicant.conf
 network={
     ssid="puvisitor"
     priority=5
     key_mgmt=NONE
 }
 EOF
+
+echo "Done with script $0."
 
 # mount:  sudo mount -o loop,offset=70254592 from-sd-card.img /mnt/img

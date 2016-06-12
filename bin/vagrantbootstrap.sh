@@ -6,4 +6,5 @@ function runAsUser {
 }
 runAsUser "mkdir -p /home/vagrant/sketchbook"
 runAsUser "ln -s /vagrant /home/vagrant/sketchbook/gunnar"
-runAsUser "/bin/bash ~/sketchbook/gunnar/bin/bootstrap.sh"
+/vagrant/bin/doctorSDcard.sh / vagrant noninteractive
+# runAsUser "/bin/bash ~/sketchbook/gunnar/bin/bootstrap.sh"
