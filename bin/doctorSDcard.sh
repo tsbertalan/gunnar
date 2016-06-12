@@ -77,6 +77,13 @@ if [ -f /etc/bootInstall_semaphore ]
 then
     echo "bootInstall has run before. Not running on this boot."
 else
+    # Wait for network connection...try to ping $server for about a minute.
+    for i in {1..60}
+    do
+        ping -c1 $server &> /dev/null && echo "Can see $server on network. Continuing...." && break
+        echo "Can't see $server on network. Waiting..."
+        sleep 1
+    done
     apt-get clean
     apt-get update
     apt-get clean
