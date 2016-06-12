@@ -115,6 +115,13 @@ cat << EOF >> $bp/etc/init.d/screenTunnel
 # Short-Description: $desc
 # Description: $desc
 ### END INIT INFO
+# Wait for network connection...try to ping $server for about a minute.
+for i in {1..60}
+do
+    ping -c1 $server &> /dev/null && echo "Can see $server on network. Continuing...." && break
+    echo "Can't see $server on network. Waiting..."
+    sleep 1
+done
 su $user --command='/usr/bin/screen -dmS tunnel-screen $reverseCmd'
 EOF
 chmod +x $bp/etc/init.d/screenTunnel
