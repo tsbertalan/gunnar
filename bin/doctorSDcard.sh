@@ -97,7 +97,7 @@ else
     chmod 600 /var/spool/cron/crontabs/$user
     chown $user:crontab /var/spool/cron/crontabs/$user
     # Console boot:
-    [ -e /etc/init.d/lightdm ] && update-rc.d lightdm disable 2
+    [ -e /etc/init.d/lightdm ] && update-rc.d lightdm disable && echo "/bin/true" > /etc/X11/default-display-manager
     # If the script has gotten to this point, we've succeeded. Touch a semaphore.
     touch /etc/bootInstall_semaphore
     echo "bootInstall appears to have succeeded. Rebooting..."
