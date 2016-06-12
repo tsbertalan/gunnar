@@ -145,4 +145,23 @@ EOF
 echo "" >> $wpaddr/wpa_supplicant.conf
 cat extraNetworks.conf >> $wpaddr/wpa_supplicant.conf
 
+
+
+## Set Keyboard layout and locale to US
+echo "Set keyboard layout to US."
+mkdir -p $bp/etc/default/
+cat << EOF > $bp/etc/default/keyboard
+XKBMODEL="pc104"
+XKBLAYOUT="us"
+XKBVARIANT=""
+XKBOPTIONS=""
+
+BACKSPACE="guess"
+EOF
+cat << EOF > $bp/etc/default/locale
+LANG=en_US.UTF-8
+EOF
+
+
+
 echo "Done with script $0."
