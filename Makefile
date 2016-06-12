@@ -29,16 +29,22 @@ dlUbuntu:
 	
 
 # Flash Raspbian Jessie image to SD card.
-sdx = zenity --entry --text="Drive name (e.g. 'sdc' in /dev/sdc):" --entry-text=sdc
-pathToFlash = zenity --entry --text="Path to img file to flash:" --entry-text="$(HOME)/Downloads/robotics/2016-05-27-raspbian-jessie.img"
+ssdx = zenity --entry --text="Drive name (e.g. 'sdc' in /dev/sdc):" --entry-text=sdc > /tmp/sdx_id
+sdx = cat /tmp/sdx_id
+spathToFlash = zenity --entry --text="Path to img file to flash:" --entry-text="$(HOME)/Downloads/robotics/2016-05-27-raspbian-jessie.img" > /tmp/ptf_p
+pathToFlash = cat /tmp/ptf_p
 flash:
+	`$(ssdx)`
+	`$(spathToFlash)`
 	sudo dcfldd bs=4M if=`$(pathToFlash)` of=/dev/`$(sdx)`
 	sync
 verify:
-	sudo dcfldd bs=4M if=/dev/`$(sdx)` of=from-sd-card.img count=2048
+	`$(ssdx)`
+	`$(spathToFlash)`
+	sudo dcfldd bs=4M if=/dev/`$(sdx)` of=/tmp/from-sd-card.img count=1024
 	sync
-	sudo truncate --reference `$(pathToFlash)` from-sd-card.img
-	sudo diff -s from-sd-card.img `$(pathToFlash)`
+	sudo truncate --reference `$(pathToFlash)` /tmp/from-sd-card.img
+	sudo diff -s /tmp/from-sd-card.img `$(pathToFlash)`
 
 vagrantSaveKey:
 	vagrant up | tee /tmp/vagrant.out

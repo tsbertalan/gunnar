@@ -13,7 +13,6 @@ grep "img2" /tmp/fdisk.out
 startSector=`grep "img2" /tmp/fdisk.out | awk "{ print \\$2 }"`
 startByte=$(( $bytesPerSector * $startSector ))
 echo "$bytesPerSector bytes per sector times $startSector sectors equals $startByte bytes at start of partition."
-exit
 
 echo Mount the second partition.
 sudo mount -o loop,offset=$startByte $imgPath $mntPoint
