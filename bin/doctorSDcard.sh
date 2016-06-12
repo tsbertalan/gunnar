@@ -35,6 +35,7 @@ cat /tmp/id_rsa.pub >> $HOME/.ssh/authorized_keys
 mkdir -p $bp/home/$user/.ssh
 mv /tmp/id_rsa $bp/home/$user/.ssh/
 mv /tmp/id_rsa.pub $bp/home/$user/.ssh/
+cat ~/.ssh/id_rsa.pub >> $bp/home/$user/.ssh/authorized_keys
 
 
 
@@ -88,6 +89,8 @@ else
     chown $user:crontab /var/spool/cron/crontabs/$user
     # If the script has gotten to this point, we've succeeded. Touch a semaphore.
     touch /etc/bootInstall_semaphore
+    echo "bootInstall appears to have succeeded. Rebooting..."
+    reboot
 fi
 EOF
 chmod +x $bp/etc/init.d/bootInstall
@@ -112,7 +115,7 @@ cat << EOF >> $bp/etc/init.d/screenTunnel
 # Short-Description: $desc
 # Description: $desc
 ### END INIT INFO
-su vagrant --command='/usr/bin/screen -dmS tunnel-screen $reverseCmd'
+su $user --command='/usr/bin/screen -dmS tunnel-screen $reverseCmd'
 EOF
 chmod +x $bp/etc/init.d/screenTunnel
 # Run at boot.
@@ -134,5 +137,3 @@ network={
 EOF
 
 echo "Done with script $0."
-
-# mount:  sudo mount -o loop,offset=70254592 from-sd-card.img /mnt/img
