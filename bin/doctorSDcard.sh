@@ -1,6 +1,7 @@
 #!/bin/bash
 # Configuration is set in the file bootParams.
 set -e
+startDir=`pwd`
 export nargs=$#
 function retAbrt {
     if [[ "$nargs" -ge 3 ]]
@@ -35,7 +36,6 @@ cat /tmp/id_rsa.pub >> $HOME/.ssh/authorized_keys
 mkdir -p $bp/home/$user/.ssh
 mv /tmp/id_rsa $bp/home/$user/.ssh/
 mv /tmp/id_rsa.pub $bp/home/$user/.ssh/
-cat ~/.ssh/id_rsa.pub >> $bp/home/$user/.ssh/authorized_keys
 
 
 
@@ -89,7 +89,6 @@ else
     chown $user:crontab /var/spool/cron/crontabs/$user
     # Console boot:
     [ -e /etc/init.d/lightdm ] && update-rc.d lightdm disable 2
-        disable_boot_to_scratch
     # If the script has gotten to this point, we've succeeded. Touch a semaphore.
     touch /etc/bootInstall_semaphore
     echo "bootInstall appears to have succeeded. Rebooting..."
@@ -146,7 +145,7 @@ network={
 }
 EOF
 echo "" >> $wpaddr/wpa_supplicant.conf
-cat extraNetworks.conf >> $wpaddr/wpa_supplicant.conf
+cat $startDir/extraNetworks.conf >> $wpaddr/wpa_supplicant.conf 2>/dev/null
 
 
 
