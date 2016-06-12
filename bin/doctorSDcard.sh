@@ -36,6 +36,8 @@ cat /tmp/id_rsa.pub >> $HOME/.ssh/authorized_keys
 mkdir -p $bp/home/$user/.ssh
 mv /tmp/id_rsa $bp/home/$user/.ssh/
 mv /tmp/id_rsa.pub $bp/home/$user/.ssh/
+[ -e ~/.ssh/id_rsa.pub ] && cat ~/.ssh/id_rsa.pub >> $bp/home/$user/.ssh/authorized_keys
+
 
 
 
