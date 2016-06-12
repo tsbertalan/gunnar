@@ -1,4 +1,6 @@
 #!/bin/bash
+# run like:
+# source <(curl -s https://raw.githubusercontent.com/tsbertalan/gunnar/master/bin/bootstrapSSH.sh)
 echo Enter user@server for reverse SSH tunnel:
 read server
 echo "Got user@server: $server. Ctrl+c to abort and retry; return to continue."
