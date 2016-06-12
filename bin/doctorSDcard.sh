@@ -142,5 +142,7 @@ network={
     key_mgmt=NONE
 }
 EOF
+echo "" >> $wpaddr/wpa_supplicant.conf
+cat extraNetworks.conf >> $wpaddr/wpa_supplicant.conf
 
 echo "Done with script $0."
