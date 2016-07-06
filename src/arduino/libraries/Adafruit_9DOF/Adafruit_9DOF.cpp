@@ -25,7 +25,10 @@
 
 #include "Adafruit_9DOF.h"
 
-#define PI  (3.14159265F);
+// This is already defined at line 28 of /usr/share/arduino/hardware/arduino/cores/arduino/Arduino.h
+// as 3.1415926535897932384626433832795
+// Also, HALF_PI and TWO_PI are there.
+// #define PI  (3.14159265F);
 
 /***************************************************************************
  PRIVATE FUNCTIONS

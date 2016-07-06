@@ -87,7 +87,7 @@ else
     apt-get clean
     apt-get update
     apt-get clean
-    apt-get install -y --force-yes screen vim git
+    apt-get install -y --force-yes screen vim git htop
     chmod 700 /home/$user/.ssh
     chown -R $user:$user /home/$user/.ssh
     chmod 700 /home/$user/.ssh/
@@ -172,6 +172,11 @@ EOF
 cat << EOF > $bp/etc/default/locale
 LANG=en_US.UTF-8
 EOF
+
+
+## Clone repo into card.
+mkdir -p $bp/home/$user/sketchbook/
+git `dirname $0`/.. $bp/home/$user/sketchbook/gunnar
 
 
 

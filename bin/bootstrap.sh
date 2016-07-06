@@ -19,14 +19,16 @@ function aptinst {
 
 
 #### ROBOT OPERATING SYSTEM ####
+
+## Set up your keys
+sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 0xB01FA116
+wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O - | sudo apt-key add -
+
 ## Setup your sources.list
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 sudo apt-get update
 sudo apt-get upgrade -y
 
-## Set up your keys
-sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 0xB01FA116
-wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O - | sudo apt-key add -
 
 #     #########
 #     distDesc=$(lsb_release --description)
