@@ -1,0 +1,3 @@
+<!--Read LIDAR and odometry topics and conver them into map and pose estimates.-->
+<launch><!--TODO: All these gunnar_ROS_pkg strings will probably need to change to something else later. Including "_ROS_pkg" seems tacky.-->
+	<node pkg="gunnar_ROS_pkg" name="slam" type="slam.py"></node></launch>
