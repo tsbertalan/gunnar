@@ -178,6 +178,12 @@ EOF
 mkdir -p $bp/home/$user/sketchbook/
 git `dirname $0`/.. $bp/home/$user/sketchbook/gunnar
 
+## Modify .bashrc
+export bashrc=$bp/home/$user/.bashrc
+echo "export LC_ALL=\"C\"" >> $bashrc
+echo "source \$HOME/catkin_ws/devel/setup.bash" >> $bashrc
+ 
+
 
 
 echo "Done with script $0."

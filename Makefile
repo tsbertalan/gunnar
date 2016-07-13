@@ -31,7 +31,7 @@ dlUbuntu:
 # Flash Raspbian Jessie image to SD card.
 ssdx = zenity --entry --text="Drive name (e.g. 'sdc' in /dev/sdc):" --entry-text=sdc > /tmp/sdx_id
 sdx = cat /tmp/sdx_id
-spathToFlash = zenity --entry --text="Path to img file to flash:" --entry-text="$(HOME)/Downloads/robotics/2016-05-27-raspbian-jessie.img" > /tmp/ptf_p
+spathToFlash = zenity --entry --text="Path to img file to flash:" --entry-text="/media/tsbertalan/Acomdata/robotics/doctoredSD.img" > /tmp/ptf_p
 pathToFlash = cat /tmp/ptf_p
 flash:
 	`$(ssdx)`
