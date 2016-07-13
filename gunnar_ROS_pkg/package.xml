@@ -1,3 +1,4 @@
+<!--TODO: Add gunnar_description and gunnar_simulation packages.-->
 <?xml version="1.0"?>
 <package>
   <name>gunnar_ROS_pkg</name>
