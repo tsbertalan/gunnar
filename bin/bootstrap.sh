@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Install/build all necessary ROS software, assuming Raspbian OS. 
+#
 # Attempt to exit on first error.
 set -e
 

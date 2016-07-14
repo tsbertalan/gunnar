@@ -1,4 +1,14 @@
-## Mount an image and do stuff to it.
+## Mount a Raspberry Pi SD image and do stuff to it.
+# 
+if [ $# -ne 3 ]
+then
+	echo "USAGE: $0 IMGPATH MNTPOINT USER"
+	echo
+	echo 'Where IMGPATH is the path to the .img file,'
+	echo '      MNTPOINT is the place to mount it (like /mnt/sdcard,'
+	echo '  and USER is the user on the SD image (probably "pi").'
+	exit
+fi
 set -e
 # imgPath=/media/tsbertalan/Acomdata/robotics/doctoredSD.img
 imgPath=$1

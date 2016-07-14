@@ -1,4 +1,5 @@
 #!/bin/sh
+# DEPRECATED: Update a pcduino image.
 cd `dirname $0`
 IMG=pcduino_ubuntu_20131126.img
 

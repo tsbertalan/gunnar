@@ -2,10 +2,12 @@
 #
 # This script is to be run on the robot at boot time.
 #
+# DEPRECATED: This should be included in doctorSDcard.sh.
+#
 source /home/tsbertalan/.profile
 scrCmd="/usr/bin/screen -dmS"
 
-# Start an SSH tunnel to sigurd, so we can SSH back into the robot.
+# Start an SSH tunnel to Sigurd, so we can SSH back into the robot.
 cmd="$scrCmd tunnel-screen $HOME/bin/reverseTunnelSigurdStartup.sh"
 echo \$ $cmd
 $cmd 2>$HOME/Desktop/tunnelError.out
@@ -15,4 +17,3 @@ $cmd 2>$HOME/Desktop/tunnelError.out
 #cmd="$scrCmd upload $HOME/sketchbook/gunnar/cam/uploadLastImageDir.py"
 #echo \$ $cmd
 #$cmd 2>$HOME/Desktop/uploadError.out
-

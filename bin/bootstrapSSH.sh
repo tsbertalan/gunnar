@@ -1,6 +1,12 @@
 #!/bin/bash
-# run like:
-# source <(curl -s https://raw.githubusercontent.com/tsbertalan/gunnar/master/bin/bootstrapSSH.sh)
+# Script for installing an SSH TUNNEL BACKDOOR as a boot cron job. 
+#
+# Run like:
+# source <(curl -s URLTOTHISFILE)
+# Where URLTOTHISFILE is something like https://raw.githubusercontent.com/tsbertalan/gunnar/master/bin/bootstrapSSH.sh
+#
+# DEPRECATED: This should be included in doctorSDcard.sh.
+#
 echo Enter user@server for reverse SSH tunnel:
 read server
 echo "Got user@server: $server. Ctrl+c to abort and retry; return to continue."
@@ -15,7 +21,8 @@ read
 port=19899
 reverseCmd="ssh -o \"StrictHostKeyChecking no\" -tR $port:localhost:22 $server watch date"
 
-# Write ping.sh
+
+## Write ping.sh
 mkdir -p ~/bin
 mkdir -p ~/Desktop
 cat << EOF > ~/bin/ping.sh
@@ -29,7 +36,8 @@ echo "on target \$1 from host \$host."
 ssh "\$1" "\$cmd"
 EOF
 
-# Describe reverse tunnel cron job in a 
+
+## Write reverse tunnel cron job as a HEREDOC. 
 cat << EOF > /tmp/tunnelCron
 # m h  dom mon dow   command
 @reboot  (. ~/.profile; /usr/bin/screen -dmS tunnel-screen $reverseCmd )
