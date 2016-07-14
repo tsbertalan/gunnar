@@ -1,4 +1,6 @@
-To make the SD card:
+## GUNNAR IS A ROBOT
+
+# To make the SD card:
 
 1. Download and extract Raspbian Jessie image (make target "dlUbuntu", maybe).
 2. Mount image, alter it  to contain our backdoor, and unmount (script "mountAndAlterSD.sh"),
