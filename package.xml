@@ -1,14 +1,13 @@
-<!--TODO: Add gunnar_description and gunnar_simulation packages.-->
 <?xml version="1.0"?>
 <package>
-  <name>gunnar_ROS_pkg</name>
+  <name>gunnar</name>
   <version>0.0.0</version>
-  <description>The gunnar_ROS_pkg package</description>
+  <description>The gunnar package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="tom@tombertalan.com">Tom Bertalan</maintainer>
+  <maintainer email="pi@todo.todo">pi</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -20,7 +19,7 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/gunnar_ROS_pkg</url> -->
+  <!-- <url type="website">http://wiki.ros.org/gunnar</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
@@ -41,10 +40,8 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>differential_drive</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
-  <run_depend>differential_drive</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
 

@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(gunnar_ROS_pkg)
+project(gunnar)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  differential_driveA
   rospy
   std_msgs
 )
@@ -101,8 +100,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES gunnar_ROS_pkg
-#  CATKIN_DEPENDS differential_driveA rospy std_msgs
+#  LIBRARIES gunnar
+#  CATKIN_DEPENDS rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -118,24 +117,24 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(gunnar_ROS_pkg
-#   src/${PROJECT_NAME}/gunnar_ROS_pkg.cpp
+# add_library(gunnar
+#   src/${PROJECT_NAME}/gunnar.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(gunnar_ROS_pkg ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(gunnar ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(gunnar_ROS_pkg_node src/gunnar_ROS_pkg_node.cpp)
+# add_executable(gunnar_node src/gunnar_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(gunnar_ROS_pkg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(gunnar_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(gunnar_ROS_pkg_node
+# target_link_libraries(gunnar_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -154,7 +153,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS gunnar_ROS_pkg gunnar_ROS_pkg_node
+# install(TARGETS gunnar gunnar_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -179,7 +178,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_gunnar_ROS_pkg.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_gunnar.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
