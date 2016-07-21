@@ -2,6 +2,7 @@
 import logging
 import random
 import sys
+import glob
 import serial
 from struct import unpack, calcsize
 import time
@@ -12,13 +13,43 @@ import numpy as np
 from gunnar.io.usb import CmdMessenger
 from serial.tools import list_ports
 
-from gunnar.io.disk import PyTableSavingHandler
+# from gunnar.io.disk import PyTableSavingHandler
+
+def get_serial_ports():
+    """ Lists serial port names
+    
+    http://stackoverflow.com/a/14224477/1224886
+
+        :raises EnvironmentError:
+            On unsupported or unknown platforms
+        :returns:
+            A list of the serial ports available on the system
+    """
+    if sys.platform.startswith('win'):
+        ports = ['COM%s' % (i + 1) for i in range(256)]
+    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+        # this excludes your current terminal "/dev/tty"
+        ports = glob.glob('/dev/tty[A-Za-z]*')
+    elif sys.platform.startswith('darwin'):
+        ports = glob.glob('/dev/tty.*')
+    else:
+        raise EnvironmentError('Unsupported platform')
+
+    result = []
+    for port in ports:
+        if port not in result:
+            try:
+                s = serial.Serial(port)
+                s.close()
+                result.append(port)
+            except (OSError, serial.SerialException):
+                pass
+    return result
 
 
 class GunnarCommunicator(object):
 
     def __init__(self, fname="data/gunnarCommunicator.h5", logLength=28):
-        import tables
         logging.debug('Begin GunnarCommunicator init.')
         self.statusHistory = [''] * logLength
 
@@ -50,12 +81,12 @@ class GunnarCommunicator(object):
         self.sensorDataSize = calcsize(self.types)
         self.nfields = nfields = len(self.sensorFields)
         
-        # Create a handler object for saving data.
-        logging.debug('Make a PyTable saving object.')
-        self.handler = PyTableSavingHandler(fname, dataShapes=((nfields,),),
-                                            printFn=False,
-                                            AtomClasses=(tables.FloatAtom,),
-                                            )
+#         # Create a handler object for saving data.
+#         logging.debug('Make a PyTable saving object.')
+#         self.handler = PyTableSavingHandler(fname, dataShapes=((nfields,),),
+#                                             printFn=False,
+#                                             AtomClasses=(tables.FloatAtom,),
+#                                             )
         
         # Make sure this matches the baudrate on the Arduino.
         self.baud = 19200
@@ -72,8 +103,11 @@ class GunnarCommunicator(object):
 
         try:
             # Try to open a USB port.
-            ports = [p[0] for p in self.list_usb_ports()]
-            logging.debug('USB ports available are %s.' % (ports,))
+            ports = get_serial_ports()
+            print 'USB ports available are %s.' % (ports,)
+            if len(ports) == 0:
+                raise EnvironmentError('No active USB ports found!')
+                
             self.port_name = ports[-1]
             logging.debug('Trying to open USB port at %s.' % self.port_name)
             self.serial_port = serial.Serial(self.port_name, self.baud, timeout=0)

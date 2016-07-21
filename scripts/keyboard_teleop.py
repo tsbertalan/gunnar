@@ -44,7 +44,7 @@ class KeyboardTeleop(object):
         'Right': [3, 30],
         'Down': [4, 20],
         'Space': [3, 20],
-        'speeds': [WINDOWHEIGHT, 0],
+        'speeds': [WINDOWHEIGHT - 10, 0],
         'status': [WINDOWHEIGHT - 30, 1],
     }
     
