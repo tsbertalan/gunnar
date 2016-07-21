@@ -3,6 +3,13 @@ from time import sleep
 import logging
 import curses
 
+from sys import path
+for p in path:
+    if 'catkin_ws' in p:
+        print p
+        
+print
+        
 from gunnar.robot import GunnarCommunicator
 from gunnar.lidar.localLogger import LocalLogger
 
@@ -59,6 +66,7 @@ WINDOWHEIGHT = 40
 class Controller(object):
     def __init__(self, sensorDataRate=10.0):
         self.sensorDataRate = sensorDataRate
+        from os import system; system('mkdir -p data')
         logging.basicConfig(filename='data/drive.log', level=logging.DEBUG)
         logging.debug('Begin Controller init.')
         self.stdscr = curses.initscr()
