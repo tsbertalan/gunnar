@@ -3,13 +3,6 @@ from time import sleep
 import logging
 import curses
 
-from sys import path
-for p in path:
-    if 'catkin_ws' in p:
-        print p
-        
-print
-        
 from gunnar.robot import GunnarCommunicator
 from gunnar.lidar.localLogger import LocalLogger
 
