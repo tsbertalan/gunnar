@@ -14,7 +14,7 @@ WINDOWHEIGHT = 40
 class KeyboardTeleop(object):
     def __init__(self, sensorDataRate=10.0):
         rospy.init_node('keyboard_teleop')
-        self.publisher = rospy.Publisher('~cmd_vel', Twist, queue_size=5)
+        self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=5)
         self.sensorDataRate = sensorDataRate
         logging.basicConfig(filename='data/drive.log', level=logging.DEBUG)
         logging.debug('Begin Controller init.')
@@ -29,7 +29,7 @@ class KeyboardTeleop(object):
         
         self.statusLines = deque()
         
-        self.subscriber = rospy.Subscriber('~cmd_vel', Twist, self.printLogCallback)
+        self.subscriber = rospy.Subscriber('/cmd_vel', Twist, self.printLogCallback)
         
         for s in self.textLocations:
             self.updateText(s)
@@ -48,9 +48,9 @@ class KeyboardTeleop(object):
         'status': [WINDOWHEIGHT - 30, 1],
     }
     
-    def printStatusMessage(self, *msgArgs):
-        pass
-#         self.gunnar.communicator.statusMessage = ' '.join(msgArgs)
+    def printStatusMessage(self, msg):
+        r, c = self.textLocations['status']
+        self.writeRC(r, c, msg)
 
     def addToLog(self, message):
         for line in message.split('\n'):
