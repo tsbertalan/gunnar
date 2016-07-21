@@ -6,7 +6,7 @@
 
 ### REPO_DIR
 ### This is the path to where you have created/cloned the project.
-REPO_DIR       = $(HOME)/sketchbook/gunnar
+REPO_DIR       = $(HOME)/catkin_ws/src/gunnar
 PROJECT_DIR = $(REPO_DIR)/src/arduino/sketches/gunnar
 
 

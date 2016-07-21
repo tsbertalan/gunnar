@@ -49,9 +49,13 @@ sudo apt-get upgrade -y
 sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
 
 # Install Bootstrap Dependencies
+# ... and other needful things.
 aptinst python-pip python-setuptools python-yaml python-distribute \
     python-docutils python-dateutil python-six libconsole-bridge-dev \
-    liburdfdom-headers-dev liburdfdom-dev liblz4-dev
+    liburdfdom-headers-dev liburdfdom-dev liblz4-dev \
+    arduino ipython
+    # More that might be necessary:
+    #libboost-filesystem-dev libxml2-dev qt4-qmake libqt4-dev cmake  
 sudo pip install rosdep rosinstall_generator wstool rosinstall
 
 # Initializing rosdep
