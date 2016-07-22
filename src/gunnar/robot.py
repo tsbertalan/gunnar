@@ -6,7 +6,7 @@ import glob
 import serial
 from struct import unpack, calcsize
 import time
-
+import rospy
 
 import numpy as np
 
@@ -50,7 +50,7 @@ def get_serial_ports():
 class GunnarCommunicator(object):
 
     def __init__(self, fname="data/gunnarCommunicator.h5", logLength=28):
-        logging.debug('Begin GunnarCommunicator init.')
+        rospy.logdebug('Begin GunnarCommunicator init.')
         self.statusHistory = [''] * logLength
 
         # Define the ordering and sizes of data in incoming sensor packets.
@@ -82,7 +82,7 @@ class GunnarCommunicator(object):
         self.nfields = nfields = len(self.sensorFields)
         
 #         # Create a handler object for saving data.
-#         logging.debug('Make a PyTable saving object.')
+#         rospy.logdebug('Make a PyTable saving object.')
 #         self.handler = PyTableSavingHandler(fname, dataShapes=((nfields,),),
 #                                             printFn=False,
 #                                             AtomClasses=(tables.FloatAtom,),
@@ -104,19 +104,19 @@ class GunnarCommunicator(object):
         try:
             # Try to open a USB port.
             ports = get_serial_ports()
-            print 'USB ports available are %s.' % (ports,)
+            rospy.loginfo('USB ports available are %s.' % (ports,))
             if len(ports) == 0:
                 raise EnvironmentError('No active USB ports found!')
-                
+            ports.sort(key=lambda port: 'C' in port)
             self.port_name = ports[-1]
-            logging.debug('Trying to open USB port at %s.' % self.port_name)
+            rospy.logdebug('Trying to open USB port at %s.' % self.port_name)
             self.serial_port = serial.Serial(self.port_name, self.baud, timeout=0)
         except (serial.SerialException, IndexError) as e:
             raise SystemExit('Could not open serial port %s: %s' % (self.port_name, e))
         else:
-            m = self.statusMessage = 'Serial port %s sucessfully opened.' % self.port_name
-            logging.debug(m)
+            rospy.loginfo('Serial port %s sucessfully opened.' % self.port_name)
             self.messenger = CmdMessenger(self.serial_port, cmdNames=self.commands)
+            
             # attach callbacks
             self.messenger.attach(func=self.onError, msgid=self.commands.index('error'))
             self.messenger.attach(func=self.onSensorsResponse,
@@ -126,28 +126,10 @@ class GunnarCommunicator(object):
 
             # Send a command that the arduino will acknowledge.
             time.sleep(1.0);  # Give the Arduino time to initialize first.
-            self.acknowledge()
-            m = self.statusMessage = 'Arduino ready.'
-            logging.debug(m)
-        
-    @property
-    def statusMessage(self):
-        return self._statusMessage
-    
-    @statusMessage.setter
-    def statusMessage(self, args):
-        if isinstance(args, tuple):
-            self._statusMessage = ' '.join(['%s' % (s,) for s in args])
-            lines = self._statusMessage.split('\n')
-            for newLine in lines:
-                for i in range(1, len(self.statusHistory)):  # Keep a scrolling history of status messages.
-                    self.statusHistory[i - 1] = self.statusHistory[i]
-                self.statusHistory[i] = newLine
-        else:
-            self.statusMessage = (args,)
             
-    def printStatusMessage(self, *msg):
-        self.statusMessage = ' '.join(msg)
+            rospy.loginfo('Requesting ACK from arduino.')
+            self.acknowledge(wait=False)
+            rospy.loginfo('Arduino ready.')
 
     def list_usb_ports(self):
         """ Use the grep generator to get a list of all USB ports.
@@ -164,14 +146,14 @@ class GunnarCommunicator(object):
 
     ############################### C O M M A N D S ###########################
     def acknowledge(self, wait=True):
-        logging.debug('Sending ack command.')
+        rospy.logdebug('Sending ACK command.')
         self.messenger.send_cmd(self.commands.index('acknowledge'))
         if wait:
             # Wait until the arduino sends an acknowledgement back
             self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'))
 
     def sensorsRequest(self):
-        logging.debug('Sending sensor data request.')
+        rospy.logdebug('Sending sensor data request.')
         self.messenger.send_cmd(self.commands.index('sensorsRequest'))
         ## This doesn't work:
         #self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'),
@@ -180,20 +162,24 @@ class GunnarCommunicator(object):
         
     def speedSet(self, left, right):
         msg = 'Sending speedSet(%s, %s) command.' % (left, right)
-        logging.debug(msg)
-        self.statusMessage = msg
+        rospy.loginfo(msg)
         self.messenger.send_cmd(self.commands.index('speedSet'), left, right)
 
     ####################### R E S P O N S E   C A L L B A C K S ###############
     def onError(self, received_command, *args, **kwargs):
         """Callback function to handle errors
         """
-        self.statusMessage = 'Got unrecognized data from Arduino.'
+        rospy.loginfo('Got unrecognized data from Arduino.')
 
     nresp = 0.
     def onSensorsResponse(self, received_command, *args, **kwargs):
-        """Callback to handle the float addition response
+        """Callback to handle the sensor data response
         """
+        msg = 'Received command %s' % received_command
+        if isinstance(received_command, int) and received_command < len(self.commands):
+            msg += ' (%s)' % self.commands[received_command]
+        msg += '.'
+        rospy.logdebug(msg)
         s = self.sensorDataSize
         types = self.types
         try:
@@ -201,37 +187,36 @@ class GunnarCommunicator(object):
             if len(byteString) >= s:
                 arr = unpack(types, byteString[:s])
                 self.nresp += 1
-                #self.statusMessage =  "Response data:", arr
                 
                 # Save the data in our HDF5 file.
                 data = np.empty((self.nfields,))
                 assert len(arr) == self.nfields, (len(arr), self.nfields)
                 data[:] = arr
-                self.handler.enqueue((data,))
-                
-#                 # Construct a sensor status message.
-#                 m = ' '.join([
-#                         '%s=%s' % (k, v)
-#                         for (k, v) in zip(self.sensorFields, data)
-#                     ])
-#                 # Ensure each line of the sensor status message is close to 80 chars.
-#                 statements = m.split()
-#                 segments = []
-#                 segmentSize = 79
-#                 segment = ''
-#                 for statement in statements:
-#                     if len(segment) < segmentSize:
-#                         segment += ' ' + statement
-#                         m = m[segmentSize:]
-#                     else:
-#                         segments.append(segment)
-#                         segment = statement
-#                 if segment != '':
-#                     segments.append(segment)
-#                 self.statusMessage = '\n '.join(segments)
-                self.statusMessage = ' '.join(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
+#                 self.handler.enqueue((data,))
+                  
+                # Construct a sensor status message.
+                m = ' '.join([
+                        '%s=%s' % (k, v)
+                        for (k, v) in zip(self.sensorFields, data)
+                    ])
+                # Ensure each line of the sensor status message is close to 80 chars.
+                statements = m.split()
+                segments = []
+                segmentSize = 79
+                segment = ''
+                for statement in statements:
+                    if len(segment) < segmentSize:
+                        segment += ' ' + statement
+                        m = m[segmentSize:]
+                    else:
+                        segments.append(segment)
+                        segment = statement
+                if segment != '':
+                    segments.append(segment)
+                segments.extend(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
+                rospy.logdebug('\n '.join(segments))
             else:
-                self.statusMessage = 'byteString of length %d is not long enough (%d).' % (len(byteString), s)
+                rospy.loginfo('byteString of length %d is not long enough (%d).' % (len(byteString), s))
 
                 
             
@@ -243,7 +228,10 @@ class GunnarCommunicator(object):
 
     def logMessage(self, received_command, *args, **kwargs):
         '''Callback to log string messages sent by for debugging.'''
-        logging.debug('Got message from Arduino: %s %s' % (args, kwargs))
+        rospy.logdebug('Got message from Arduino: %s %s' % (args, kwargs))
+        
+    def printStatus(self, msg):
+        print msg
 
         
 if __name__ == '__main__':

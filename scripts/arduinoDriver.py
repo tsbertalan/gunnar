@@ -10,7 +10,7 @@ class Gunnar(object):
     def __init__(self):
         self._spds = [0, 0]
         self.robotSpeedsStr = ''
-#         self.communicator = GunnarCommunicator()
+        self.communicator = GunnarCommunicator()
 
     def stop(self):
         self.spds = [0, 0]
@@ -25,18 +25,18 @@ class Gunnar(object):
         self.cmdSetSpeeds(twoList[0], twoList[1])
         
     def cmdSetSpeeds(self, a, b):
-#         self.communicator.speedSet(a, b)
+        self.communicator.speedSet(a, b)
         self.robotSpeedsStr = "(%.1f, %.1f)." % (a, b)
 
     def spinOnce(self):
         pass
-#         self.communicator.loopOnce()
+        self.communicator.loopOnce()
         
 class VtargetListener(Gunnar):
     
     def __init__(self):
+        rospy.init_node('arduino_driver', log_level=rospy.DEBUG)
         super(VtargetListener, self).__init__()
-        rospy.init_node('arduino_driver')
         rospy.loginfo('Begin VtargetListener init.')
         rospy.Subscriber('/lwheel_vtarget', Float32, self.lwheelCallback)
         rospy.Subscriber('/rwheel_vtarget', Float32, self.rwheelCallback)
