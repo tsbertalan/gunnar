@@ -131,19 +131,39 @@ public:
 
     // Callback function sets the motor speeds.
     void setSpeeds() {
-        // Retreive first parameter as float
+        // Retrieve first parameter as float
         float leftSpeed = cmdMessenger.readFloatArg();
 
-        // Retreive second parameter as float
+        // Retrieve second parameter as float
         float rightSpeed = cmdMessenger.readFloatArg();
 
         motor1.setSpeed(leftSpeed);
         motor2.setSpeed(rightSpeed);
+
+        sendMsg(String("Speeds set in firmware: "), leftSpeed, rightSpeed);
     }
+
+    String f2s(float in, int width=6, int precision=2) {
+        char out[25];
+        dtostrf(in, width, precision, out);
+        return String(out);
+    }
+
 
     // Called when a received command has no attached function
     void unknownCommandCallback() {
         cmdMessenger.sendCmd(kError, "Command without attached callback");
+    }
+
+    void sendMsg(String msg) {
+        cmdMessenger.sendCmd(kMsg, msg);
+    }
+
+    void sendMsg(String base, float x, float y) {
+        base.concat(f2s(x));
+        base.concat(" ");
+        base.concat(f2s(y));
+        sendMsg(base);
     }
 
     Encoder encoder0;

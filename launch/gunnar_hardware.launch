@@ -1,5 +1,10 @@
 <!-- Run drivers to publish sensor data and respond to actuation requests. -->
-<launch><!--Driver which publishes lidar scans.-->
+<launch>
 
-	<node pkg="gunnar_ROS_pkg" name="lidarDriver" type="lidarDriver.py"></node><!--Driver which publishes sensor data and responds to commands about motors and other devices.-->
-	<node name="arduinoDriver" pkg="gunnar_ROS_pkg" type="arduinoDriver.py"></node></launch>
+    <!--Driver which publishes lidar scans.-->
+	<!-- <node pkg="gunnar" name="lidarDriver" type="lidarDriver.py"></node> -->
+	<!--Driver which publishes sensor data and responds to commands about motors and other devices.-->
+	<node name="arduino_driver" pkg="gunnar" type="arduinoDriver.py"></node>
+	<node name="twist_to_motors" pkg="gunnar" type="twist_to_motors.py"></node>
+
+</launch>

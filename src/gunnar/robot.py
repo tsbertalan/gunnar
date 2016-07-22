@@ -104,7 +104,7 @@ class GunnarCommunicator(object):
         try:
             # Try to open a USB port.
             ports = get_serial_ports()
-            rospy.loginfo('USB ports available are %s.' % (ports,))
+            rospy.logdebug('USB ports available are %s.' % (ports,))
             if len(ports) == 0:
                 raise EnvironmentError('No active USB ports found!')
             ports.sort(key=lambda port: 'C' in port)
@@ -114,7 +114,7 @@ class GunnarCommunicator(object):
         except (serial.SerialException, IndexError) as e:
             raise SystemExit('Could not open serial port %s: %s' % (self.port_name, e))
         else:
-            rospy.loginfo('Serial port %s sucessfully opened.' % self.port_name)
+            rospy.logdebug('Serial port %s sucessfully opened.' % self.port_name)
             self.messenger = CmdMessenger(self.serial_port, cmdNames=self.commands)
             
             # attach callbacks
@@ -127,9 +127,9 @@ class GunnarCommunicator(object):
             # Send a command that the arduino will acknowledge.
             time.sleep(1.0);  # Give the Arduino time to initialize first.
             
-            rospy.loginfo('Requesting ACK from arduino.')
+            rospy.logdebug('Requesting ACK from arduino.')
             self.acknowledge(wait=False)
-            rospy.loginfo('Arduino ready.')
+            rospy.logdebug('Arduino ready.')
 
     def list_usb_ports(self):
         """ Use the grep generator to get a list of all USB ports.
@@ -169,7 +169,7 @@ class GunnarCommunicator(object):
     def onError(self, received_command, *args, **kwargs):
         """Callback function to handle errors
         """
-        rospy.loginfo('Got unrecognized data from Arduino.')
+        rospy.logdebug('Got unrecognized data (id %s args %s kwargs %s) from Arduino.' % (received_command, args, kwargs))
 
     nresp = 0.
     def onSensorsResponse(self, received_command, *args, **kwargs):
@@ -216,7 +216,7 @@ class GunnarCommunicator(object):
                 segments.extend(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
                 rospy.logdebug('\n '.join(segments))
             else:
-                rospy.loginfo('byteString of length %d is not long enough (%d).' % (len(byteString), s))
+                rospy.logdebug('byteString of length %d is not long enough (%d).' % (len(byteString), s))
 
                 
             
@@ -228,7 +228,7 @@ class GunnarCommunicator(object):
 
     def logMessage(self, received_command, *args, **kwargs):
         '''Callback to log string messages sent by for debugging.'''
-        rospy.logdebug('Got message from Arduino: %s %s' % (args, kwargs))
+        rospy.loginfo('Got message from Arduino: %s' % (args[0],))
         
     def printStatus(self, msg):
         print msg

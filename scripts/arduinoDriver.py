@@ -21,8 +21,9 @@ class Gunnar(object):
 
     @spds.setter
     def spds(self, twoList):
-        self._spds = twoList
-        self.cmdSetSpeeds(twoList[0], twoList[1])
+        if twoList[0] != self.spds[0] or twoList[1] != self.spds[1]:
+            self._spds = twoList
+            self.cmdSetSpeeds(twoList[0], twoList[1])
         
     def cmdSetSpeeds(self, a, b):
         self.communicator.speedSet(a, b)
@@ -35,7 +36,7 @@ class Gunnar(object):
 class VtargetListener(Gunnar):
     
     def __init__(self):
-        rospy.init_node('arduino_driver', log_level=rospy.DEBUG)
+        rospy.init_node('arduino_driver', log_level=rospy.INFO)
         super(VtargetListener, self).__init__()
         rospy.loginfo('Begin VtargetListener init.')
         rospy.Subscriber('/lwheel_vtarget', Float32, self.lwheelCallback)
@@ -45,11 +46,11 @@ class VtargetListener(Gunnar):
         print 'Done with VtargetListener init.'
         
     def lwheelCallback(self, data):
-        rospy.loginfo('got left wheel data %s' % data.data)
+        rospy.logdebug('got left wheel data %s' % data.data)
         self.spds = [data.data, self.spds[1]]
         
     def rwheelCallback(self, data):
-        rospy.loginfo('got right wheel data %s' % data.data)
+        rospy.logdebug('got right wheel data %s' % data.data)
         self.spds = [self.spds[0], data.data]
         
     def spin(self):

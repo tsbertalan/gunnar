@@ -1,3 +1,4 @@
 <!--Read a pose objectives topic and translate these moment-by-moment into movement commands.-->
 <launch>
-	<node pkg="gunnar_ROS_pkg" name="path_planning" type="path_planning.py"></node></launch>
+	<node pkg="gunnar" name="path_planning" type="path_planning.py"></node>
+</launch>

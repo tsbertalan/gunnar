@@ -1,3 +1,4 @@
 <!--Run a TUI or GUI for providing high-level objectives for the autonomous path planner.-->
 <launch>
-	<node pkg="gunnar_ROS_pkg" name="objective_director_ui" type="objective_director_ui.py"></node></launch>
+	<node pkg="gunnar" name="objective_director_ui" type="objective_director_ui.py"></node>
+</launch>

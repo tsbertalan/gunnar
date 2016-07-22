@@ -260,10 +260,15 @@ class CmdMessenger(object):
         as arguments to the file-like object. If the keyword argument
         flush is True (default), the file-like object will also be flushed.
         """
+        if 'flush' not in kwargs:
+            kwargs['flush'] = True
         if self.commandNames is not None:
             msgType = self.commandNames[msgid]
         else:
             msgType = msgid
+        if msgType is 'speedSet':
+            import rospy
+            rospy.loginfo('Sending speedSet command args %s.' % (args,))
         self._file.write(str(msgid))
         for a in args:
             self._file.write(self._fld_sep)
