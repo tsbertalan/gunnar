@@ -142,7 +142,10 @@ class GunnarCommunicator(object):
         self.sensorsRequest()
 
         # Check to see if any data has been received
-        self.messenger.feed_in_data()
+        try:
+            self.messenger.feed_in_data()
+        except (ValueError, RuntimeWarning) as e:
+            rospy.logerr(str(e))
 
     ############################### C O M M A N D S ###########################
     def acknowledge(self, wait=True):
@@ -162,7 +165,7 @@ class GunnarCommunicator(object):
         
     def speedSet(self, left, right):
         msg = 'Sending speedSet(%s, %s) command.' % (left, right)
-        rospy.loginfo(msg)
+        rospy.logdebug(msg)
         self.messenger.send_cmd(self.commands.index('speedSet'), left, right)
 
     ####################### R E S P O N S E   C A L L B A C K S ###############
@@ -228,7 +231,7 @@ class GunnarCommunicator(object):
 
     def logMessage(self, received_command, *args, **kwargs):
         '''Callback to log string messages sent by for debugging.'''
-        rospy.loginfo('Got message from Arduino: %s' % (args[0],))
+        rospy.loginfo('Got message from Arduino: %s' % ('|'.join(args[0]),))
         
     def printStatus(self, msg):
         print msg
