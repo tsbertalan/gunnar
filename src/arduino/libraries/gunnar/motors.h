@@ -9,19 +9,25 @@ const uint8_t MOTORSTOP = 0;
 const uint8_t MOTORFORWARD = 1;
 const uint8_t MOTORBACKWARD = 2;
 
+// TODO: Use ENUMs for all these identifier constants.
 const boolean MOTORLEFT = LOW;
 const boolean MOTORRIGHT = HIGH;
 
 class Motor {
 public:
     void init(boolean which) {
-        pinMode(motorPinPwmA, OUTPUT);
-        pinMode(motorPinDirA, OUTPUT);
-        pinMode(motorPinCurA, INPUT);
-        pinMode(motorPinPwmB, OUTPUT);
-        pinMode(motorPinDirB, OUTPUT);
-        pinMode(motorPinCurB, INPUT);
-        _which = which;
+        if(which == MOTORLEFT) {
+            _dirPin = motorPinDirA;
+            _pwmPin = motorPinPwmA;
+            _curPin = motorPinCurA;
+        } else {
+            _dirPin = motorPinDirB;
+            _pwmPin = motorPinPwmB;
+            _curPin = motorPinCurB;
+        }
+        pinMode(_pwmPin, OUTPUT);
+        pinMode(_dirPin, OUTPUT);
+        pinMode(_curPin, INPUT);
         stop();
     }
 
@@ -43,16 +49,7 @@ public:
         }
         _speed = constrain(speed, 0, 255);
 
-//         Serial.print("Setting motor ");
-//         Serial.print(_which);
-//         Serial.print(" to ");
-//         Serial.print(speed);
-//         Serial.println(".");
-        if(_which == MOTORLEFT) {
-            analogWrite(motorPinPwmA, speed);
-        } else {
-            analogWrite(motorPinPwmB, speed);
-        }
+        analogWrite(_pwmPin, speed);
     }
 
     uint16_t getSpeed() {
@@ -71,25 +68,19 @@ public:
     }
 
 private:
-    boolean _which;
     uint16_t _speed;
     uint8_t _status;
+
+    uint8_t _dirPin;
+    uint8_t _pwmPin;
+    uint8_t _curPin;
 
     void _setStatus(uint8_t status) {
 
         if(status == MOTORSTOP) {
             stop();
         } else {
-            // Since both motors are wired the same, but face different
-            // sides of the vehicle, the sense of "forward" is different
-            // for both.
-            // ... is how it should be, but somehow my wiring is s.t. this is
-            // not necessary.
-            if(_which == MOTORLEFT) {
-                digitalWrite(motorPinDirA, status==MOTORBACKWARD);
-            } else {
-                digitalWrite(motorPinDirB, status==MOTORBACKWARD);
-            }
+            digitalWrite(_dirPin, status==MOTORBACKWARD);
         }
 
         _status = status;
