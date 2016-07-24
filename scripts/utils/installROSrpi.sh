@@ -4,9 +4,9 @@
 
 # Set locale stuff (optional?).
 sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
-export LANGUAGE=en_US.UTF-8
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
+sudo export LANGUAGE=en_US.UTF-8
+sudo export LANG=en_US.UTF-8
+sudo export LC_ALL=en_US.UTF-8
 sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
 sudo locale-gen en_US.UTF-8
 # probably optional-er:
