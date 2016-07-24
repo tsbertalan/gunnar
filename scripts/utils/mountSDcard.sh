@@ -1,10 +1,10 @@
-if [ $# -ne 3 ]
+#!/bin/sh
+if [ $# -ne 2 ]
 then
-	echo "USAGE: $0 IMGPATH MNTPOINT USER"
+	echo "USAGE: $0 IMGPATH MNTPOINT"
 	echo
 	echo 'Where IMGPATH is the path to the .img file,'
-	echo '      MNTPOINT is the place to mount it (like /mnt/sdcard,'
-	echo '  and USER is the user on the SD image (probably "pi").'
+	echo '  and MNTPOINT is the place to mount it (like /mnt/sdcard).'
 	exit
 fi
 set -e
@@ -12,7 +12,6 @@ set -e
 imgPath=$1
 # mntPoint=/mnt/img
 mntPoint=$2
-user=$3
 
 echo Get information about the starting image file--we want to mount the second partition.
 sudo fdisk -lu $imgPath > /tmp/fdisk.out

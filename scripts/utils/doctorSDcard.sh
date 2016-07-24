@@ -17,6 +17,7 @@ fi
 set -e
 startDir=`pwd`
 export nargs=$#
+
 function retAbrt {
     if [[ "$nargs" -ge 3 ]]
     then
@@ -25,6 +26,9 @@ function retAbrt {
         echo "Return to continue; Ctrl+C to abort."; read
     fi
 }
+
+SCRIPTPATH=$( cd $(dirname $0) ; pwd -P )
+echo "\$SCRIPTPATH is $SCRIPTPATH."
 
 
 bp=$1
@@ -89,7 +93,10 @@ cat << EOF >> $bp/etc/init.d/bootInstall
 # Short-Description: $desc
 # Description: $desc
 ### END INIT INFO
+
+# Attempt to exit on error.
 set -e
+
 if [ -f /etc/bootInstall_semaphore ]
 then
     echo "bootInstall has run before. Not running on this boot."
@@ -104,8 +111,8 @@ else
     apt-get clean
     apt-get update
     apt-get clean
-    # Install programs needed for SSH tunnel.
-    apt-get install -y --force-yes screen  htop
+    # Install programs needed for SSH tunnel and source download.
+    apt-get install -y --force-yes screen git htop
     # Set permissions of SSH keys.
     chmod 700 /home/$user/.ssh
     chown -R $user:$user /home/$user/.ssh
@@ -118,6 +125,16 @@ else
     chown $user:crontab /var/spool/cron/crontabs/$user
     # Ensure console boot (optional).
     [ -e /etc/init.d/lightdm ] && update-rc.d lightdm disable && echo "/bin/true" > /etc/X11/default-display-manager
+    
+    # Clone the repo.
+	su="sudo -u $user"
+	$su mkdir -p /home/$user/catkin_ws/src/
+	chown -R $user:$user /home/$user/catkin_ws
+	$su git clone https://github.com/tsbertalan/gunnar.git /home/$user/catkin_ws/src/gunnar
+	
+	# Install ROS packages.
+	$su /home/$user/catkin_ws/src/gunnar/scripts/utils/installROSrpi.sh 2>&1 > /home/$user/Desktop/installROSrpi.sh.out
+    
     # If the script has gotten to this point, we've succeeded. Touch a semaphore.
     touch /etc/bootInstall_semaphore
     echo "bootInstall appears to have succeeded. Rebooting..."
@@ -200,16 +217,17 @@ EOF
 
 ## Clone repo into card.
 mkdir -p $bp/home/$user/sketchbook/
-cd `dirname $0` && \
-git clone ../.. $bp/home/$user/sketchbook/gunnar
+cd $SCRIPTPATH && \
+git clone $SCRIPTPATH/../.. $bp/home/$user/sketchbook/gunnar
 
 
 
 ## Modify .bashrc
 export bashrc=$bp/home/$user/.bashrc
 echo "export LC_ALL=\"C\"" >> $bashrc
-echo "source \$HOME/catkin_ws/devel/setup.bash" >> $bashrc
- 
+# If the setup file exists, source it.
+echo "[ -e /opt/ros/indigo/setup.bash ] && source /opt/ros/indigo/setup.bash" >> $bashrc
+echo "[ -e \$HOME/catkin_ws/devel/setup.bash ] && source \$HOME/catkin_ws/devel/setup.bash" >> $bashrc
 
 
 echo "Done with script $0."

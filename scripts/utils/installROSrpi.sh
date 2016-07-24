@@ -3,6 +3,7 @@
 # claims to be for Ubuntu Trusty, but also appears to work for Raspbian Jessie.
 
 # Set locale stuff (optional?).
+# Some of this seems to fail anyway.
 sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
 sudo export LANGUAGE=en_US.UTF-8
 sudo export LANG=en_US.UTF-8
@@ -41,6 +42,3 @@ sudo pip install rosdep rosinstall_generator wstool rosinstall
 # Initialize ROS.
 sudo rosdep init
 rosdep update
-echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
-mkdir -p ~/ros_catkin_ws
-cd ~/ros_catkin_ws

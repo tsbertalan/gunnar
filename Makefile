@@ -24,27 +24,35 @@ go: upload
 cleanPyc:
 	find . -name "*.pyc" -type f -delete
 	find . -name "*.pyo" -type f -delete
-dlUbuntu:
-	wget http://www.finnie.org/software/raspberrypi/ubuntu-rpi3/ubuntu-16.04-preinstalled-server-armhf+raspi3.img.xz
 	
+downloadDiskimage:
+	wget http://ftp.jaist.ac.jp/pub/raspberrypi/raspbian/images/raspbian-2016-05-31/2016-05-27-raspbian-jessie.zip
+	
+unzipDiskImage:
+	rm 2016-05-27-raspbian-jessie.img || true
+	unzip 2016-05-27-raspbian-jessie.zip
+	sync
+	
+# Load config file.
+include makeconfig.mk
 
+# Modify image file.
+mountAndAlterSD:
+	scripts/utils/mountSDcard.sh $(IMGPATH) $(MNTPOINT)
+	sudo scripts/utils/doctorSDcard.sh $(MNTPOINT) $(USER)
+	sync
+	sudo umount $(MNTPOINT)
+	
 # Flash Raspbian Jessie image to SD card.
-ssdx = zenity --entry --text="Drive name (e.g. 'sdc' in /dev/sdc):" --entry-text=sdc > /tmp/sdx_id
-sdx = cat /tmp/sdx_id
-spathToFlash = zenity --entry --text="Path to img file to flash:" --entry-text="/home/tsbertalan/Downloads/robotics/2016-05-27-raspbian-jessie.img" > /tmp/ptf_p
-pathToFlash = cat /tmp/ptf_p
 flash:
-	`$(ssdx)`
-	`$(spathToFlash)`
-	sudo dcfldd bs=4M if=`$(pathToFlash)` of=/dev/`$(sdx)`
+	sudo dcfldd bs=4M if=$(IMGPATH) of=$(SDX)
 	sync
 verify:
-	`$(ssdx)`
-	`$(spathToFlash)`
-	sudo dcfldd bs=4M if=/dev/`$(sdx)` of=/tmp/from-sd-card.img count=1024
+	sudo dcfldd bs=4M if=$(SDX) of=/tmp/from-sd-card.img count=1024
 	sync
-	sudo truncate --reference `$(pathToFlash)` /tmp/from-sd-card.img
-	sudo diff -s /tmp/from-sd-card.img `$(pathToFlash)`
+	sudo truncate --reference $(IMGPATH) /tmp/from-sd-card.img
+	sudo diff -s /tmp/from-sd-card.img $(IMGPATH)
+	sudo rm /tmp/from-sd-card.img
 
 vagrantSaveKey:
 	vagrant up | tee /tmp/vagrant.out
