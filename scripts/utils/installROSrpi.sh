@@ -11,6 +11,14 @@ sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
 sudo locale-gen en_US.UTF-8
 # probably optional-er:
 #sudo dpkg-reconfigure locales
+function aptinst {
+    for i in 1 2 3 4
+    do
+        sudo apt-get install --yes --force-yes $@
+        sleep 4
+    done
+}
+
 
 # Add apt source/key.
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu trusty main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -18,13 +26,13 @@ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net --recv-key 0xB01FA
 sudo apt-get update
 
 # Instal ROS Indigo base. 
-sudo apt-get install ros-indigo-ros-base
+aptinst ros-indigo-ros-base
 
 # Install other ROS packages.
-sudo apt-get install ros-indigo-geometry python-rosdep
+aptinst ros-indigo-geometry python-rosdep
 	
 # Install some non-ROS packages.
-sudo apt-get install python-pip arduino ipython vim git
+aptinst python-pip arduino ipython vim git
 	
 # Install some Python packages.
 sudo pip install rosdep rosinstall_generator wstool rosinstall
