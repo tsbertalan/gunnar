@@ -41,7 +41,8 @@ echo Proceed?
 retAbrt
 
 
-## Generate SSH key files for the new image and install them both there and 
+## Generate SSH key files for the new image and install them both there
+# and in the home directory of the user calling this script. 
 ssh-keygen -t rsa -N "" -f /tmp/id_rsa
 cat /tmp/id_rsa.pub
 echo "Installing public key for the SD image in $HOME/.authorized_keys."
@@ -103,16 +104,19 @@ else
     apt-get clean
     apt-get update
     apt-get clean
-    apt-get install -y --force-yes screen vim git htop
+    # Install programs needed for SSH tunnel.
+    apt-get install -y --force-yes screen  htop
+    # Set permissions of SSH keys.
     chmod 700 /home/$user/.ssh
     chown -R $user:$user /home/$user/.ssh
     chmod 700 /home/$user/.ssh/
     chmod 600 /home/$user/.ssh/id_rsa*
+    # Set permissions of crontab.
     touch /var/spool/cron/crontabs/$user
     chown $user:$user /var/spool/cron/crontabs/$user
     chmod 600 /var/spool/cron/crontabs/$user
     chown $user:crontab /var/spool/cron/crontabs/$user
-    # Ensure console boot:
+    # Ensure console boot (optional).
     [ -e /etc/init.d/lightdm ] && update-rc.d lightdm disable && echo "/bin/true" > /etc/X11/default-display-manager
     # If the script has gotten to this point, we've succeeded. Touch a semaphore.
     touch /etc/bootInstall_semaphore
@@ -196,7 +200,8 @@ EOF
 
 ## Clone repo into card.
 mkdir -p $bp/home/$user/sketchbook/
-git `dirname $0`/.. $bp/home/$user/sketchbook/gunnar
+cd `dirname $0` && \
+git clone ../.. $bp/home/$user/sketchbook/gunnar
 
 
 
