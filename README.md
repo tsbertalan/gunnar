@@ -25,6 +25,5 @@
     wifi download speeds.
     Monitor the process on the HDMI output--if there's an immediate kernel panic,
     reflash the card. 
-6. If you're able to SSH in, test functionality by cd'ing to ~/catkin_ws,
-   doing a `catkin_make`, then `source ~/.bashrc`, and then trying
+6. If you're able to SSH in, test functionality by
    `roslaunch gunnar gunnar_hardware.launch`

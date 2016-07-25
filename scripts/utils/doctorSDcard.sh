@@ -125,15 +125,29 @@ else
     chown $user:crontab /var/spool/cron/crontabs/$user
     # Ensure console boot (optional).
     [ -e /etc/init.d/lightdm ] && update-rc.d lightdm disable && echo "/bin/true" > /etc/X11/default-display-manager
-    
-    # Clone the repo.
-	su="sudo -u $user"
-	$su mkdir -p /home/$user/catkin_ws/src/
-	chown -R $user:$user /home/$user/catkin_ws
-	$su git clone https://github.com/tsbertalan/gunnar.git /home/$user/catkin_ws/src/gunnar
+
+    # Do some commands as $user.    
+	su="sudo -i -u $user"
 	
 	# Install ROS packages.
-	$su /home/$user/catkin_ws/src/gunnar/scripts/utils/installROSrpi.sh 2>&1 > /home/$user/Desktop/installROSrpi.sh.out
+	\$su /home/$user/catkin_ws/src/gunnar/scripts/utils/installROSrpi.sh 2>&1 > /home/$user/Desktop/installROSrpi.sh.out
+	
+	
+	# Chown the workspace and profile.
+	chn="chown -R $user:$user"
+	\$chn /home/$user/catkin_ws
+	\$chn /home/$user/.bashrc 
+	\$chn /home/$user/.bash_profile 
+	
+	# Set development desktop as git remote.
+	gitdir=/home/$user/catkin_ws/src/gunnar
+	\$su bash -l -c "cd \$gitdir && git remote remove origin"
+	\$su bash -l -c "cd \$gitdir && git remote add origin tsbertalan@sigurd.tomsb.net:~/workspace/gunnar"
+	\$su bash -l -c "cd \$gitdir && git fetch"
+	\$su bash -l -c "cd \$gitdir && git branch -u origin/master master"
+	
+	# Try to build the workspace. 
+	\$su bash -l -c "cd /home/$user/catkin_ws && catkin_make"
     
     # If the script has gotten to this point, we've succeeded. Touch a semaphore.
     touch /etc/bootInstall_semaphore
@@ -216,9 +230,9 @@ EOF
 
 
 ## Clone repo into card.
-mkdir -p $bp/home/$user/sketchbook/
+mkdir -p $bp/home/$user/catkin_ws/src
 cd $SCRIPTPATH && \
-git clone $SCRIPTPATH/../.. $bp/home/$user/sketchbook/gunnar
+git clone $SCRIPTPATH/../.. $bp/home/$user/catkin_ws/src/gunnar
 
 
 
@@ -229,5 +243,9 @@ echo "export LC_ALL=\"C\"" >> $bashrc
 echo "[ -e /opt/ros/indigo/setup.bash ] && source /opt/ros/indigo/setup.bash" >> $bashrc
 echo "[ -e \$HOME/catkin_ws/devel/setup.bash ] && source \$HOME/catkin_ws/devel/setup.bash" >> $bashrc
 
+## Make .bash_profile also include these source commands.
+export bashprofile=$bp/home/$user/.bash_profile
+echo "[ -e /opt/ros/indigo/setup.bash ] && source /opt/ros/indigo/setup.bash" >> $bashprofile
+echo "[ -e \$HOME/catkin_ws/devel/setup.bash ] && source \$HOME/catkin_ws/devel/setup.bash" >> $bashprofile
 
 echo "Done with script $0."
