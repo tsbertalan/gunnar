@@ -145,7 +145,11 @@ class GunnarCommunicator(object):
         try:
             self.messenger.feed_in_data()
         except (ValueError, RuntimeWarning) as e:
-            rospy.logerr(str(e))
+            from sys import exc_info
+            import traceback
+            errtype, unused_errval, errtb = exc_info()
+            tbstr = traceback.format_tb(errtb)
+            rospy.logerr('%s:\n%s' % (errtype, ''.join(tbstr).strip())) 
 
     ############################### C O M M A N D S ###########################
     def acknowledge(self, wait=True):
@@ -216,8 +220,8 @@ class GunnarCommunicator(object):
                         segment = statement
                 if segment != '':
                     segments.append(segment)
-                segments.extend(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
                 rospy.logdebug('\n '.join(segments))
+                rospy.logdebug('Received sensor data array: %s' % (data,))
             else:
                 rospy.logdebug('byteString of length %d is not long enough (%d).' % (len(byteString), s))
 

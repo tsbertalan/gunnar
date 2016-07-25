@@ -128,7 +128,6 @@ else
 
     # Do some commands as $user.    
 	su="sudo -i -u $user"
-	
 	# Install ROS packages.
 	\$su /home/$user/catkin_ws/src/gunnar/scripts/utils/installROSrpi.sh 2>&1 > /home/$user/Desktop/installROSrpi.sh.out
 	

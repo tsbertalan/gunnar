@@ -52,7 +52,7 @@ class Gunnar(object):
 class VtargetListener(Gunnar):
     
     def __init__(self):
-        rospy.init_node('arduino_driver', log_level=rospy.INFO)
+        rospy.init_node('arduino_driver', log_level=rospy.DEBUG)
         super(VtargetListener, self).__init__()
         rospy.loginfo('Begin VtargetListener init.')
         rospy.Subscriber('/lwheel_vtarget', Float32, self.lwheelCallback)
