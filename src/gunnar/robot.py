@@ -8,6 +8,8 @@ from struct import unpack, calcsize
 import time
 import rospy
 
+import matplotlib.pyplot as plt
+
 import numpy as np
 
 from gunnar.io.usb import CmdMessenger
@@ -52,6 +54,8 @@ class GunnarCommunicator(object):
     def __init__(self, fname="data/gunnarCommunicator.h5", logLength=28):
         rospy.logdebug('Begin GunnarCommunicator init.')
         self.statusHistory = [''] * logLength
+        
+        self.millisDiff = None
 
         # Define the ordering and sizes of data in incoming sensor packets.
         self.sensorFields = [
@@ -130,6 +134,33 @@ class GunnarCommunicator(object):
             rospy.logdebug('Requesting ACK from arduino.')
             self.acknowledge(wait=False)
             rospy.logdebug('Arduino ready.')
+            
+        # Assign topics for publishing sensor data.
+        #from geometry_msgs.msg import QuaternionStamped
+        from std_msgs.msg import Float64MultiArray
+        self.orientationPublisher = rospy.Publisher('~IMUorientation', Float64MultiArray, queue_size=5)
+        self.orientation = Float64MultiArray()
+        
+        self.fig = plt.figure()
+        self.axes = {
+             'heading': self.fig.add_subplot(3, 3, 1, projection='polar'),
+             'roll':    self.fig.add_subplot(3, 3, 2, projection='polar'),
+             'pitch':   self.fig.add_subplot(3, 3, 3, projection='polar'),
+             'encpos':  self.fig.add_subplot(3, 2, 3),
+             'encspd':  self.fig.add_subplot(3, 2, 4),
+             '9dof':    self.fig.add_subplot(3, 1, 3)
+                     }
+        from collections import deque
+        self.orientationHistory = {'heading': deque(), 'roll': deque(), 'pitch': deque()}
+        self.fig.subplots_adjust(wspace=.3)
+        plt.ion()
+        plt.show()
+            
+    def mcuMs2RosMs(self, mcums):
+        if self.millisDiff is None:
+            now = rospy.rostime.get_rostime().to_sec() * 1000
+            self.millisDiff = now - mcums
+        return mcums + self.millisDiff
 
     def list_usb_ports(self):
         """ Use the grep generator to get a list of all USB ports.
@@ -145,7 +176,11 @@ class GunnarCommunicator(object):
         try:
             self.messenger.feed_in_data()
         except (ValueError, RuntimeWarning) as e:
-            rospy.logerr(str(e))
+            from sys import exc_info
+            import traceback
+            errtype, unused_errval, errtb = exc_info()
+            tbstr = traceback.format_tb(errtb)
+            rospy.logerr('%s:\n%s' % (errtype, ''.join(tbstr).strip())) 
 
     ############################### C O M M A N D S ###########################
     def acknowledge(self, wait=True):
@@ -156,7 +191,7 @@ class GunnarCommunicator(object):
             self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'))
 
     def sensorsRequest(self):
-        rospy.logdebug('Sending sensor data request.')
+#         rospy.logdebug('Sending sensor data request.')
         self.messenger.send_cmd(self.commands.index('sensorsRequest'))
         ## This doesn't work:
         #self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'),
@@ -178,11 +213,11 @@ class GunnarCommunicator(object):
     def onSensorsResponse(self, received_command, *args, **kwargs):
         """Callback to handle the sensor data response
         """
-        msg = 'Received command %s' % received_command
-        if isinstance(received_command, int) and received_command < len(self.commands):
-            msg += ' (%s)' % self.commands[received_command]
-        msg += '.'
-        rospy.logdebug(msg)
+#         msg = 'Received command %s' % received_command
+#         if isinstance(received_command, int) and received_command < len(self.commands):
+#             msg += ' (%s)' % self.commands[received_command]
+#         msg += '.'
+#         rospy.logdebug(msg)
         s = self.sensorDataSize
         types = self.types
         try:
@@ -191,33 +226,57 @@ class GunnarCommunicator(object):
                 arr = unpack(types, byteString[:s])
                 self.nresp += 1
                 
-                # Save the data in our HDF5 file.
+                # Put the sensor data into ROS topics.
                 data = np.empty((self.nfields,))
                 assert len(arr) == self.nfields, (len(arr), self.nfields)
                 data[:] = arr
-#                 self.handler.enqueue((data,))
-                  
-                # Construct a sensor status message.
-                m = ' '.join([
-                        '%s=%s' % (k, v)
-                        for (k, v) in zip(self.sensorFields, data)
-                    ])
-                # Ensure each line of the sensor status message is close to 80 chars.
-                statements = m.split()
-                segments = []
-                segmentSize = 79
-                segment = ''
-                for statement in statements:
-                    if len(segment) < segmentSize:
-                        segment += ' ' + statement
-                        m = m[segmentSize:]
-                    else:
-                        segments.append(segment)
-                        segment = statement
-                if segment != '':
-                    segments.append(segment)
-                segments.extend(['%s=%s' % (k, v) for (k, v) in zip(self.sensorFields[4:6], data[4:6])])
-                rospy.logdebug('\n '.join(segments))
+                timestampMs = self.mcuMs2RosMs(data[0])
+                
+                dataDict = {k:v for (k,v) in zip(self.sensorFields, data)}
+
+                ## Plot sensor data (slow).
+                if True:
+                    start = time.time()
+                    for k in self.axes:
+                        self.axes[k].cla()
+                        self.axes[k].set_title(k)
+                    
+                    for key in 'heading', 'roll', 'pitch':
+                        theta = dataDict[key]
+                        self.orientationHistory[key].append(theta)
+                        L = lambda : len(self.orientationHistory[key])
+                        if L() > 4:
+                            self.orientationHistory[key].popleft()
+                        l = float(L())
+                        for i, theta in enumerate(self.orientationHistory[key]):
+                            color = [i/l]*3
+                            ax = self.axes[key]
+                            ax.plot([theta]*2, [0,1], color=color)
+                            ax.set_rticks([])
+                            ax.set_xticks([])
+                        
+                    for key in 'encpos', 'encspd', '9dof':
+                        if key == 'encpos':
+                            nx = 2
+                            y = dataDict['enc1pos'], dataDict['enc2pos']
+                            labels = '1', '2' 
+                        elif key == 'encspd':
+                            nx = 2
+                            y = dataDict['enc1spd'], dataDict['enc2spd']
+                            labels = '1', '2'
+                        else:
+                            nx = 9
+                            y = [dataDict[k] for k in self.sensorFields[-9:]]
+                            labels = self.sensorFields[-9:]
+                        x = np.arange(1, nx+1).astype(float)
+                        ax = self.axes[key]
+                        ax.bar(x, y)
+                        ax.set_xticks(x + .5)
+                        ax.set_xticklabels(labels, rotation=45)
+                    
+                    plt.draw()
+                    rospy.loginfo('Took %.3f seconds to draw figure.' % (time.time() - start,))
+                
             else:
                 rospy.logdebug('byteString of length %d is not long enough (%d).' % (len(byteString), s))
 
@@ -228,6 +287,7 @@ class GunnarCommunicator(object):
             from sys import exc_info
             tb = ''.join(['!! ' + l for l in format_exception(*exc_info())])
             self.statusMessage = "Failed with %s: %s" % (type(e), e) + '\n' + tb
+            rospy.logerr(self.statusMessage)
 
     def logMessage(self, received_command, *args, **kwargs):
         '''Callback to log string messages sent by for debugging.'''

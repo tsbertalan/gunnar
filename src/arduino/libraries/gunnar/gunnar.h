@@ -92,12 +92,14 @@ public:
 
     void handleSensorRequest() {
         updateAHRS();
-        // one byte
+        // Send starting byte.
         cmdMessenger.sendCmdStart(kSensorsResponse);
         
-        // Assemble the response struct (45 bytes).
+        // Assemble the response struct.
         SensorResponse response;
+
         response.ms = millis();
+
         response.heading = sensors.ahrs.orientation.heading;
         response.roll= sensors.ahrs.orientation.roll;
         response.pitch = sensors.ahrs.orientation.pitch;
@@ -123,6 +125,7 @@ public:
         response.gyroY = sensors.ahrs.gyro_event.gyro.y;
         response.gyroZ = sensors.ahrs.gyro_event.gyro.z;
         
+        // Send the response struct (45 bytes).
         cmdMessenger.sendCmdBinArg<SensorResponse>(response);
 
         // Send the closing byte.

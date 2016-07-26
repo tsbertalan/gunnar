@@ -16,14 +16,15 @@
    it wouldn't be `pi`). THE `SDX` MUST BE THE SD CARD YOU WILL BE OVERWRITING.
    If you don't get this right, you might OVERWRITE YOUR INTERNAL HARD DRIVE
    with the Raspbian image.
-
 3. Mount image, alter it  to contain our backdoor, and unmount (script `mountAndAlterSD.sh`),
 4. Write image (make targets `flash` and `verify`). This takes about 3 minutes
    on my machine, with a 32 GB Samsung
 5. Insert SD into Raspberri Pi. Boot and wait for the script to install things
-    and self-reboot. This takes about ten minutes on my Pi 3 B v1.2 and 62 Mbps
-    wifi download speeds.
-    Monitor the process on the HDMI output--if there's an immediate kernel panic,
-    reflash the card. 
+   and self-reboot. This takes about ten minutes on my Pi 3 B v1.2 and 62 Mbps
+   wifi download speeds.
+   Monitor the process on the HDMI output--if there's an immediate kernel panic,
+   reflash the card.
+   Try using `tail -f /var/log/syslog | grep bootInstall` to monitor progress
+   or diagnose errors.  
 6. If you're able to SSH in, test functionality by
    `roslaunch gunnar gunnar_hardware.launch`

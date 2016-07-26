@@ -46,13 +46,12 @@ class Gunnar(object):
         self.robotSpeedsStr = "(%.1f, %.1f)." % (a, b)
 
     def spinOnce(self):
-        pass
         self.communicator.loopOnce()
         
 class VtargetListener(Gunnar):
     
     def __init__(self):
-        rospy.init_node('arduino_driver', log_level=rospy.INFO)
+        rospy.init_node('arduino_driver', log_level=rospy.DEBUG)
         super(VtargetListener, self).__init__()
         rospy.loginfo('Begin VtargetListener init.')
         rospy.Subscriber('/lwheel_vtarget', Float32, self.lwheelCallback)
@@ -61,17 +60,16 @@ class VtargetListener(Gunnar):
         print 'Done with VtargetListener init.'
         
     def lwheelCallback(self, data):
-        rospy.logdebug('got left wheel data %s' % data.data)
+#         rospy.logdebug('got left wheel data %s' % data.data)
         self.spds = [data.data, self.spds[1]]
         
     def rwheelCallback(self, data):
-        rospy.logdebug('got right wheel data %s' % data.data)
+#         rospy.logdebug('got right wheel data %s' % data.data)
         self.spds = [self.spds[0], data.data]
         
     def spin(self):
         r = rospy.Rate(self.rate)
         idle = rospy.Rate(10)
-    
         while not rospy.is_shutdown():
             # Time per loop iteration will be max(ts, tr, ti), where ts, tr,
             # and ti are the duration of the spin code, rate period, and idle

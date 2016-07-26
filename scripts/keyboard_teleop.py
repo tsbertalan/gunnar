@@ -88,19 +88,21 @@ class KeyboardTeleop(object):
         key = ''
         while key != ord('q'):
             try:
+                turnAmt = 10
+                straightAmt = 2
                 key = self.stdscr.getch()
                 self.stdscr.refresh()
                 if key == curses.KEY_UP:
-                    self.twist.linear.x += 1
+                    self.twist.linear.x += straightAmt
                     self.updateText('Up')
                 elif key == curses.KEY_LEFT:
-                    self.twist.angular.z += 1
+                    self.twist.angular.z += turnAmt
                     self.updateText('Left')
                 elif key == curses.KEY_RIGHT:
-                    self.twist.angular.z -= 1
+                    self.twist.angular.z -= turnAmt
                     self.updateText('Right')
                 elif key == curses.KEY_DOWN:
-                    self.twist.linear.x -= 1
+                    self.twist.linear.x -= straightAmt
                     self.updateText('Down')
                 elif key == ord(' '):
                     self.stop()
