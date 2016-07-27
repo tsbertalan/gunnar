@@ -208,7 +208,8 @@ class GunnarCommunicator(object):
         self.messenger.send_cmd(self.commands.index('speedSet'), left, right)
 
     ####################### R E S P O N S E   C A L L B A C K S ###############
-    def onError(self, received_command, *args, **kwargs):
+    
+def onError(self, received_command, *args, **kwargs):
         """Callback function to handle errors
         """
         rospy.logdebug('Got unrecognized data (id %s args %s kwargs %s) from Arduino.' % (received_command, args, kwargs))

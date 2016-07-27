@@ -96,6 +96,8 @@ cat << EOF >> $bp/etc/init.d/bootInstall
 
 # Attempt to exit on error.
 set -e
+case "\$1" in
+start)
 
 if [ -f /etc/bootInstall_semaphore ]
 then
@@ -126,33 +128,28 @@ else
     # Ensure console boot (optional).
     [ -e /etc/init.d/lightdm ] && update-rc.d lightdm disable && echo "/bin/true" > /etc/X11/default-display-manager
 
-    # Do some commands as $user.    
-	su="sudo -i -u $user"
-	# Install ROS packages.
-	\$su /home/$user/catkin_ws/src/gunnar/scripts/utils/installROSrpi.sh 2>&1 > /home/$user/Desktop/installROSrpi.sh.out
-	
-	
 	# Chown the workspace and profile.
 	chn="chown -R $user:$user"
 	\$chn /home/$user/catkin_ws
 	\$chn /home/$user/.bashrc 
 	\$chn /home/$user/.bash_profile 
 	
-	# Set development desktop as git remote.
-	gitdir=/home/$user/catkin_ws/src/gunnar
-	\$su bash -l -c "cd \$gitdir && git remote remove origin"
-	\$su bash -l -c "cd \$gitdir && git remote add origin tsbertalan@sigurd.tomsb.net:~/workspace/gunnar"
-	\$su bash -l -c "cd \$gitdir && git fetch"
-	\$su bash -l -c "cd \$gitdir && git branch -u origin/master master"
+	# Install ROS packages.
+	sudo -i -u $user /home/$user/catkin_ws/src/gunnar/scripts/utils/installROSrpi.sh &
+    sudo echo \$! > /etc/forked_installROSrpi.sh.pid
 	
-	# Try to build the workspace. 
-	\$su bash -l -c "cd /home/$user/catkin_ws && catkin_make"
-    
-    # If the script has gotten to this point, we've succeeded. Touch a semaphore.
-    touch /etc/bootInstall_semaphore
-    echo "bootInstall appears to have succeeded. Rebooting..."
-    reboot
+    echo "bootInstall parent script appears to have succeeded. Waiting for install script to reboot..."
 fi
+;;
+# End of 'start' case
+stop)
+    [ -e /etc/forked_installROSrpi.sh.pid ] && kill \$( cat /etc/forked_installROSrpi.sh.pid )
+;;
+*)
+    N=/etc/init.d/bootInstall
+    echo "Usage: \$N {start|stop}" >&2
+    exit 1
+esac
 EOF
 chmod +x $bp/etc/init.d/bootInstall
 # Run at boot. 
@@ -246,5 +243,7 @@ echo "[ -e \$HOME/catkin_ws/devel/setup.bash ] && source \$HOME/catkin_ws/devel/
 export bashprofile=$bp/home/$user/.bash_profile
 echo "[ -e /opt/ros/indigo/setup.bash ] && source /opt/ros/indigo/setup.bash" >> $bashprofile
 echo "[ -e \$HOME/catkin_ws/devel/setup.bash ] && source \$HOME/catkin_ws/devel/setup.bash" >> $bashprofile
+echo "source \$HOME/.profile"
+
 
 echo "Done with script $0."

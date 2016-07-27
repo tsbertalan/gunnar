@@ -2,12 +2,17 @@
 # http://wiki.ros.org/indigo/Installation/UbuntuARM
 # claims to be for Ubuntu Trusty, but also appears to work for Raspbian Jessie.
 
+# Make sure debconf knows we won't be interacting with it.
+# http://serverfault.com/questions/500764
+export DEBIAN_FRONTEND=noninteractive
+
+
 # Set locale stuff (optional?).
 # Some of this seems to fail anyway.
 sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
-sudo export LANGUAGE=en_US.UTF-8
-sudo export LANG=en_US.UTF-8
-sudo export LC_ALL=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
 sudo locale-gen en_US.UTF-8
 # probably optional-er:
@@ -41,3 +46,20 @@ sudo pip install rosdep rosinstall_generator wstool rosinstall
 # Initialize ROS.
 sudo rosdep init
 rosdep update
+
+# Set development desktop as git remote.
+user=pi
+gitdir=/home/$user/catkin_ws/src/gunnar
+su="sudo -i -u $user"
+$su bash -l -c "cd $gitdir && git remote remove origin"
+$su bash -l -c "cd $gitdir && git remote add origin tsbertalan@sigurd.tomsb.net:~/workspace/gunnar"
+$su bash -l -c "cd $gitdir && git fetch"
+$su bash -l -c "cd $gitdir && git branch -u origin/master master"
+    
+# Try to build the workspace. 
+$su bash -l -c "cd /home/$user/catkin_ws && catkin_make"
+
+# If the script has gotten to this point, we've succeeded. Touch a semaphore.
+sudo touch /etc/bootInstall_semaphore
+sudo reboot
+
