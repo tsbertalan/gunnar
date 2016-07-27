@@ -15,6 +15,10 @@ import numpy as np
 from gunnar.io.usb import CmdMessenger
 from serial.tools import list_ports
 
+from geometry_msgs.msg import QuaternionStamped
+from std_msgs.msg import Header
+import tf
+
 # from gunnar.io.disk import PyTableSavingHandler
 
 def get_serial_ports():
@@ -136,31 +140,32 @@ class GunnarCommunicator(object):
             rospy.logdebug('Arduino ready.')
             
         # Assign topics for publishing sensor data.
-        #from geometry_msgs.msg import QuaternionStamped
-        from std_msgs.msg import Float64MultiArray
-        self.orientationPublisher = rospy.Publisher('~IMUorientation', Float64MultiArray, queue_size=5)
-        self.orientation = Float64MultiArray()
-        
-        self.fig = plt.figure()
-        self.axes = {
-             'heading': self.fig.add_subplot(3, 3, 1, projection='polar'),
-             'roll':    self.fig.add_subplot(3, 3, 2, projection='polar'),
-             'pitch':   self.fig.add_subplot(3, 3, 3, projection='polar'),
-             'encpos':  self.fig.add_subplot(3, 2, 3),
-             'encspd':  self.fig.add_subplot(3, 2, 4),
-             '9dof':    self.fig.add_subplot(3, 1, 3)
-                     }
-        from collections import deque
-        self.orientationHistory = {'heading': deque(), 'roll': deque(), 'pitch': deque()}
-        self.fig.subplots_adjust(wspace=.3)
-        plt.ion()
-        plt.show()
+        self.header = Header()
+        self.quaternionStamped = QuaternionStamped()
+        self.orientationPublisher = rospy.Publisher('~IMUorientation', QuaternionStamped, queue_size=5)
+       
+        self.doPlot = False
+        if self.doPlot: 
+            self.fig = plt.figure()
+            self.axes = {
+                 'heading': self.fig.add_subplot(3, 3, 1, projection='polar'),
+                 'roll':    self.fig.add_subplot(3, 3, 2, projection='polar'),
+                 'pitch':   self.fig.add_subplot(3, 3, 3, projection='polar'),
+                 'encpos':  self.fig.add_subplot(3, 2, 3),
+                 'encspd':  self.fig.add_subplot(3, 2, 4),
+                 '9dof':    self.fig.add_subplot(3, 1, 3)
+                         }
+            from collections import deque
+            self.orientationHistory = {'heading': deque(), 'roll': deque(), 'pitch': deque()}
+            self.fig.subplots_adjust(wspace=.3)
+            plt.ion()
+            plt.show()
             
-    def mcuMs2RosMs(self, mcums):
+    def mcuSecs2RosSecs(self, mcuSecs):
         if self.millisDiff is None:
-            now = rospy.rostime.get_rostime().to_sec() * 1000
-            self.millisDiff = now - mcums
-        return mcums + self.millisDiff
+            now = rospy.rostime.get_rostime().to_sec()
+            self.millisDiff = now - mcuSecs
+        return mcuSecs + self.millisDiff
 
     def list_usb_ports(self):
         """ Use the grep generator to get a list of all USB ports.
@@ -230,12 +235,21 @@ class GunnarCommunicator(object):
                 data = np.empty((self.nfields,))
                 assert len(arr) == self.nfields, (len(arr), self.nfields)
                 data[:] = arr
-                timestampMs = self.mcuMs2RosMs(data[0])
+                timestampSecs = self.mcuSecs2RosSecs(data[0] / 1000.)
                 
                 dataDict = {k:v for (k,v) in zip(self.sensorFields, data)}
+                
+                # We'll have to transform the roll, pitch, and heading somehow
+                # since the IMU board is mounted vertically.
+                q = self.quaternionStamped.quaternion
+                q.x, q.y, q.z, q.w = tf.transformations.quaternion_from_euler(
+                    dataDict['roll'], dataDict['pitch'], dataDict['heading']
+                    )
+                self.quaternionStamped.header.stamp = rospy.Time(secs=timestampSecs)
+                self.orientationPublisher.publish(self.quaternionStamped)
 
                 ## Plot sensor data (slow).
-                if True:
+                if self.doPlot:
                     start = time.time()
                     for k in self.axes:
                         self.axes[k].cla()
