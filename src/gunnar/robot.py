@@ -196,7 +196,6 @@ class GunnarCommunicator(object):
             self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'))
 
     def sensorsRequest(self):
-#         rospy.logdebug('Sending sensor data request.')
         self.messenger.send_cmd(self.commands.index('sensorsRequest'))
         ## This doesn't work:
         #self.messenger.wait_for_ack(ackid=self.commands.index('acknowledgeResponse'),
@@ -218,11 +217,6 @@ class GunnarCommunicator(object):
     def onSensorsResponse(self, received_command, *args, **kwargs):
         """Callback to handle the sensor data response
         """
-#         msg = 'Received command %s' % received_command
-#         if isinstance(received_command, int) and received_command < len(self.commands):
-#             msg += ' (%s)' % self.commands[received_command]
-#         msg += '.'
-#         rospy.logdebug(msg)
         s = self.sensorDataSize
         types = self.types
         try:
