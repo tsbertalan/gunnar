@@ -252,7 +252,7 @@ echo "[ -e \$HOME/catkin_ws/devel/setup.bash ] && source \$HOME/catkin_ws/devel/
 export bashprofile=$bp/home/$user/.bash_profile
 echo "[ -e /opt/ros/indigo/setup.bash ] && source /opt/ros/indigo/setup.bash" >> $bashprofile
 echo "[ -e \$HOME/catkin_ws/devel/setup.bash ] && source \$HOME/catkin_ws/devel/setup.bash" >> $bashprofile
-echo "source \$HOME/.profile"
+echo "source \$HOME/.profile" >> $bashprofile
 
 
 echo "Done with script $0."

@@ -55,13 +55,12 @@ rosdep update
 user=pi
 gitdir=/home/$user/catkin_ws/src/gunnar
 su="sudo -i -u $user"
-cd $gitdir 
-$su bash -l -c "git remote remove origin"
-$su bash -l -c "git remote add origin tsbertalan@sigurd.tomsb.net:~/workspace/gunnar"
-$su bash -l -c "git fetch"
-$su bash -l -c "git branch -u origin/master master"
+$su bash -l -c "cd $gitdir && git remote remove origin"
+$su bash -l -c "cd $gitdir && git remote add origin tsbertalan@sigurd.tomsb.net:~/workspace/gunnar"
+$su bash -l -c "cd $gitdir && git fetch"
+$su bash -l -c "cd $gitdir && git branch -u origin/master master"
     
-# Try to build the workspace. 
+# Try to build the workspace.
 $su bash -l -c "cd /home/$user/catkin_ws && catkin_make"
 
 # If the script has gotten to this point, we've succeeded. Touch a semaphore.
