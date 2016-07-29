@@ -45,8 +45,7 @@ mountAndAlterSD:
 	
 # Flash Raspbian Jessie image to SD card.
 flash:
-	sudo dcfldd bs=4M if=$(IMGPATH) of=$(SDX)
-	sync
+	scripts/utils/doFlash.sh "$(IMGPATH)" "$(SDX)"
 verify:
 	sudo dcfldd bs=4M if=$(SDX) of=/tmp/from-sd-card.img count=1024
 	sync
