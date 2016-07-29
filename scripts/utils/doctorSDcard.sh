@@ -110,11 +110,18 @@ else
         echo "Can't see $server on network. Waiting..."
         sleep 1
     done
+    
+    
+    # Make sure debconf knows we won't be interacting with it.
+	# http://serverfault.com/questions/500764
+	export DEBIAN_FRONTEND=noninteractive
+    
     apt-get clean
     apt-get update
     apt-get clean
-    # Install programs needed for SSH tunnel and source download.
-    apt-get install -y --force-yes screen git htop
+    # Install screen (needed for SSH tunnel).
+	echo 'Installing GNU screen..'
+    apt-get install -y --force-yes --no-install-recommends screen
     # Set permissions of SSH keys.
     chmod 700 /home/$user/.ssh
     chown -R $user:$user /home/$user/.ssh

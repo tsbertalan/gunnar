@@ -18,6 +18,7 @@ sudo locale-gen en_US.UTF-8
 # probably optional-er:
 #sudo dpkg-reconfigure locales
 function aptinst {
+	echo "Installing: $@"
     for i in 1 2 3 4
     do
         sudo apt-get install --yes --force-yes $@
@@ -25,6 +26,9 @@ function aptinst {
     done
 }
 
+# Upgrade existing software.
+sudo aptitude upgrade --assume-yes
+aptinst vim htop
 
 # Add apt source/key.
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu trusty main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -38,7 +42,7 @@ aptinst ros-indigo-ros-base
 aptinst ros-indigo-geometry python-rosdep
 	
 # Install some non-ROS packages.
-aptinst python-pip arduino ipython vim git python-matplotlib
+aptinst python-pip arduino ipython git python-matplotlib
 	
 # Install some Python packages.
 sudo pip install rosdep rosinstall_generator wstool rosinstall
