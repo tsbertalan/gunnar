@@ -16,7 +16,7 @@ from gunnar.io.usb import CmdMessenger
 from serial.tools import list_ports
 
 from geometry_msgs.msg import QuaternionStamped
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Int32
 import tf
 
 # from gunnar.io.disk import PyTableSavingHandler
@@ -142,8 +142,13 @@ class GunnarCommunicator(object):
         # Assign topics for publishing sensor data.
         self.header = Header()
         self.quaternionStamped = QuaternionStamped()
-        self.orientationPublisher = rospy.Publisher('~IMUorientation', QuaternionStamped, queue_size=5)
-       
+        self.orientationPublisher = rospy.Publisher('~IMUorientation', QuaternionStamped, queue_size=8)
+        self.encoderLPublisher = rospy.Publisher('~lwheel', Int32, queue_size=8)
+        self.encoderRPublisher = rospy.Publisher('~rwheel', Int32, queue_size=8)
+        self.encoderSpdLPublisher = rospy.Publisher('~lspd', Int32, queue_size=8)
+        self.encoderSpdRPublisher = rospy.Publisher('~rspd', Int32, queue_size=8)
+
+        # Set up live sensor plot. # TODO: Move this into a separate node, preferably that runs off the RPI.
         self.doPlot = False
         if self.doPlot: 
             self.fig = plt.figure()
@@ -209,7 +214,7 @@ class GunnarCommunicator(object):
 
     ####################### R E S P O N S E   C A L L B A C K S ###############
     
-def onError(self, received_command, *args, **kwargs):
+    def onError(self, received_command, *args, **kwargs):
         """Callback function to handle errors
         """
         rospy.logdebug('Got unrecognized data (id %s args %s kwargs %s) from Arduino.' % (received_command, args, kwargs))
@@ -242,7 +247,14 @@ def onError(self, received_command, *args, **kwargs):
                     )
                 self.quaternionStamped.header.stamp = rospy.Time(secs=timestampSecs)
                 self.orientationPublisher.publish(self.quaternionStamped)
-
+                
+                # Publish the encoder positions and speeds.
+                # TODO: Don't bother calculating encoder speed in firmware, unless we're also doing PID there.
+                self.encoderLPublisher.publish(dataDict['enc1pos'])
+                self.encoderRPublisher.publish(dataDict['enc2pos'])
+                self.encoderSpdLPublisher.publish(dataDict['enc1spd'])
+                self.encoderSpdRPublisher.publish(dataDict['enc2spd'])
+                
                 ## Plot sensor data (slow).
                 if self.doPlot:
                     start = time.time()
