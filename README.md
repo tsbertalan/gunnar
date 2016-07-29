@@ -2,8 +2,9 @@
 
 ## To make the SD card:
 
-1. Download and extract Raspbian Jessie image (e.g. `2016-05-27-raspbian-jessie.img`,
-    which I torrented from raspberrypi.org; see `/data/`).
+1. Download and extract Raspbian Jessie image (e.g.
+   `2016-05-27-raspbian-jessie.img`, which I torrented from raspberrypi.org;
+   see `/data/`).
 2. Create config script `makeconfig.mk`. Mine looks like this:
 
     IMGPATH = /home/tsbertalan/workspace/gunnar/2016-05-27-raspbian-jessie.img
@@ -16,12 +17,15 @@
    it wouldn't be `pi`). THE `SDX` MUST BE THE SD CARD YOU WILL BE OVERWRITING.
    If you don't get this right, you might OVERWRITE YOUR INTERNAL HARD DRIVE
    with the Raspbian image.
-3. Mount image, alter it  to contain our backdoor, and unmount (script `mountAndAlterSD.sh`),
+3. Mount image, alter it  to contain our backdoor, and unmount (script
+   `mountAndAlterSD.sh`),
 4. Write image (make targets `flash` and `verify`). This takes about 3 minutes
    on my machine, with a 32 GB Samsung
 5. Insert SD into Raspberri Pi. Boot and wait for the script to install things
-   and self-reboot. This takes about ten minutes on my Pi 3 B v1.2 and 62 Mbps
-   wifi download speeds.
+   and self-reboot. This sometimes takes more than an hour on my Pi 3B v1.2
+   with 62 Mbps wifi download speeds, mostly in the
+   "Unpacking libboost1.55-dev:armhf" stage. However, 20 minutes is a more
+   likely duration.
    Monitor the process on the HDMI output--if there's an immediate kernel panic,
    reflash the card.
    Try using `tail -f /var/log/syslog | grep bootInstall` to monitor progress

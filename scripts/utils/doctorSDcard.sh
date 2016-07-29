@@ -139,7 +139,9 @@ else
 	chn="chown -R $user:$user"
 	\$chn /home/$user/catkin_ws
 	\$chn /home/$user/.bashrc 
-	\$chn /home/$user/.bash_profile 
+	\$chn /home/$user/.bash_profile
+	
+	# TODO: Use semafore here to reboot on first run-through so that we can monitor the following script through SSH. 
 	
 	# Install ROS packages.
 	sudo -i -u $user /home/$user/catkin_ws/src/gunnar/scripts/utils/installROSrpi.sh &
