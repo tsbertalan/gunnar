@@ -29,6 +29,7 @@ function retAbrt {
 
 SCRIPTPATH=$( cd $(dirname $0) ; pwd -P )
 echo "\$SCRIPTPATH is $SCRIPTPATH."
+repodir=$SCRIPTPATH/../../
 
 
 bp=$1
@@ -38,11 +39,17 @@ serverUser=tsbertalan
 port=19898
 
 echo Continuing with these parameters:
-    echo Base dir: $bp
-    echo SBC user: $user
-    echo SSH target: $serverUser@$server:$port
+echo Base dir: $bp
+echo SBC user: $user
+echo SSH target: $serverUser@$server:$port
 echo Proceed?
 retAbrt
+
+
+## Clone repo into card.
+mkdir -p $bp/home/$user/catkin_ws/src
+cd $SCRIPTPATH && \
+git clone $SCRIPTPATH/../.. $bp/home/$user/catkin_ws/src/gunnar
 
 
 ## Generate SSH key files for the new image and install them both there
@@ -121,7 +128,7 @@ else
     apt-get clean
     # Install screen (needed for SSH tunnel).
 	echo 'Installing GNU screen..'
-    apt-get install -y --force-yes --no-install-recommends screen
+    apt-get install -y --force-yes --no-install-recommends screen htop openvpn
     # Set permissions of SSH keys.
     chmod 700 /home/$user/.ssh
     chown -R $user:$user /home/$user/.ssh
@@ -200,6 +207,47 @@ cd $bp/etc/rc2.d && \
     ln -s ../init.d/screenTunnel ./S99screenTunnel
 
 
+## Make script to start vpn connection at boot.
+beforeDir=`pwd`
+vpndir=$repodir/scripts/vpn/
+piVpndir=$bp/home/pi/catkin_ws/src/gunnar/scripts/vpn/
+mkdir -p "$vpndir"
+mkdir -p "$piVpndir"
+cd "$vpndir"
+if [ ! -e static.key ]
+then
+	openvpn --genkey --secret static.key
+fi
+cp static.key "$piVpndir/"
+echo "Start VPN server like this:"
+echo "cd \"$vpndir\" && sudo openvpn --config server.conf"
+cat << EOF >> $bp/etc/init.d/openvpnBootscript
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          openvpnBootscript
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop:
+# Short-Description: $desc
+# Description: $desc
+### END INIT INFO
+# Wait for network connection...try to ping $server for about a minute.
+for i in {1..60}
+do
+    ping -c1 $server &> /dev/null && echo "Can see $server on network. Continuing...." && break
+    echo "Can't see $server on network. Waiting..."
+    sleep 1
+done
+cd /home/pi/catkin_ws/src/gunnar/scripts/vpn
+sudo openvpn --config client.conf
+
+EOF
+chmod +x $bp/etc/init.d/openvpnBootscript
+# Run at boot.
+cd $bp/etc/rc2.d && \
+    ln -s ../init.d/openvpnBootscript ./S99openvpnBootscript
+
 
 ## Make WIFI defaults configuration file.
 echo "Make WIFI defaults file."
@@ -231,14 +279,6 @@ EOF
 cat << EOF > $bp/etc/default/locale
 LANG=en_US.UTF-8
 EOF
-
-
-
-## Clone repo into card.
-mkdir -p $bp/home/$user/catkin_ws/src
-cd $SCRIPTPATH && \
-git clone $SCRIPTPATH/../.. $bp/home/$user/catkin_ws/src/gunnar
-
 
 
 ## Modify .bashrc
