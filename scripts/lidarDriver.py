@@ -6,6 +6,8 @@ Created on Dec 29, 2015
 
 Read serial data from the Neato LIDAR sensor, and pack it into a topic.
 '''
-from gunnar.lidar.networkLogger import LidarLoggerClient
-client = LidarLoggerClient()
-client.main()
+from gunnar.lidar.lidarPublisher import LidarPublisher
+import logging
+logging.getLogger().setLevel(logging.DEBUG)
+publisher = LidarPublisher()
+publisher.main()

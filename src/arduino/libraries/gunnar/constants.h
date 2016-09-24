@@ -34,7 +34,7 @@ const double KI = 1.5;
 const double KD = 0.1;
 
 
-// Dagu5 motor driver pins:
+// Motor driver pins:
 //Motor A
 const uint8_t motorPinPwmA = 11; // Speed control
 const uint8_t motorPinDirA = 22; // Direction

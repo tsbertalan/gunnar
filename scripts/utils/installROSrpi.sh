@@ -39,7 +39,7 @@ sudo apt-get update
 aptinst ros-indigo-ros-base
 
 # Install other ROS packages.
-aptinst ros-indigo-geometry python-rosdep
+aptinst ros-indigo-geometry python-rosdep ros-indigo-xv-11-laser-driver
 	
 # Install some non-ROS packages.
 aptinst python-pip arduino ipython git python-matplotlib

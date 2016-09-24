@@ -4,10 +4,10 @@ Created on Nov 29, 2015
 @author: tsbertalan
 '''
 
-import time, logging
 from multiprocessing import Queue  # TODO: This might be preventing clean exit of the CLUI.
-from time import sleep
 import serial
+from time import sleep
+import time, logging
 
 import numpy as np
 
@@ -59,13 +59,12 @@ class LidarSerialConnection(CharStream):
 
 class LidarParser:
 
-    def __init__(self, server, exitTimeCallback):
+    def __init__(self, server):
         assert isinstance(server, CharStream)
-        self.lidarData = [[]] * 360  # A list of 360 elements Angle, Distance , quality
+        self.lidarData = [[]] * 360  # A list of 360 elements Angle, Distance, quality
         self.dataArrs = Queue()
         self.init_level = 0
         self.server = server
-        self.exitTimeCallback = exitTimeCallback
 
     def __len__(self):
         return int(self.dataArrs.qsize())
@@ -90,7 +89,7 @@ class LidarParser:
         quality = x2 | (x3 << 8)  # quality is on 16 bits
         self.lidarData[angle] = [dist_mm, quality]
 
-    def saveScan(self):
+    def packageScan(self):
         try:
             ragged = False
             for angle in self.lidarData:
@@ -100,19 +99,13 @@ class LidarParser:
             if not ragged:
                 dataArr = np.vstack(self.lidarData)
                 if dataArr.size > 0:
-                    self.dataArrs.put((
-                                          dataArr, np.array([time.time(),])
-                                          ))
+                    return dataArr
         except ValueError as e:  # Data is likely ragged (not all filled).
             logging.debug("Got a ValueError.")
             raise e
-
+  
     def parse(self):
         while True:
-            logging.debug("self.exitTimeCallback() gives %s" % self.exitTimeCallback())
-            if self.exitTimeCallback():
-                logging.debug("Breaking from parser.parse().")
-                break
             time.sleep(0.00001)  # do not hog the processor power
             nb_errors = 0
 
@@ -136,7 +129,7 @@ class LidarParser:
                 b = ord(self.server.getChar(1))
                 if b >= 0xA0 and b <= 0xF9:  # The angle indices range from 160 to 249
                     if b == 0xA0:  # We're at the first index; save the previous scan.
-                        self.saveScan()
+                        yield self.packageScan()
                     index = b - 0xA0
                     logging.debug("At index %d." % index)
                     self.init_level = 2
@@ -193,7 +186,7 @@ class LidarParser:
 
                 # verify that the received checksum is equal to the one computed from the data
                 if checksum(all_data) == incoming_checksum:
-                    # speed_rpm = compute_speed(b_speed)
+                    logging.debug('speed_rpm=%s' % compute_speed(b_speed))
                     self.savePacketQuarter(index * 4 + 0, b_data0)
                     self.savePacketQuarter(index * 4 + 1, b_data1)
                     self.savePacketQuarter(index * 4 + 2, b_data2)
@@ -211,4 +204,5 @@ class LidarParser:
                 self.init_level = 0  # reset and wait for the next packet
 
             else:  # default, should never happen...
+                raise RuntimeError("You shouldn't be here!")
                 self.init_level = 0
