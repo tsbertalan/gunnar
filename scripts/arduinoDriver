@@ -5,6 +5,7 @@ from gunnar.robot import GunnarCommunicator
 import rospy
 from std_msgs.msg import Float32
 
+
 class ResettableRate(rospy.Rate):
     
     def reset(self):
@@ -15,6 +16,7 @@ class ResettableRate(rospy.Rate):
     
     def past(self):
         return self.remainingSeconds() <= 0
+
 
 class Gunnar(object):
     def __init__(self):
@@ -47,7 +49,8 @@ class Gunnar(object):
 
     def spinOnce(self):
         self.communicator.loopOnce()
-        
+
+
 class VtargetListener(Gunnar):
     
     def __init__(self):
@@ -82,7 +85,8 @@ class VtargetListener(Gunnar):
             self.spinOnce()
             r.sleep()
             idle.sleep()
-        
+
+
 def main():
     listener = VtargetListener()
     listener.spin()

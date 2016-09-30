@@ -1,4 +1,0 @@
-<!--Display current map and other data in a GUI.-->
-<launch>
-	<node pkg="gunnar" name="graphical_view" type="graphical_view.py"></node>
-</launch>
