@@ -25,7 +25,7 @@ class LidarPublisher(object):
         self.messageScan.angle_min = startAngle
         self.messageScan.angle_max = startAngle + np.pi*2
         self.messageScan.angle_increment = np.pi*2 / 360
-        self.messageScan.header.frame_id = 'neato_laser'
+        self.messageScan.header.frame_id = 'lidar'
         
         self.messageRpm = Float32()
         
