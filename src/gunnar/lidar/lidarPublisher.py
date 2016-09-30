@@ -5,21 +5,46 @@ from threading import Thread
 from time import sleep
 import sys
 
-from gunnar.io.network import Server
+import numpy as np
+
+
+import rospy
+from sensor_msgs.msg import LaserScan
+from std_msgs.msg import Float32 
+
 from gunnar.lidar import LidarParser, LidarSerialConnection
 
-from sensor_msgs.msg import LaserScan
 
 class LidarPublisher(object):
     def __init__(self):
         self.connection = LidarSerialConnection()
         self.parser = LidarParser(self.connection)
         
+        self.messageScan = LaserScan()
+        self.messageScan.angle_min = 0
+        self.messageScan.angle_max = np.pi*2
+        self.messageScan.angle_increment = np.pi*2 / 360
+        self.messageScan.header.frame_id = 'neato_laser'
+        
+        self.messageRpm = Float32()
+        
+        self.publisherScan = rospy.Publisher('/scan', LaserScan, queue_size=20)
+        self.publisherRPM = rospy.Publisher('/lidar_rpm', Float32, queue_size=20)
+        
+        
     def main(self):
-        for scan in self.parser.parse():
+        for scan, rpm in self.parser.parse():
             if scan is not None:
-#                 print 'Got scan:',
-                print scan[:, 0].mean(),
-            else:
-                print scan,
-                    
+                # Construct and publish the LIDAR scan messageScan.
+                # scans are (360, 2) arrays; first column is distance in mm, second is quality.
+                self.messageScan.header.stamp = rospy.get_rostime()
+                self.messageScan.scan_time = 1
+                self.messageScan.range_min = .2
+                self.messageScan.range_max = 1.5
+                self.messageScan.ranges = scan[:, 0].astype(float) / 1000
+                self.messageScan.intensities = scan[:, 1]
+                self.publisherScan.publish(self.messageScan)
+                
+                # Construct and publish the LIDAR rpm messageScan.
+                self.messageRpm.data = rpm
+                self.publisherRPM.publish(self.messageRpm)

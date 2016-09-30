@@ -65,6 +65,7 @@ class LidarParser:
         self.dataArrs = Queue()
         self.init_level = 0
         self.server = server
+        self.rpm = 0
 
     def __len__(self):
         return int(self.dataArrs.qsize())
@@ -129,7 +130,13 @@ class LidarParser:
                 b = ord(self.server.getChar(1))
                 if b >= 0xA0 and b <= 0xF9:  # The angle indices range from 160 to 249
                     if b == 0xA0:  # We're at the first index; save the previous scan.
-                        yield self.packageScan()
+                        #######################
+                        #### YIELD/RETURN #####
+                        #######################
+                        yield self.packageScan(), self.rpm
+                        #######################
+                        #### YIELD/RETURN #####
+                        #######################
                     index = b - 0xA0
                     logging.debug("At index %d." % index)
                     self.init_level = 2
@@ -186,7 +193,7 @@ class LidarParser:
 
                 # verify that the received checksum is equal to the one computed from the data
                 if checksum(all_data) == incoming_checksum:
-                    logging.debug('speed_rpm=%s' % compute_speed(b_speed))
+                    self.rpm = compute_speed(b_speed)
                     self.savePacketQuarter(index * 4 + 0, b_data0)
                     self.savePacketQuarter(index * 4 + 1, b_data1)
                     self.savePacketQuarter(index * 4 + 2, b_data2)
