@@ -21,8 +21,9 @@ class LidarPublisher(object):
         self.parser = LidarParser(self.connection)
         
         self.messageScan = LaserScan()
-        self.messageScan.angle_min = 0
-        self.messageScan.angle_max = np.pi*2
+        startAngle = np.pi * .35
+        self.messageScan.angle_min = startAngle
+        self.messageScan.angle_max = startAngle + np.pi*2
         self.messageScan.angle_increment = np.pi*2 / 360
         self.messageScan.header.frame_id = 'neato_laser'
         
@@ -39,8 +40,8 @@ class LidarPublisher(object):
                 # scans are (360, 2) arrays; first column is distance in mm, second is quality.
                 self.messageScan.header.stamp = rospy.get_rostime()
                 self.messageScan.scan_time = 1
-                self.messageScan.range_min = .2
-                self.messageScan.range_max = 1.5
+                self.messageScan.range_min = .06  # cut off 
+                self.messageScan.range_max = 50
                 self.messageScan.ranges = scan[:, 0].astype(float) / 1000
                 self.messageScan.intensities = scan[:, 1]
                 self.publisherScan.publish(self.messageScan)
