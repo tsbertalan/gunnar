@@ -88,8 +88,8 @@ class KeyboardTeleop(object):
         key = ''
         while key != ord('q'):
             try:
-                turnAmt = 10
-                straightAmt = 2
+                turnAmt = .25
+                straightAmt = 1
                 key = self.stdscr.getch()
                 self.stdscr.refresh()
                 if key == curses.KEY_UP:

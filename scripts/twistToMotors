@@ -37,7 +37,7 @@ class TwistToMotors():
         nodename = rospy.get_name()
         rospy.loginfo("%s started" % nodename)
     
-        self.w = rospy.get_param("~base_width", 0.2)
+        self.w = rospy.get_param("~base_width", 0.22)
     
         self.pub_lmotor = rospy.Publisher('lwheel_vtarget', Float32,queue_size=10)
         self.pub_rmotor = rospy.Publisher('rwheel_vtarget', Float32,queue_size=10)
@@ -73,9 +73,11 @@ class TwistToMotors():
         # dx = (l + r) / 2
         # dr = (r - l) / w
             
-        self.right = 1.0 * self.dx + self.dr * self.w / 2 
-        self.left = 1.0 * self.dx - self.dr * self.w / 2
-        # rospy.loginfo("publishing: (%d, %d)", left, right) 
+        scaleFactor = 2  # 5 for accurate speed
+        radFactor = 40  # 150 for accurate rads/sec
+        self.right = scaleFactor * (self.dx + self.dr * self.w / 2 * radFactor)
+        self.left  = scaleFactor * (self.dx - self.dr * self.w / 2 * radFactor)
+        rospy.logdebug("dx=%s, dr=%s. publishing: (%s, %s)", self.dx, self.dr, self.left, self.right) 
                 
         self.pub_lmotor.publish(self.left)
         self.pub_rmotor.publish(self.right)
@@ -83,7 +85,7 @@ class TwistToMotors():
         self.ticks_since_target += 1
 
     #############################################################
-    def twistCallback(self,msg):
+    def twistCallback(self, msg):
     #############################################################
         # rospy.loginfo("-D- twistCallback: %s" % str(msg))
         self.ticks_since_target = 0
