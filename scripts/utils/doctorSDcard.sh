@@ -207,6 +207,30 @@ cd $bp/etc/rc2.d && \
     ln -s ../init.d/screenTunnel ./S99screenTunnel
 
 
+
+## Make script to start roscore at boot.
+desc="Start roscore screen at boot."
+echo "Make script for: $desc"
+reverseCmd="/home/pi/catkin_ws/src/gunnar/scripts/utils/startRoscore.sh"
+cat << EOF >> $bp/etc/init.d/screenRoscore
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          screenRoscore
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop:
+# Short-Description: $desc
+# Description: $desc
+### END INIT INFO
+su $user --command='/usr/bin/screen -dmS roscore-screen $reverseCmd'
+EOF
+chmod +x $bp/etc/init.d/screenRoscore
+# Run at boot.
+cd $bp/etc/rc2.d && \
+    ln -s ../init.d/screenRoscore ./S99screenRoscore
+
+
 ## Make script to start vpn connection at boot.
 beforeDir=`pwd`
 vpndir=$repodir/scripts/vpn/
@@ -287,6 +311,10 @@ echo "export LC_ALL=\"C\"" >> $bashrc
 # If the setup file exists, source it.
 echo "[ -e /opt/ros/indigo/setup.bash ] && source /opt/ros/indigo/setup.bash" >> $bashrc
 echo "[ -e \$HOME/catkin_ws/devel/setup.bash ] && source \$HOME/catkin_ws/devel/setup.bash" >> $bashrc
+
+# Remove interactive-shell test from bashrc
+sed '5,9d' $bashrc > $bashrc.mod
+mv $bashrc.mod $bashrc 
 
 ## Make .bash_profile also include these source commands.
 export bashprofile=$bp/home/$user/.bash_profile
