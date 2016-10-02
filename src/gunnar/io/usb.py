@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import time, warnings
+import rospy
 
 MAXCALLBACKS = 50
 DEFAULT_TIMEOUT = 5000
@@ -115,10 +116,14 @@ class CmdMessenger(object):
 
             # Unsplit escaped separators
             while c.endswith(self._esc_char):
-                i = cmds.index(c)
-                cmds.pop(i)
-                fc = cmds.pop(i)
-                cmds.insert(i, c + self._cmd_sep + fc)
+                try:
+                    i = cmds.index(c)
+                    cmds.pop(i)
+                    fc = cmds.pop(i)
+                    cmds.insert(i, c + self._cmd_sep + fc)
+                except ValueError as e:
+                    rospy.logerr(str(e))
+                    break
 
         self._file_buffer = ""
         # If the string ends with a separator, last item is empty
@@ -139,7 +144,7 @@ class CmdMessenger(object):
             try:
                 self.exec_command(self._commands.pop(0))
             except ValueError as e:
-                warnings.warn("Unable to parse invalid command. Make sure you're not sending debug output. ValueError: " + e.message, RuntimeWarning)
+                rospy.logerr("Unable to parse invalid command. Make sure you're not sending debug output. ValueError: " + e.message)
             count += 1
 
     def exec_command(self, command):
@@ -268,7 +273,7 @@ class CmdMessenger(object):
             msgType = msgid
         if msgType is 'speedSet':
             import rospy
-            rospy.loginfo('Sending speedSet command args %s.' % (args,))
+            rospy.logdebug('Sending speedSet command args %s.' % (args,))
         self._file.write(str(msgid))
         for a in args:
             self._file.write(self._fld_sep)

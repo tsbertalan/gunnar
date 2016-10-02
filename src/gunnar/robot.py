@@ -213,11 +213,10 @@ class GunnarCommunicator(object):
         self.messenger.send_cmd(self.commands.index('speedSet'), left, right)
 
     ####################### R E S P O N S E   C A L L B A C K S ###############
-    
     def onError(self, received_command, *args, **kwargs):
         """Callback function to handle errors
         """
-        rospy.logdebug('Got unrecognized data (id %s args %s kwargs %s) from Arduino.' % (received_command, args, kwargs))
+        rospy.logerr('Got unrecognized data (args %s kwargs %s) from Arduino.' % (args, kwargs))
 
     nresp = 0.
     def onSensorsResponse(self, received_command, *args, **kwargs):
@@ -299,7 +298,7 @@ class GunnarCommunicator(object):
                     rospy.loginfo('Took %.3f seconds to draw figure.' % (time.time() - start,))
                 
             else:
-                rospy.logdebug('byteString of length %d is not long enough (%d).' % (len(byteString), s))
+                rospy.logerr('byteString of length %d is not long enough (%d).' % (len(byteString), s))
 
                 
             
@@ -312,7 +311,7 @@ class GunnarCommunicator(object):
 
     def logMessage(self, received_command, *args, **kwargs):
         '''Callback to log string messages sent by for debugging.'''
-        rospy.loginfo('Got message from Arduino: %s' % ('|'.join(args[0]),))
+        rospy.logdebug('Got message from Arduino: %s' % ('|'.join(args[0]),))
         
     def printStatus(self, msg):
         print msg
