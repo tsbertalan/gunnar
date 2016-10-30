@@ -273,22 +273,6 @@ cd $bp/etc/rc2.d && \
     ln -s ../init.d/openvpnBootscript ./S99openvpnBootscript
 
 
-## Make WIFI defaults configuration file.
-echo "Make WIFI defaults file."
-wpadir=$bp/etc/wpa_supplicant/
-mkdir -p $wpadir
-cat << EOF >> $wpadir/wpa_supplicant.conf
-network={
-    ssid="puvisitor"
-    priority=5
-    key_mgmt=NONE
-}
-EOF
-echo "" >> $wpaddr/wpa_supplicant.conf
-# Add any extra networks defined in extraNetworks.conf. 
-cat $startDir/extraNetworks.conf >> $wpaddr/wpa_supplicant.conf 2>/dev/null
-
-
 ## Set Keyboard layout and locale to US
 echo "Set keyboard layout to US."
 mkdir -p $bp/etc/default/
@@ -302,6 +286,23 @@ BACKSPACE="guess"
 EOF
 cat << EOF > $bp/etc/default/locale
 LANG=en_US.UTF-8
+EOF
+
+
+## Install Network Manager config for puvisitor.
+echo "Install Network Manager config for puvisitor."
+mkdir -p $bp/etc/NetworkManager/system-connections
+cat << EOF > $bp/etc/NetworkManager/system-connections/puvis
+[connection]
+id=puvis
+uuid=9b73fcd0-e67b-4c8c-80a3-b96851198a09
+interface-name=wlan0
+type=wifi
+BOOTPROTO=dhcp
+ONBOOT=yes
+
+[wifi]
+ssid=puvisitor
 EOF
 
 

@@ -42,7 +42,7 @@ aptinst ros-indigo-ros-base
 aptinst ros-indigo-geometry python-rosdep ros-indigo-xv-11-laser-driver
 	
 # Install some non-ROS packages.
-aptinst python-pip arduino ipython git python-matplotlib
+aptinst python-pip arduino ipython git python-matplotlib network-manager
 	
 # Install some Python packages.
 sudo pip install rosdep rosinstall_generator wstool rosinstall
