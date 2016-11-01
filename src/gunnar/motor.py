@@ -2,10 +2,17 @@ import RPi.GPIO as GPIO
 import numpy as np
 import time
 
-GPIO.setmode(GPIO.BCM)
+GPIO.setmode(GPIO.BOARD)
+
+from sys import stderr
+# def writeErr(s, endl=True):
+#     stderr.write(s)
+#     if endl:
+#         stderr.write('\n')
 
 class Motor(object):
-    def __init__(self, spdPin, dirPin, hz=10000):
+    def __init__(self, spdPin, dirPin, curPin, hz=10000):
+        self.pins = spdPin, dirPin, curPin
         GPIO.setup(spdPin, GPIO.OUT)
         self.p = GPIO.PWM(spdPin, hz)
 
@@ -15,12 +22,27 @@ class Motor(object):
 
         self._isStarted = False
         self.frac = self.pct = 0
+        
+    def __repr__(self):
+        return 'Motor(%d, %d, %d)' % self.pins
     
     def setFrac(self, frac, verbose=False):
         fwd = (frac > 0)
+        
+        if np.abs(frac) > 1.0:
+            from warnings import warn
+            warn("Capping motor frac from %s." % frac)
+        
+        # Bound frac within [-1, 1].
+        frac = max(min(frac, 1.0), -1.0)
+        
+        # Get magnitude as a percent.
         pct = np.abs(frac * 100.0)
+        
+#         writeErr("Setting duty cycle percent to %s%%." % pct)
 
         if np.abs(frac) < .01:
+#             writeErr('Stopping motor %s' % self)
             self.p.ChangeDutyCycle(0)
             self.stop()
         else:
@@ -31,8 +53,10 @@ class Motor(object):
             else:
                 self.p.ChangeDutyCycle(pct)
             if fwd:
+#                 writeErr('Running %s forward.' % self)
                 self.dp.ChangeDutyCycle(100)
             else:
+#                 writeErr('Running %s backward.' % self)
                 self.dp.ChangeDutyCycle(0)
 
         self.frac = frac

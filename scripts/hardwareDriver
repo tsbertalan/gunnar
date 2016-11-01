@@ -1,9 +1,28 @@
 #!/usr/bin/env python
 from time import sleep
+from sys import stderr
+# def writeErr(s, endl=True):
+#     stderr.write(s)
+#     if endl:
+#         stderr.write('\n')
 
-from gunnar.robot import GunnarCommunicator
-import rospy
+# from sys import path
+# # from os.path import dirname
+# # from sys import argv 
+# # writeErr('')
+# # thisDir = dirname(argv[0])
+# # writeErr('This script is in %s.' % thisDir)
+# # 
+# # path.append(thisDir + '/../src')
+# 
+# writeErr("PYTHONPATH is:")
+# for p in path:
+#     writeErr('  %s' % p)
+
+from gunnar.motor import Motor
 from std_msgs.msg import Float32
+
+import rospy
 
 
 class ResettableRate(rospy.Rate):
@@ -24,8 +43,11 @@ class Gunnar(object):
         self.robotSpeedsStr = ''
         self.rate = rospy.get_param("~rate", 10)
         self.speedSetRate = ResettableRate(self.rate)
-        self.communicator = GunnarCommunicator()
-        rospy.loginfo('Set speedSet rate at %s Hz.' % (1./self.speedSetRate.sleep_dur.to_sec(),))
+        self.motors = [
+                       Motor(35, 33, 31),
+                       Motor(19, 23, 21),
+                       ]
+        rospy.loginfo('Set speedSet rate limiter at %s Hz.' % (1./self.speedSetRate.sleep_dur.to_sec(),))
 
     def stop(self):
         self.spds = [0, 0]
@@ -36,31 +58,40 @@ class Gunnar(object):
 
     @spds.setter
     def spds(self, twoList):
-        if self.speedSetRate.past() and (
-             twoList[0] != self.spds[0] or twoList[1] != self.spds[1]
-             ):
-            self.speedSetRate.reset()
-            self._spds = twoList
-            self.cmdSetSpeeds(twoList[0], twoList[1])
-        
-    def cmdSetSpeeds(self, a, b):
-        self.communicator.speedSet(a, b)
-        self.robotSpeedsStr = "(%.1f, %.1f)." % (a, b)
+        if self.speedSetRate.past():
+            changed = False
+            for i in 0, 1:
+                if twoList[i] != self.spds[i]:
+#                     writeErr('Set motor %d speed frac to %f.' % (i, twoList[i],))
+                    self.motors[i].setFrac(twoList[i] / 100.)
+                    self._spds[i] = twoList[i]
+                    changed = True
+            if changed:
+                self.speedSetRate.reset()
+                self.robotSpeedsStr = "(%.1f, %.1f)." % tuple(self.spds)
+#                 writeErr('Motor speeds were modified to %s.' % self.robotSpeedsStr)
+
+#     def cmdSetSpeeds(self, a, b):
+#         self.communicator.speedSet(a, b)
+#         self.robotSpeedsStr = "(%.1f, %.1f)." % (a, b)
 
     def spinOnce(self):
-        self.communicator.loopOnce()
+        pass
 
 
 class VtargetListener(Gunnar):
     
     def __init__(self):
-        rospy.init_node('arduino_driver', log_level=rospy.DEBUG)
+        rospy.init_node('hardware_driver', log_level=rospy.DEBUG)
         super(VtargetListener, self).__init__()
         rospy.loginfo('Begin VtargetListener init.')
         rospy.Subscriber('/lwheel_vtarget', Float32, self.lwheelCallback)
         rospy.Subscriber('/rwheel_vtarget', Float32, self.rwheelCallback)
         rospy.loginfo('Done with VtargetListener init.')
         print 'Done with VtargetListener init.'
+        
+#     def lwheelCallback(self, data):
+#         self.motors[0].setFrac(data.data)
         
     def lwheelCallback(self, data):
 #         rospy.logdebug('got left wheel data %s' % data.data)
