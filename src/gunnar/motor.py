@@ -5,10 +5,6 @@ import time
 GPIO.setmode(GPIO.BOARD)
 
 from sys import stderr
-# def writeErr(s, endl=True):
-#     stderr.write(s)
-#     if endl:
-#         stderr.write('\n')
 
 class Motor(object):
     def __init__(self, spdPin, dirPin, curPin, hz=10000):
@@ -39,10 +35,8 @@ class Motor(object):
         # Get magnitude as a percent.
         pct = np.abs(frac * 100.0)
         
-#         writeErr("Setting duty cycle percent to %s%%." % pct)
 
         if np.abs(frac) < .01:
-#             writeErr('Stopping motor %s' % self)
             self.p.ChangeDutyCycle(0)
             self.stop()
         else:
@@ -53,10 +47,8 @@ class Motor(object):
             else:
                 self.p.ChangeDutyCycle(pct)
             if fwd:
-#                 writeErr('Running %s forward.' % self)
                 self.dp.ChangeDutyCycle(100)
             else:
-#                 writeErr('Running %s backward.' % self)
                 self.dp.ChangeDutyCycle(0)
 
         self.frac = frac

@@ -1,23 +1,6 @@
 #!/usr/bin/env python
 from time import sleep
 from sys import stderr
-# def writeErr(s, endl=True):
-#     stderr.write(s)
-#     if endl:
-#         stderr.write('\n')
-
-# from sys import path
-# # from os.path import dirname
-# # from sys import argv 
-# # writeErr('')
-# # thisDir = dirname(argv[0])
-# # writeErr('This script is in %s.' % thisDir)
-# # 
-# # path.append(thisDir + '/../src')
-# 
-# writeErr("PYTHONPATH is:")
-# for p in path:
-#     writeErr('  %s' % p)
 
 from gunnar.motor import Motor
 from std_msgs.msg import Float32
@@ -62,18 +45,12 @@ class Gunnar(object):
             changed = False
             for i in 0, 1:
                 if twoList[i] != self.spds[i]:
-#                     writeErr('Set motor %d speed frac to %f.' % (i, twoList[i],))
                     self.motors[i].setFrac(twoList[i] / 100.)
                     self._spds[i] = twoList[i]
                     changed = True
             if changed:
                 self.speedSetRate.reset()
                 self.robotSpeedsStr = "(%.1f, %.1f)." % tuple(self.spds)
-#                 writeErr('Motor speeds were modified to %s.' % self.robotSpeedsStr)
-
-#     def cmdSetSpeeds(self, a, b):
-#         self.communicator.speedSet(a, b)
-#         self.robotSpeedsStr = "(%.1f, %.1f)." % (a, b)
 
     def spinOnce(self):
         pass
@@ -90,15 +67,11 @@ class VtargetListener(Gunnar):
         rospy.loginfo('Done with VtargetListener init.')
         print 'Done with VtargetListener init.'
         
-#     def lwheelCallback(self, data):
-#         self.motors[0].setFrac(data.data)
         
     def lwheelCallback(self, data):
-#         rospy.logdebug('got left wheel data %s' % data.data)
         self.spds = [data.data, self.spds[1]]
         
     def rwheelCallback(self, data):
-#         rospy.logdebug('got right wheel data %s' % data.data)
         self.spds = [self.spds[0], data.data]
         
     def spin(self):
