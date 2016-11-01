@@ -5,10 +5,10 @@
 	<!--<node pkg="gunnar" name="lidarDriver" type="lidarDriver"></node>-->
 	
 	<!--Driver which publishes sensor data and responds to commands about motors and other devices.-->
-	<node name="arduinoDriver" pkg="gunnar" type="arduinoDriver"></node>
+	<node name="hardwareDriver_sh" pkg="gunnar" type="hardwareDriver.sh"></node>
 	<node name="twistToMotors" pkg="gunnar" type="twistToMotors"></node>
 	
 	<!--Establish static TF transforms-->
-	<node pkg="tf" type="static_transform_publisher" name="mapToLidarBroadcaster" args="0 0 0 0 0 0 1 map lidar 100" />
+	<!--<node pkg="tf" type="static_transform_publisher" name="mapToLidarBroadcaster" args="0 0 0 0 0 0 1 map lidar 100" />-->
 
 </launch>
