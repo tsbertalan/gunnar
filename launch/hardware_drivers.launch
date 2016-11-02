@@ -1,14 +1,14 @@
 <!-- Run drivers to publish sensor data and respond to actuation requests. -->
 <launch>
 
-    <!--Driver which publishes lidar scans.-->
-	<!--<node pkg="gunnar" name="lidarDriver" type="lidarDriver"></node>-->
-	
-	<!--Driver which publishes sensor data and responds to commands about motors and other devices.-->
+  <!--Driver which publishes sensor data and responds to commands about motors and other devices.-->
 	<node name="hardwareDriver_sh" pkg="gunnar" type="hardwareDriver.sh"></node>
 	<node name="twistToMotors" pkg="gunnar" type="twistToMotors"></node>
 	
+	<!--Driver which publishes lidar scans.-->
+  <node pkg="gunnar" name="lidarDriver" type="lidarDriver"></node>
+  	
 	<!--Establish static TF transforms-->
-	<!--<node pkg="tf" type="static_transform_publisher" name="mapToLidarBroadcaster" args="0 0 0 0 0 0 1 map lidar 100" />-->
+	<node pkg="tf" type="static_transform_publisher" name="mapToLidarBroadcaster" args="0 0 0 -1.571 0 0 map lidar 100" />
 
 </launch>

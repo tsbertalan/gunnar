@@ -21,9 +21,8 @@ class LidarPublisher(object):
         self.parser = LidarParser(self.connection)
         
         self.messageScan = LaserScan()
-        startAngle = np.pi * .35
-        self.messageScan.angle_min = startAngle
-        self.messageScan.angle_max = startAngle + np.pi*2
+        self.messageScan.angle_min = 0
+        self.messageScan.angle_max = np.pi*2
         self.messageScan.angle_increment = np.pi*2 / 360
         self.messageScan.header.frame_id = 'lidar'
         

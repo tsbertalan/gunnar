@@ -25,12 +25,14 @@ class Motor(object):
     def setFrac(self, frac, verbose=False):
         fwd = (frac > 0)
         
-        if np.abs(frac) > 1.0:
-            from warnings import warn
-            warn("Capping motor frac from %s." % frac)
-        
         # Bound frac within [-1, 1].
+        oldFrac = frac
         frac = max(min(frac, 1.0), -1.0)
+        
+        if np.abs(oldFrac) > 1.0:
+            from warnings import warn
+            warn("Capping motor frac from %s to %s." % (oldFrac, frac))
+        
         
         # Get magnitude as a percent.
         pct = np.abs(frac * 100.0)
@@ -47,9 +49,9 @@ class Motor(object):
             else:
                 self.p.ChangeDutyCycle(pct)
             if fwd:
-                self.dp.ChangeDutyCycle(100)
-            else:
                 self.dp.ChangeDutyCycle(0)
+            else:
+                self.dp.ChangeDutyCycle(100)
 
         self.frac = frac
         self.pct = pct
