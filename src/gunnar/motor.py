@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import numpy as np
 import time
+from collections import deque
 
 GPIO.setmode(GPIO.BOARD)
 
@@ -97,13 +98,15 @@ class MotPair(object):
 
 class Encoder(object):
     
-    def __init__(self, intPin, aPin, bPin, backward=False):
-        # a b i  a  b  i
-        # 3 5 7 11 13 15
+    def __init__(self, intPin, aPin, bPin, backward=False, dtHistMaxLen=10):
+        # a  b  i  a  b  i
+        # 12 16 7 11 13 15
         self.intPin = intPin
         self.wavePins = aPin, bPin
         self.prev = (0, 0)
         self.prevTime = time.time()
+        self.dtHist = deque()
+        self.dtHistMaxLen = dtHistMaxLen
         self.dt = 1
         self.pos = 0
         for pin in intPin, aPin, bPin:
@@ -115,23 +118,44 @@ class Encoder(object):
             self.reverser = 1
                 
         GPIO.add_event_detect(intPin, GPIO.BOTH, callback=self.interruptCallback)
+        
+        
+    def __del__(self):
+        try:
+            GPIO.remove_event_detect(self.intPin)
+        except:
+            pass
+        
+    @property
+    def dt(self):
+        return self._dt
+    
+    @dt.setter
+    def dt(self, dtVal):
+        self._dt = dtVal
+        self.dtHist.append(dtVal)
+        if len(self.dtHist) > self.dtHistMaxLen:
+            self.dtHist.popleft()
+            
+    def smoothedDt(self):
+        return sum(self.dtHist) / len(self.dtHist)
             
     def interruptCallback(self, data):
         aPre, bPre = self.prev
         aNow, bNow = self.prev = GPIO.input(self.wavePins[0]), GPIO.input(self.wavePins[1])
         pre = aPre + 2 * bPre
         now = aNow + 2 * bNow
-        self.pos += ((0, -1, 1, 0),
-                     (1, 0, 0, -1),
-                     (-1, 0, 0, 1),
-                     (0, 1, -1, 0))[pre][now] * self.reverser
+        dir = ((0, -1, 1, 0),
+               (1, 0, 0, -1),
+               (-1, 0, 0, 1),
+               (0, 1, -1, 0))[pre][now] * self.reverser
+        self.pos += dir
                      
-        now = time.time()
+        now = time.time() * dir
         self.dt = now - self.prevTime
         self.prevTime = now
         
-        print 'Pos is %d; dt is %s.' % (self.pos, self.dt)
-    
+            
 if __name__ == '__main__':
     print 'motor.main'
     try:
