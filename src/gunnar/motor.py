@@ -5,8 +5,6 @@ from collections import deque
 
 GPIO.setmode(GPIO.BOARD)
 
-from sys import stderr
-
 class Motor(object):
     def __init__(self, spdPin, dirPin, curPin, hz=10000):
         self.pins = spdPin, dirPin, curPin
@@ -61,40 +59,6 @@ class Motor(object):
         self.p.stop()
         self._isStarted = False
 
-    def ramp(self, stop, start=None, duration=1.0, increment=.01, verbose=False):
-        if start is None:
-            start = self.frac
-        nsteps = duration / increment
-        for frac in np.linspace(start, stop, nsteps):
-            time.sleep(increment)
-            self.setFrac(frac, verbose=verbose)
- 
-
-class MotPair(object):
-    
-    def __init__(self, ml, mr):
-        self._isStarted = False
-        self.fracs = ml.frac, mr.frac
-        self.motors = ml, mr
-    
-    def setFracs(self, fracs, verbose=False):
-        for m, f in zip(self.motors, fracs):
-            m.setFrac(f, verbose=verbose)
-
-    def stop(self):
-        for m in self.motors:
-            m.stop()
-    
-    def ramp(self, stops, starts=None, duration=1.0, increment=.01, verbose=False):
-        if starts is None:
-            starts = self.fracs
-        nsteps = duration / increment
-        for fl, fr in zip(
-                np.linspace(starts[0], stops[0], nsteps),
-                np.linspace(starts[1], stops[1], nsteps)
-            ):
-            time.sleep(increment)
-            self.setFracs((fl, fr), verbose=verbose)
 
 class Encoder(object):
     

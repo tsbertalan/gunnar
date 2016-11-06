@@ -39,10 +39,16 @@ sudo apt-get update
 aptinst ros-indigo-ros-base
 
 # Install other ROS packages.
-aptinst ros-indigo-geometry python-rosdep ros-indigo-xv-11-laser-driver
+aptinst ros-indigo-geometry python-rosdep ros-indigo-xv-11-laser-driver ros-indigo-teleop-twist-joy ros-indigo-yocs-velocity-smoother
 	
 # Install some non-ROS packages.
 aptinst python-pip arduino ipython git python-matplotlib network-manager
+
+# Install xbox controller drivers.
+sudo apt-get install --yes --force-yes --install-recommends jstest* joystick xboxdrv
+# We also need to ensure that xpad is not getting loaded:
+echo "blacklist xpad" | sudo tee -a /etc/modprobe.d/blacklist.conf
+sudo rmmod xpad  # unload module if already loaded
 	
 # Install some Python packages.
 sudo pip install rosdep rosinstall_generator wstool rosinstall

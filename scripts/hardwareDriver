@@ -2,10 +2,12 @@
 from time import sleep
 from sys import stderr
 
-from gunnar.motor import Motor
-from std_msgs.msg import Float32
+from gunnar.motor import Motor, Encoder
+from std_msgs.msg import Float32, Int32
 
 import rospy
+
+from sys import stderr
 
 
 class ResettableRate(rospy.Rate):
@@ -31,6 +33,22 @@ class Gunnar(object):
                        Motor(19, 23, 21),
                        ]
         rospy.loginfo('Set speedSet rate limiter at %s Hz.' % (1./self.speedSetRate.sleep_dur.to_sec(),))
+        
+        self.encoders = [
+                         Encoder(7, 12, 16),
+                         Encoder(15, 11, 13),
+                         ]
+        self.messageEncs = [
+                            Int32(),
+                            Int32(),
+                            ]
+#         for m, label in zip(self.messageEncs, ('encl', 'encr')):
+#             m.header.frame_id = label
+         
+        self.publisherEncs = [
+                              rospy.Publisher('/encl', Int32, queue_size=20),
+                              rospy.Publisher('/encr', Int32, queue_size=20),
+                              ]
 
     def stop(self):
         self.spds = [0, 0]
@@ -45,7 +63,9 @@ class Gunnar(object):
             changed = False
             for i in 0, 1:
                 if twoList[i] != self.spds[i]:
-                    self.motors[i].setFrac(twoList[i] / 100.)
+                    ispd = twoList[i]
+#                     stderr.write('Setting speed %d to %s.\n' % (i, ispd))
+                    self.motors[i].setFrac(ispd)
                     self._spds[i] = twoList[i]
                     changed = True
             if changed:
@@ -54,6 +74,11 @@ class Gunnar(object):
 
     def spinOnce(self):
         pass
+        for enc, pub, msg in zip(self.encoders, self.publisherEncs, self.messageEncs):
+#             msg.header.stamp = rospy.get_rostime()
+            msg.data = enc.pos
+            pub.publish(msg)
+
 
 
 class VtargetListener(Gunnar):

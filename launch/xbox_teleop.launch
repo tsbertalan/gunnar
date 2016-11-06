@@ -1,0 +1,24 @@
+<!-- Run drivers and control by joystick. -->
+<launch>
+
+    <!-- Start the gunnar hardware drivers. -->
+    <include file="$(find gunnar)/launch/hardware_drivers.launch">
+    </include>
+    
+    <!-- start the joystick nodes. -->
+    <node name="joy_node" pkg="joy" type="joy_node">
+        <!-- This might not be necessary. -->
+        <param name="dev" type="str" value="/dev/input/js0" />
+    </node>
+    <node name="teleop_node" pkg="teleop_twist_joy" type="teleop_node">
+        <remap from="/cmd_vel" to="/raw_cmd_vel" />
+    </node>
+    
+    <include file="$(find yocs_velocity_smoother)/launch/standalone.launch">
+        <param name="accel_lim_v" type="double" value="10000" />
+        <param name="accel_lim_w" type="double" value="1" />
+        <param name="speed_lim_v" type="double" value="10000" />
+        <param name="speed_lim_w" type="double" value=".5" />
+    </include>
+
+</launch>
