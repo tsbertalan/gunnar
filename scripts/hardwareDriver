@@ -102,7 +102,7 @@ class Odometer(object):
         self.theta = 0.0
         self.x = 0.0
         self.y = 0.0
-        self.LEFT_CLICKS_PER_M = self.RIGHT_CLICKS_PER_M = 143000.
+        self.LEFT_CLICKS_PER_M = self.RIGHT_CLICKS_PER_M = 202.6 * 100
         self.WHEEL_BASE = 11.5 * 2.54 / 100.  # meters
     
         self.frame_id = '/odom'
