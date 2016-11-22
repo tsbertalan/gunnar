@@ -2,12 +2,17 @@
 from time import sleep
 from sys import stderr
 
-from gunnar.motor import Motor, Encoder
-from std_msgs.msg import Float32, Int32
-
 import rospy
 
-from sys import stderr
+from std_msgs.msg import Float32, Int32
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Point, Quaternion, TransformStamped
+import tf
+
+import numpy as np
+
+from gunnar.motor import Motor, Encoder
+
 
 
 class ResettableRate(rospy.Rate):
@@ -25,7 +30,9 @@ class ResettableRate(rospy.Rate):
 class Gunnar(object):
     def __init__(self):
         self._spds = [0, 0]
+        
         self.robotSpeedsStr = ''
+        self.scalingFactor =  0.1
         self.rate = rospy.get_param("~rate", 10)
         self.speedSetRate = ResettableRate(self.rate)
         self.motors = [
@@ -34,10 +41,13 @@ class Gunnar(object):
                        ]
         rospy.loginfo('Set speedSet rate limiter at %s Hz.' % (1./self.speedSetRate.sleep_dur.to_sec(),))
         
+        # Initialize encoders and odometer.
         self.encoders = [
-                         Encoder(7, 12, 16),
+                         Encoder(7, 12, 16, backward=True),
                          Encoder(15, 11, 13),
                          ]
+        self.odometer = Odometer(*self.encoders)
+        
         self.messageEncs = [
                             Int32(),
                             Int32(),
@@ -59,13 +69,14 @@ class Gunnar(object):
 
     @spds.setter
     def spds(self, twoList):
+        self._spds = list(twoList)
+        
         if self.speedSetRate.past():
             changed = False
             for i in 0, 1:
                 if twoList[i] != self.spds[i]:
-                    ispd = twoList[i]
+                    ispd = twoList[i] * self.scalingFactor
 #                     stderr.write('Setting speed %d to %s.\n' % (i, ispd))
-                    self.motors[i].setFrac(ispd)
                     self._spds[i] = twoList[i]
                     changed = True
             if changed:
@@ -73,13 +84,133 @@ class Gunnar(object):
                 self.robotSpeedsStr = "(%.1f, %.1f)." % tuple(self.spds)
 
     def spinOnce(self):
-        pass
         for enc, pub, msg in zip(self.encoders, self.publisherEncs, self.messageEncs):
 #             msg.header.stamp = rospy.get_rostime()
             msg.data = enc.pos
             pub.publish(msg)
+            
+        self.odometer.update()
+        
+        
+class Odometer(object):
+    '''Adapted from http://answers.ros.org/question/79851/python-odometry/'''
+    
+    def __init__(self, encl, encr):
+        self.encs = encl, encr
+        self.last_left = encl.pos
+        self.last_right = encr.pos
+        self.theta = 0.0
+        self.x = 0.0
+        self.y = 0.0
+        self.LEFT_CLICKS_PER_M = self.RIGHT_CLICKS_PER_M = 143000.
+        self.WHEEL_BASE = 11.5 * 2.54 / 100.  # meters
+    
+        self.frame_id = '/odom'
+        self.odom_pub = rospy.Publisher(self.frame_id, Odometry)
+        self.tf_broadcaster = tf.TransformBroadcaster()
+        self.child_frame_id = '/map'
+      
+    def publish_odom(self, x, y, z, thx, thy, thz):
+        
+        # Initialize Odometry message object.
+        msg = Odometry()
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = self.frame_id # i.e. '/odom'
+        msg.child_frame_id = self.child_frame_id # i.e. '/base_footprint'
+        
+#         # Do the same with a tf object. Not sure why this is better.
+#         transform = TransformStamped()
+#         transform.header.stamp = rospy.Time.now()
+#         transform.header.frame_id = self.frame_id + "_tf"
+#         transform.child_frame_id = self.child_frame_id
+        
+        # Fill the messages with data.
+        msg.pose.pose.position = Point(x, y, z)
+        quat = tf.transformations.quaternion_from_euler(thx, thy, thz)
+        msg.pose.pose.orientation = Quaternion(*quat)
+        
+#         for k, v in zip('xyz', (x, y, z)):
+#             setattr(transform.transform.translation, k, v)
+#         for k, v in zip('xyzw', quat):
+#             setattr(transform.transform.rotation, k, v)
+        self.tf_broadcaster.sendTransform(
+            (x, y, z),
+            quat,
+            msg.header.stamp,
+            self.frame_id + '_tf',
+            self.child_frame_id
+            )
+        
+        
+        # position covariance
+        P = np.mat(np.diag([0.0]*3))  # Covariance
+        p_cov = np.array([0.0]*36).reshape(6,6)
+        p_cov[0:2,0:2] = P[0:2,0:2]
+        # orientation covariance for Yaw
+        # x and Yaw
+        p_cov[5,0] = p_cov[0,5] = P[2,0]
+        # y and Yaw
+        p_cov[5,1] = p_cov[1,5] = P[2,1]
+        # Yaw and Yaw
+        p_cov[5,5] = P[2,2]
+  
+        msg.pose.covariance = tuple(p_cov.ravel().tolist())
+  
+        # Publish odometry message
+        self.odom_pub.publish(msg)
+  
+#         pos = (msg.pose.pose.position.x,
+#                msg.pose.pose.position.y,
+#                msg.pose.pose.position.z)
+#           
+#         ori = (msg.pose.pose.orientation.x,
+#                msg.pose.pose.orientation.y,
+#                msg.pose.pose.orientation.z,
+#                msg.pose.pose.orientation.w)
+#         # Also publish tf if necessary
+#         if self.publish_odom_tf:
+#             self.tf_br.sendTransform(pos, ori, msg.header.stamp, msg.child_frame_id, msg.header.frame_id)
+            
+    def update(self):
+        '''Adapted from http://www.seattlerobotics.org/encoder/200610/Article3/IMU%20Odometry,%20by%20David%20Anderson.htm'''
+        from math import cos, sin
+        
+        # sample the left and right encoder counts as close together
+        # in time as possible
+        lsamp, rsamp = [enc.pos for enc in self.encs]
 
+        # determine how many ticks since our last sampling?
+        L_ticks = lsamp - self.last_left
+        R_ticks = rsamp - self.last_right
 
+        # and update last sampling for next time
+        self.last_left = lsamp 
+        self.last_right = rsamp 
+
+        # convert longs to floats and ticks to meters
+        left_meters = float(L_ticks) / self.LEFT_CLICKS_PER_M
+        right_meters = float(R_ticks) / self.RIGHT_CLICKS_PER_M
+
+        # calculate distance we have traveled since last sampling
+        meters = (left_meters + right_meters) / 2.0
+    
+        # accumulate total rotation around our center (radians)
+        self.theta += (left_meters - right_meters) / self.WHEEL_BASE
+
+        # and clip the rotation to plus or minus 360 degrees
+        # We could perhaps use modulo for this, but Python's modulo operator
+        # is "improved" s.t.  
+        self.theta -= float(
+            int(
+                self.theta / 6.283185307179586
+                )
+            ) * 6.283185307179586
+
+        # now calculate and accumulate our position in meters
+        self.y += meters * cos(self.theta) 
+        self.x += meters * sin(self.theta)
+
+        self.publish_odom(self.x, self.y, 0, 0, 0, self.theta)
 
 class VtargetListener(Gunnar):
     
@@ -92,12 +223,13 @@ class VtargetListener(Gunnar):
         rospy.loginfo('Done with VtargetListener init.')
         print 'Done with VtargetListener init.'
         
-        
     def lwheelCallback(self, data):
         self.spds = [data.data, self.spds[1]]
+        self.motors[0].setFrac(data.data * self.scalingFactor)
         
     def rwheelCallback(self, data):
         self.spds = [self.spds[0], data.data]
+        self.motors[1].setFrac(data.data * self.scalingFactor)
         
     def spin(self):
         r = rospy.Rate(self.rate)
