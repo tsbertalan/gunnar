@@ -102,6 +102,7 @@ class Odometer(object):
         self.theta = 0.0
         self.x = 0.0
         self.y = 0.0
+        self.t = rospy.Time.now().to_sec()
         self.LEFT_CLICKS_PER_M = self.RIGHT_CLICKS_PER_M = 202.6 * 100
         self.WHEEL_BASE = 11.5 * 2.54 / 100.  # meters
     
@@ -110,7 +111,7 @@ class Odometer(object):
         self.tf_broadcaster = tf.TransformBroadcaster()
         self.child_frame_id = '/map'
       
-    def publish_odom(self, x, y, z, thx, thy, thz):
+    def publish_odom(self, xyz, thxyz, vxyz, vthxyz):
         
         # Initialize Odometry message object.
         msg = Odometry()
@@ -125,22 +126,25 @@ class Odometer(object):
 #         transform.child_frame_id = self.child_frame_id
         
         # Fill the messages with data.
-        msg.pose.pose.position = Point(x, y, z)
-        quat = tf.transformations.quaternion_from_euler(thx, thy, thz)
+        msg.pose.pose.position = Point(*xyz)
+        quat = tf.transformations.quaternion_from_euler(*thxyz)
         msg.pose.pose.orientation = Quaternion(*quat)
         
+        for i in range(3):
+            setattr(msg.twist.twist.linear, 'xyz'[i], vxyz[i])
+            setattr(msg.twist.twist.angular, 'xyz'[i], vthxyz[i])
+            
 #         for k, v in zip('xyz', (x, y, z)):
 #             setattr(transform.transform.translation, k, v)
 #         for k, v in zip('xyzw', quat):
 #             setattr(transform.transform.rotation, k, v)
         self.tf_broadcaster.sendTransform(
-            (x, y, z),
+            xyz,
             quat,
             msg.header.stamp,
             self.frame_id + '_tf',
             self.child_frame_id
             )
-        
         
         # position covariance
         P = np.mat(np.diag([0.0]*3))  # Covariance
@@ -178,6 +182,9 @@ class Odometer(object):
         # sample the left and right encoder counts as close together
         # in time as possible
         lsamp, rsamp = [enc.pos for enc in self.encs]
+        oldt = self.t
+        self.t = rospy.Time.now().to_sec()
+        dt = self.t - oldt
 
         # determine how many ticks since our last sampling?
         L_ticks = lsamp - self.last_left
@@ -195,6 +202,7 @@ class Odometer(object):
         meters = (left_meters + right_meters) / 2.0
     
         # accumulate total rotation around our center (radians)
+        oldTheta = self.theta
         self.theta += (left_meters - right_meters) / self.WHEEL_BASE
 
         # and clip the rotation to plus or minus 360 degrees
@@ -207,10 +215,27 @@ class Odometer(object):
             ) * 6.283185307179586
 
         # now calculate and accumulate our position in meters
+        oldx = self.x
+        oldy = self.y
         self.y += meters * cos(self.theta) 
         self.x += meters * sin(self.theta)
+        vxyz = (
+            (self.x - oldx) / dt,
+            (self.y - oldy) / dt,
+            0.0,
+            )
+        vthxyz = (
+            0.0,
+            0.0,
+            (self.theta - oldTheta) / dt,
+            )
 
-        self.publish_odom(self.x, self.y, 0, 0, 0, self.theta)
+        self.publish_odom(
+            (self.x, self.y, 0),
+            (0, 0, self.theta),
+            vxyz,
+            vthxyz)
+
 
 class VtargetListener(Gunnar):
     
