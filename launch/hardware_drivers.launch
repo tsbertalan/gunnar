@@ -2,16 +2,51 @@
 <launch>
 
     <!--Driver which publishes sensor data and responds to commands about motors and other devices.-->
-	<node name="hardwareDriver_sh" pkg="gunnar" type="hardwareDriver.sh"></node>
-	<node name="twistToMotors" pkg="gunnar" type="twistToMotors">
-	<!--   <remap from="/cmd_vel" to="/smooth_cmd_vel" /> -->
-	</node>
-	
-	
-	<!--Driver which publishes lidar scans.-->
-    <!--<node pkg="gunnar" name="lidarDriver" type="lidarDriver"></node>-->
-  	
-	<!--Establish static TF transforms-->
-	<node pkg="tf" type="static_transform_publisher" name="mapToLidarBroadcaster" args="0 0 0 -1.571 0 0 map lidar 100" />
+    <node name="hardwareDriver_sh" pkg="gunnar" type="hardwareDriver.sh" />
+    <node name="twistToMotors" pkg="gunnar" type="twistToMotors">
+    <!--   <remap from="/cmd_vel" to="/smooth_cmd_vel" /> -->
+    </node>
+    
+    
+    <!--Driver which publishes lidar scans.-->
+    <node pkg="gunnar" name="lidarDriver" type="lidarDriver"></node>
+      
+    <!--Establish static TF transforms-->
+    <node pkg="tf" type="static_transform_publisher" name="mapToLidarBroadcaster" args="0 0 0 -1.571 0 0 base_link lidar 100" />
+    <!--<node pkg="tf" type="static_transform_publisher" name="mapToBaseLinkIdentityBroadcaster" args="0 0 0 0 0 0 base_link map 100" />-->
+    
+    <!--Gmapping-->
+    <node pkg="gmapping" name="slam_gmapping" type="slam_gmapping">
+        <param name="temporalUpdate" value="0.1" />
+        <!-- <param name="linearUpdate" value="0.1" /> -->
+        <!--<param name="particles" value="128" />-->
+        <!-- <param name="iterations" value="64" /> -->
+        
+        <!-- Minimum score for considering the outcome of the scan matching good.
+        Can avoid jumping pose estimates in large open spaces when using laser
+        scanners with limited range (e.g. 5m). Scores go up to 600+,
+        try 50 for example when experiencing jumping estimate issues.--> 
+        <param name="minimumScore" value="50" />
+        
+        <!-- Let's say our odometry is pretty crappy. -->
+        <!--
+        <param name="srr" value="1.0" />
+        <param name="srt" value="2.0" />
+        <param name="str" value="1.0" />
+        <param name="stt" value="2.0" />
+        -->
+        
+        <!-- Don't look at all the beams in the scan. -->
+        <param name="lskip" value="0" />
+        
+        <!-- Don't look at all scans. -->
+        <param name="throttle_scans" value="1" />
+        
+        <param name="maxUrange" value="6" />
+        <param name="maxRange" value="4" />
+        
+        <param name="map_update_interval" value="1.0" />
+        
+    </node>
 
 </launch>

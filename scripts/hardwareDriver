@@ -107,9 +107,9 @@ class Odometer(object):
         self.WHEEL_BASE = 11.5 * 2.54 / 100.  # meters
     
         self.frame_id = '/odom'
-        self.odom_pub = rospy.Publisher(self.frame_id, Odometry)
+        self.odom_pub = rospy.Publisher(self.frame_id, Odometry, queue_size=10)
         self.tf_broadcaster = tf.TransformBroadcaster()
-        self.child_frame_id = '/map'
+        self.child_frame_id = '/base_link'
       
     def publish_odom(self, xyz, thxyz, vxyz, vthxyz):
         
@@ -142,8 +142,8 @@ class Odometer(object):
             xyz,
             quat,
             msg.header.stamp,
-            self.frame_id + '_tf',
-            self.child_frame_id
+            self.child_frame_id,
+            self.frame_id,
             )
         
         # position covariance
