@@ -33,7 +33,7 @@ class Gunnar(object):
         
         self.robotSpeedsStr = ''
         self.scalingFactor =  0.1
-        self.rate = rospy.get_param("~rate", 10)
+        self.rate = rospy.get_param("~rate", 60)
         self.speedSetRate = ResettableRate(self.rate)
         self.motors = [
                        Motor(35, 33, 31),
@@ -119,12 +119,6 @@ class Odometer(object):
         msg.header.frame_id = self.frame_id # i.e. '/odom'
         msg.child_frame_id = self.child_frame_id # i.e. '/base_footprint'
         
-#         # Do the same with a tf object. Not sure why this is better.
-#         transform = TransformStamped()
-#         transform.header.stamp = rospy.Time.now()
-#         transform.header.frame_id = self.frame_id + "_tf"
-#         transform.child_frame_id = self.child_frame_id
-        
         # Fill the messages with data.
         msg.pose.pose.position = Point(*xyz)
         quat = tf.transformations.quaternion_from_euler(*thxyz)
@@ -134,10 +128,6 @@ class Odometer(object):
             setattr(msg.twist.twist.linear, 'xyz'[i], vxyz[i])
             setattr(msg.twist.twist.angular, 'xyz'[i], vthxyz[i])
             
-#         for k, v in zip('xyz', (x, y, z)):
-#             setattr(transform.transform.translation, k, v)
-#         for k, v in zip('xyzw', quat):
-#             setattr(transform.transform.rotation, k, v)
         self.tf_broadcaster.sendTransform(
             xyz,
             quat,
@@ -163,18 +153,6 @@ class Odometer(object):
         # Publish odometry message
         self.odom_pub.publish(msg)
   
-#         pos = (msg.pose.pose.position.x,
-#                msg.pose.pose.position.y,
-#                msg.pose.pose.position.z)
-#           
-#         ori = (msg.pose.pose.orientation.x,
-#                msg.pose.pose.orientation.y,
-#                msg.pose.pose.orientation.z,
-#                msg.pose.pose.orientation.w)
-#         # Also publish tf if necessary
-#         if self.publish_odom_tf:
-#             self.tf_br.sendTransform(pos, ori, msg.header.stamp, msg.child_frame_id, msg.header.frame_id)
-            
     def update(self):
         '''Adapted from http://www.seattlerobotics.org/encoder/200610/Article3/IMU%20Odometry,%20by%20David%20Anderson.htm'''
         from math import cos, sin
