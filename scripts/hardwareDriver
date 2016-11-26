@@ -33,7 +33,8 @@ class Gunnar(object):
         
         self.robotSpeedsStr = ''
         self.scalingFactor =  0.1
-        self.rate = rospy.get_param("~rate", 60)
+        rospy.set_param("~testparam", 60)
+        self.rate = rospy.get_param("rate", 60)
         self.speedSetRate = ResettableRate(self.rate)
         self.motors = [
                        Motor(35, 33, 31),
@@ -83,6 +84,29 @@ class Gunnar(object):
                 self.speedSetRate.reset()
                 self.robotSpeedsStr = "(%.1f, %.1f)." % tuple(self.spds)
 
+    def updateLidarAngleTf(self):
+        if not hasattr(self, 'lidarAngleTfBroadcaster'):
+            self.lidarAngleTfBroadcaster = tf.TransformBroadcaster()
+        tfb = self.lidarAngleTfBroadcaster
+        lidarAngle = self.lidarAngle
+        tfb.sendTransform(
+            (0, 0, 0),
+            tf.transformations.quaternion_from_euler(0, 0, lidarAngle),
+            rospy.Time.now(),
+            'lidar',
+            'base_link',                                   
+            )
+        
+#             <node pkg="tf" type="static_transform_publisher" name="baseLinkToLidarBroadcaster" args="0 0 0 -1.7 0 0 base_link lidar 100">
+
+    @property
+    def lidarAngle(self):
+        default = np.pi
+        name = "lidarAngle"
+        if not rospy.has_param(name):
+            rospy.set_param(name, str(default))
+        return float(rospy.get_param(name, default))
+    
     def spinOnce(self):
         for enc, pub, msg in zip(self.encoders, self.publisherEncs, self.messageEncs):
 #             msg.header.stamp = rospy.get_rostime()
@@ -90,6 +114,8 @@ class Gunnar(object):
             pub.publish(msg)
             
         self.odometer.update()
+        
+        self.updateLidarAngleTf()
         
         
 class Odometer(object):
@@ -103,13 +129,35 @@ class Odometer(object):
         self.x = 0.0
         self.y = 0.0
         self.t = rospy.Time.now().to_sec()
-        self.LEFT_CLICKS_PER_M = self.RIGHT_CLICKS_PER_M = 202.6 * 100
-        self.WHEEL_BASE = 11.5 * 2.54 / 100.  # meters
     
         self.frame_id = '/odom'
-        self.odom_pub = rospy.Publisher(self.frame_id, Odometry, queue_size=10)
+        self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
         self.tf_broadcaster = tf.TransformBroadcaster()
         self.child_frame_id = '/base_link'
+    
+    @property
+    def RIGHT_CLICKS_PER_M(self):
+        default = 18500.
+        name = "RIGHT_CLICKS_PER_M"
+        if not rospy.has_param(name):
+            rospy.set_param(name, str(default))
+        return float(rospy.get_param(name, default))
+    
+    @property
+    def LEFT_CLICKS_PER_M(self):
+        default = 18500.
+        name = "LEFT_CLICKS_PER_M"
+        if not rospy.has_param(name):
+            rospy.set_param(name, str(default))
+        return float(rospy.get_param(name, default))
+    
+    @property
+    def WHEEL_BASE_M(self):
+        default = 11.5 * 2.54 / 100.
+        name = "WHEEL_BASE_M"
+        if not rospy.has_param(name):
+            rospy.set_param(name, str(default))
+        return float(rospy.get_param(name, default))
       
     def publish_odom(self, xyz, thxyz, vxyz, vthxyz):
         
@@ -181,22 +229,25 @@ class Odometer(object):
     
         # accumulate total rotation around our center (radians)
         oldTheta = self.theta
-        self.theta += (left_meters - right_meters) / self.WHEEL_BASE
+        # Subtracting L from R gives us a right-handed coordinate system.
+        self.theta += (left_meters - right_meters) / self.WHEEL_BASE_M
+        
 
         # and clip the rotation to plus or minus 360 degrees
         # We could perhaps use modulo for this, but Python's modulo operator
-        # is "improved" s.t.  
-        self.theta -= float(
-            int(
-                self.theta / 6.283185307179586
-                )
-            ) * 6.283185307179586
+        # is "improved" from the C behavior.
+#         self.theta -= float(
+#             int(
+#                 self.theta / 6.283185307179586
+#                 )
+#             ) * 6.283185307179586
 
         # now calculate and accumulate our position in meters
         oldx = self.x
         oldy = self.y
-        self.y += meters * cos(self.theta) 
-        self.x += meters * sin(self.theta)
+        self.y += meters * sin(self.theta) 
+        self.x += meters * cos(self.theta)
+
         vxyz = (
             (self.x - oldx) / dt,
             (self.y - oldy) / dt,
@@ -207,6 +258,11 @@ class Odometer(object):
             0.0,
             (self.theta - oldTheta) / dt,
             )
+        
+        # Log
+        if not (vthxyz[-1] == 0 and meters == 0):
+            rospy.logwarn('Updating odometer by (dx=%scm, dy=%scm, dth=%s*).'
+                          % (vxyz[0]*dt*100, vxyz[1]*dt*100, vthxyz[-1]*dt * 180. / np.pi))
 
         self.publish_odom(
             (self.x, self.y, 0),
