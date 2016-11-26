@@ -26,15 +26,14 @@ class ResettableRate(rospy.Rate):
     def past(self):
         return self.remainingSeconds() <= 0
 
-
+    
 class Gunnar(object):
     def __init__(self):
         self._spds = [0, 0]
         
         self.robotSpeedsStr = ''
-        self.scalingFactor =  0.1
-        rospy.set_param("~testparam", 60)
-        self.rate = rospy.get_param("rate", 60)
+        self.scalingFactor =  0.05
+        self.rate = rospy.get_param("rate", 10)
         self.speedSetRate = ResettableRate(self.rate)
         self.motors = [
                        Motor(35, 33, 31),
@@ -55,7 +54,6 @@ class Gunnar(object):
                             ]
 #         for m, label in zip(self.messageEncs, ('encl', 'encr')):
 #             m.header.frame_id = label
-         
         self.publisherEncs = [
                               rospy.Publisher('/encl', Int32, queue_size=20),
                               rospy.Publisher('/encr', Int32, queue_size=20),
@@ -101,20 +99,14 @@ class Gunnar(object):
 
     @property
     def lidarAngle(self):
-        default = np.pi
-        name = "lidarAngle"
-        if not rospy.has_param(name):
-            rospy.set_param(name, str(default))
-        return float(rospy.get_param(name, default))
+        return float(rospy.get_param('lidarAngle', np.pi))
     
     def spinOnce(self):
         for enc, pub, msg in zip(self.encoders, self.publisherEncs, self.messageEncs):
 #             msg.header.stamp = rospy.get_rostime()
             msg.data = enc.pos
             pub.publish(msg)
-            
         self.odometer.update()
-        
         self.updateLidarAngleTf()
         
         
@@ -123,41 +115,35 @@ class Odometer(object):
     
     def __init__(self, encl, encr):
         self.encs = encl, encr
-        self.last_left = encl.pos
-        self.last_right = encr.pos
+        self.sampLOld = encl.pos
+        self.sampROld = encr.pos
         self.theta = 0.0
         self.x = 0.0
         self.y = 0.0
-        self.t = rospy.Time.now().to_sec()
+        self.t = self.initTime = rospy.Time.now().to_sec()
     
         self.frame_id = '/odom'
         self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
         self.tf_broadcaster = tf.TransformBroadcaster()
         self.child_frame_id = '/base_link'
+
+#     CLICKS_PER_M_DEFAULT = (
+#         48 * 171.79  # encoder CPR * gear ratio = ticks per wheel revolution
+#          / (60. * 2 * np.pi / 1000)  # / meters per revolution
+#         )
+    CLICKS_PER_M_DEFAULT = 16610.  # experimental
     
     @property
     def RIGHT_CLICKS_PER_M(self):
-        default = 18500.
-        name = "RIGHT_CLICKS_PER_M"
-        if not rospy.has_param(name):
-            rospy.set_param(name, str(default))
-        return float(rospy.get_param(name, default))
+        return float(rospy.get_param("RIGHT_CLICKS_PER_M", self.CLICKS_PER_M_DEFAULT))
     
     @property
     def LEFT_CLICKS_PER_M(self):
-        default = 18500.
-        name = "LEFT_CLICKS_PER_M"
-        if not rospy.has_param(name):
-            rospy.set_param(name, str(default))
-        return float(rospy.get_param(name, default))
+        return float(rospy.get_param("LEFT_CLICKS_PER_M", self.CLICKS_PER_M_DEFAULT))
     
     @property
     def WHEEL_BASE_M(self):
-        default = 11.5 * 2.54 / 100.
-        name = "WHEEL_BASE_M"
-        if not rospy.has_param(name):
-            rospy.set_param(name, str(default))
-        return float(rospy.get_param(name, default))
+        return float(rospy.get_param("WHEEL_BASE_M", 0.3177))
       
     def publish_odom(self, xyz, thxyz, vxyz, vthxyz):
         
@@ -202,74 +188,64 @@ class Odometer(object):
         self.odom_pub.publish(msg)
   
     def update(self):
-        '''Adapted from http://www.seattlerobotics.org/encoder/200610/Article3/IMU%20Odometry,%20by%20David%20Anderson.htm'''
+        '''Sample encoders and publish odometry topic and tf.
+        
+        Adapted from
+            http://www.seattlerobotics.org/encoder/200610/Article3/IMU%20Odometry,%20by%20David%20Anderson.htm
+            https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf
+            
+        '''
         from math import cos, sin
         
-        # sample the left and right encoder counts as close together
-        # in time as possible
-        lsamp, rsamp = [enc.pos for enc in self.encs]
+        #### DETERMINE ARC MOVEMENTS #### 
+        # Sample the left and right encoder counts as close together
+        # in time as possible.
+        sampL, sampR = [enc.pos for enc in self.encs]
         oldt = self.t
         self.t = rospy.Time.now().to_sec()
         dt = self.t - oldt
 
-        # determine how many ticks since our last sampling?
-        L_ticks = lsamp - self.last_left
-        R_ticks = rsamp - self.last_right
+        # Determine how many ticks have passed since our last sampling.
+        dTicksL = sampL - self.sampLOld
+        dTicksR = sampR - self.sampROld
+        self.sampLOld = sampL
+        self.sampROld = sampR
 
-        # and update last sampling for next time
-        self.last_left = lsamp 
-        self.last_right = rsamp 
+        # Convert longs to floats and ticks to meters.
+        deltaSlMeters = float(dTicksL) / self.LEFT_CLICKS_PER_M
+        deltaSrMeters = float(dTicksR) / self.RIGHT_CLICKS_PER_M
 
-        # convert longs to floats and ticks to meters
-        left_meters = float(L_ticks) / self.LEFT_CLICKS_PER_M
-        right_meters = float(R_ticks) / self.RIGHT_CLICKS_PER_M
-
-        # calculate distance we have traveled since last sampling
-        meters = (left_meters + right_meters) / 2.0
+        # Calculate central distance we have traveled since last sampling.
+        deltaSMeters = (deltaSrMeters + deltaSlMeters) / 2.0
     
-        # accumulate total rotation around our center (radians)
-        oldTheta = self.theta
-        # Subtracting L from R gives us a right-handed coordinate system.
-        self.theta += (left_meters - right_meters) / self.WHEEL_BASE_M
+        # Accumulate total rotation around our center (radians).
+        # Subtracting L from R gives us a right-handed coordinate system?
+        deltaTheta = (deltaSlMeters - deltaSrMeters) / self.WHEEL_BASE_M
+        self.theta += deltaTheta
         
+        # Accumulate our translation from the odometry frame (meters).
+        deltaX = deltaSMeters * cos(self.theta + deltaTheta / 2.)
+        deltaY = deltaSMeters * sin(self.theta + deltaTheta / 2.)
+        self.x += deltaX
+        self.y += deltaY 
 
-        # and clip the rotation to plus or minus 360 degrees
-        # We could perhaps use modulo for this, but Python's modulo operator
-        # is "improved" from the C behavior.
-#         self.theta -= float(
-#             int(
-#                 self.theta / 6.283185307179586
-#                 )
-#             ) * 6.283185307179586
-
-        # now calculate and accumulate our position in meters
-        oldx = self.x
-        oldy = self.y
-        self.y += meters * sin(self.theta) 
-        self.x += meters * cos(self.theta)
-
-        vxyz = (
-            (self.x - oldx) / dt,
-            (self.y - oldy) / dt,
+        translationRates = (
+            deltaX / dt,
+            deltaY / dt,
             0.0,
             )
-        vthxyz = (
+        rotationRates = (
             0.0,
             0.0,
-            (self.theta - oldTheta) / dt,
+            deltaTheta / dt,
             )
-        
-        # Log
-        if not (vthxyz[-1] == 0 and meters == 0):
-            rospy.logwarn('Updating odometer by (dx=%scm, dy=%scm, dth=%s*).'
-                          % (vxyz[0]*dt*100, vxyz[1]*dt*100, vthxyz[-1]*dt * 180. / np.pi))
 
         self.publish_odom(
             (self.x, self.y, 0),
             (0, 0, self.theta),
-            vxyz,
-            vthxyz)
-
+            translationRates,
+            rotationRates)
+        
 
 class VtargetListener(Gunnar):
     

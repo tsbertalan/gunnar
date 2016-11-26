@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO
+import rospy
 import numpy as np
 import time
 from collections import deque
@@ -114,10 +115,10 @@ class Encoder(object):
                (-1, 0, 0, 1),
                (0, 1, -1, 0))[pre][now] * self.reverser
         self.pos += dir
-                     
-        now = time.time() * dir
-        self.dt = now - self.prevTime
-        self.prevTime = now
+        
+        nowt = rospy.Time.now().to_sec()
+        self.dt = nowt - self.prevTime
+        self.prevTime = nowt
         
             
 if __name__ == '__main__':

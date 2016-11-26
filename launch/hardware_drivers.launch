@@ -7,14 +7,18 @@
     <!--   <remap from="/cmd_vel" to="/smooth_cmd_vel" /> -->
     </node>
     
-    <param name="lidarAngle" value="-1.7" />    
+    <!-- odometry parameters -->
+    <param name="lidarAngle" value="3.14159" />
+    <!-- np.mean((45273., 44593.)) / (106.5 * 2.54 / 100.) -->
+    <param name="RIGHT_CLICKS_PER_M" value="16610.476507337993" />
+    <param name="LEFT_CLICKS_PER_M" value="16610.476507337993" />
+    <!-- np.mean((41785.-29843., 58898.-37678.)) / ticksPerMMeas2 * 2. / (np.pi * 2) -->
+    <param name="WHEEL_BASE_M" value="0.31774502197344084" />
     
     <!--Driver which publishes lidar scans.-->
     <node pkg="gunnar" name="lidarDriver" type="lidarDriver"></node>
       
     <!--Establish static TF transforms-->
-    <!-- <node pkg="tf" type="static_transform_publisher" name="baseLinkToLidarBroadcaster" args="0 0 0 -1.7 0 0 base_link lidar 100">
-    </node> -->
     <node pkg="tf" type="static_transform_publisher" name="odom_rotation" args="0 0 0 -1.5698 0 0 odom odom_rot 100" />
     
     <!--Gmapping-->
