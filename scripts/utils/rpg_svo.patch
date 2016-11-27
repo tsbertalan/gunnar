@@ -1,0 +1,18 @@
+diff --git a/svo/CMakeLists.txt b/svo/CMakeLists.txt
+index 703e379..a311ef6 100644
+--- a/svo/CMakeLists.txt
++++ b/svo/CMakeLists.txt
+@@ -30,11 +30,11 @@ IF(DEBUG_OUTPUT)
+ ENDIF()
+ 
+ # Set build flags, set ARM_ARCHITECTURE environment variable on Odroid
+-SET(CMAKE_CXX_FLAGS "-Wall -D_LINUX -D_REENTRANT -march=native -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unknown-pragmas")
++SET(CMAKE_CXX_FLAGS "-Wall -D_LINUX -D_REENTRANT -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unknown-pragmas")
+ IF(DEFINED ENV{ARM_ARCHITECTURE})
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon -march=armv7-a")
+ ELSE()
+-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmmx -msse -msse -msse2 -msse3 -mssse3")
++  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+ ENDIF()
+ IF(CMAKE_COMPILER_IS_GNUCC)
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")

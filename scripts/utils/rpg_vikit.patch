@@ -1,0 +1,45 @@
+diff --git a/vikit_common/CMakeLists.txt b/vikit_common/CMakeLists.txt
+index bd3fef4..5cb766e 100644
+--- a/vikit_common/CMakeLists.txt
++++ b/vikit_common/CMakeLists.txt
+@@ -7,11 +7,11 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules/"
+ SET(USE_ROS TRUE) # Set False if you want to build this package without Catkin
+ 
+ # Set build flags. Set IS_ARM on odroid board as environment variable
+-SET(CMAKE_CXX_FLAGS "-Wall -D_LINUX -D_REENTRANT -march=native -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unknown-pragmas")
++SET(CMAKE_CXX_FLAGS "-Wall -D_LINUX -D_REENTRANT -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unknown-pragmas")
+ IF(DEFINED ENV{ARM_ARCHITECTURE})
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon -march=armv7-a")
+ ELSE()
+-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmmx -msse -msse -msse2 -msse3 -mssse3")
++  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+ ENDIF()
+ IF(CMAKE_COMPILER_IS_GNUCC)
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+@@ -94,4 +94,4 @@ IF(NOT USE_ROS)
+ 
+   INSTALL(DIRECTORY include/vikit DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
+   INSTALL(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
+-ENDIF()
+\ No newline at end of file
++ENDIF()
+diff --git a/vikit_ros/CMakeLists.txt b/vikit_ros/CMakeLists.txt
+index 22cb924..0275425 100644
+--- a/vikit_ros/CMakeLists.txt
++++ b/vikit_ros/CMakeLists.txt
+@@ -5,7 +5,7 @@ SET(CMAKE_BUILD_TYPE Release) # Release, RelWithDebInfo
+ SET(CMAKE_VERBOSE_MAKEFILE OFF)
+ 
+ # Set build flags
+-SET(CMAKE_CXX_FLAGS "-Wall -D_LINUX -D_REENTRANT -march=native -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unknown-pragmas")
++SET(CMAKE_CXX_FLAGS "-Wall -D_LINUX -D_REENTRANT -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unknown-pragmas")
+ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -g")
+ IF(CMAKE_COMPILER_IS_GNUCC)
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+@@ -49,4 +49,4 @@ TARGET_LINK_LIBRARIES(
+   ${PROJECT_NAME}
+   ${OpenCV_LIBS}
+   ${Sophus_LIBRARIES}
+-  ${catkin_LIBRARIES})
+\ No newline at end of file
++  ${catkin_LIBRARIES})

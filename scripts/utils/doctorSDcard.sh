@@ -312,6 +312,8 @@ echo "export LC_ALL=\"C\"" >> $bashrc
 # If the setup file exists, source it.
 echo "[ -e /opt/ros/indigo/setup.bash ] && source /opt/ros/indigo/setup.bash" >> $bashrc
 echo "[ -e \$HOME/catkin_ws/devel/setup.bash ] && source \$HOME/catkin_ws/devel/setup.bash" >> $bashrc
+echo "export ARM_ARCHITECTURE=armv71" >> $bashrc
+echo "export IS_ARM=true" >> $bashrc
 
 # Remove interactive-shell test from bashrc
 sed '5,9d' $bashrc > $bashrc.mod
