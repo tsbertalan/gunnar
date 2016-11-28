@@ -63,9 +63,11 @@ class Motor(object):
 
 class Encoder(object):
     
-    def __init__(self, intPin, aPin, bPin, backward=False, dtHistMaxLen=10):
+    def __init__(self, intPin, aPin, bPin, backward=False, dtHistMaxLen=10, halfRes=True, detectionDirection='rising'):
         # a  b  i  a  b  i
         # 12 16 7 11 13 15
+        if halfRes:
+            intPin = aPin
         self.intPin = intPin
         self.wavePins = aPin, bPin
         self.prev = (0, 0)
@@ -81,9 +83,14 @@ class Encoder(object):
             self.reverser = -1
         else:        
             self.reverser = 1
+            
+        direction = {
+            'rising': GPIO.RISING,
+            'falling': GPIO.FALLING,
+            'both': GPIO.BOTH
+            }[detectionDirection.lower()]
                 
-        GPIO.add_event_detect(intPin, GPIO.BOTH, callback=self.interruptCallback)
-        
+        GPIO.add_event_detect(intPin, direction, callback=self.interruptCallback)
         
     def __del__(self):
         try:
@@ -106,28 +113,22 @@ class Encoder(object):
         return sum(self.dtHist) / len(self.dtHist)
             
     def interruptCallback(self, data):
-        aPre, bPre = self.prev
-        aNow, bNow = self.prev = GPIO.input(self.wavePins[0]), GPIO.input(self.wavePins[1])
-        pre = aPre + 2 * bPre
-        now = aNow + 2 * bNow
-        dir = ((0, -1, 1, 0),
-               (1, 0, 0, -1),
-               (-1, 0, 0, 1),
-               (0, 1, -1, 0))[pre][now] * self.reverser
-        self.pos += dir
+        aNow, bNow = GPIO.input(self.wavePins[0]), GPIO.input(self.wavePins[1])
+        if aNow == bNow:
+            direc = self.reverser
+        else:
+            direc = -self.reverser
+        self.pos += direc
         
-        nowt = rospy.Time.now().to_sec()
-        self.dt = nowt - self.prevTime
-        self.prevTime = nowt
         
-            
 if __name__ == '__main__':
     print 'motor.main'
     try:
-        enc = Encoder(9, 10, 22)
+        enc = Encoder(7, 12, 16, backward=True)
         while True:
-            time.sleep(.5)
-            print 'Slept.'
+            time.sleep(.01)
+            print 'position =',
+            print enc.pos
     except KeyboardInterrupt:
         GPIO.cleanup()
     GPIO.cleanup()

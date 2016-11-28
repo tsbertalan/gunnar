@@ -54,11 +54,13 @@ ros-indigo-teleop-twist-joy ros-indigo-yocs-velocity-smoother
 #aptinst ros-indigo-image-transport ros-indigo-cv-bridge ros-indigo-image-geometry ros-indigo-pcl-ros
 
 # For SVO
-aptinst ros-indigo-rqt-gui ros-indigo-rqt-gui-py ros-indigo-cmake-modules
+aptinst ros-indigo-rqt-gui ros-indigo-rqt-gui-py ros-indigo-cmake-modules ros-indigo-camera-calibration
 
 
 
 # Download SVO code and dependencies.
+# This linking might be necessary?:
+# https://github.com/ros-perception/image_pipeline/issues/176
 export CATKIN_WS=$userhome/catkin_ws/src/
 $su mkdir -p $CATKKIN_WS && cd $CATKKIN_WS
 $su git clone https://github.com/uzh-rpg/rpg_vikit.git
