@@ -21,8 +21,8 @@ class Odometer(object):
                             Int32(),
                             ]
         self.publisherEncs = [
-                              rospy.Publisher('/encl', Int32, queue_size=64),
-                              rospy.Publisher('/encr', Int32, queue_size=64),
+                              rospy.Publisher('/encl', Int32, queue_size=24),
+                              rospy.Publisher('/encr', Int32, queue_size=24),
                               ]
         
         self.sampLOld = self.encoders[0].pos

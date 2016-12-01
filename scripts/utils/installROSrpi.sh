@@ -48,7 +48,7 @@ aptinst ros-indigo-ros-base
 
 # Install other ROS packages.
 aptinst ros-indigo-geometry python-rosdep ros-indigo-xv-11-laser-driver \
-ros-indigo-teleop-twist-joy ros-indigo-yocs-velocity-smoother
+ros-indigo-teleop-twist-joy ros-indigo-yocs-velocity-smoother ros-indigo-move-base
 
 # For viso2 (failed)
 #aptinst ros-indigo-image-transport ros-indigo-cv-bridge ros-indigo-image-geometry ros-indigo-pcl-ros

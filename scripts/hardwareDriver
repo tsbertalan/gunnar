@@ -29,7 +29,6 @@ class Gunnar(object):
         self._spds = [0, 0]
         
         self.robotSpeedsStr = ''
-        self.scalingFactor =  0.05
         self.speedSetRate = ResettableRate(rospy.get_param("rate", 10))
         self.motors = [
                        Motor(35, 33, 31),
@@ -74,6 +73,10 @@ class Gunnar(object):
     @property
     def lidarAngle(self):
         return float(rospy.get_param('lidarAngle', np.pi))
+
+    @property
+    def scalingFactor(self):
+        return float(rospy.get_param('speedScalingFactor', 2.0))
     
     def spinOnce(self):
         self.updateLidarAngleTf()

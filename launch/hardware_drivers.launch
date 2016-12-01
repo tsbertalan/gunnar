@@ -3,19 +3,22 @@
 
 
     <!-- Driver which publishes sensor data and responds to commands about motors and other devices.-->
-    <node name="hardwareDriver_sh" pkg="gunnar" type="hardwareDriver.sh" />
+    <node name="hardwareDriver_sh" pkg="gunnar" type="hardwareDriver.sh">
+        <param name="lidarAngle" value="3.14159" />
+        <param name="rate" value="10" />
+    </node>
     <node name="twistToMotors" pkg="gunnar" type="twistToMotors">
     <!--   <remap from="/cmd_vel" to="/smooth_cmd_vel" /> -->
     </node>
     
     
     <!-- Driver which publishes wheel encoder odometry. -->
-    <!-- odometry parameters -->
-    <param name="lidarAngle" value="3.14159" />
-    <param name="RIGHT_CLICKS_PER_M" value="4500" />
-    <param name="LEFT_CLICKS_PER_M" value="4500" />
-    <param name="WHEEL_BASE_M" value="0.272" />
-    <node name="wheelOdometry" pkg="gunnar" type="wheelOdometry" />
+    <node name="wheelOdometry" pkg="gunnar" type="wheelOdometry">
+        <param name="RIGHT_CLICKS_PER_M" value="4500" />
+        <param name="LEFT_CLICKS_PER_M" value="4500" />
+        <param name="WHEEL_BASE_M" value="0.272" />
+        <param name="odometryRate" value="10" />
+    </node>
     
     
     
@@ -28,49 +31,6 @@
     
     
     <!-- Publish camera iamges. -->
-    <node pkg="gunnar" name="cameraPublisher" type="cameraPublisher" /> 
-
-        
-    <!-- Gmapping -->
-    <node pkg="gmapping" name="slam_gmapping" type="slam_gmapping">
-        <param name="temporalUpdate" value="4" />
-        <!--<param name="linearUpdate" value="0.1" />-->
-        <param name="particles" value="24" />
-        <param name="iterations" value="8" />
-        
-        <!-- Minimum score for considering the outcome of the scan matching good.
-        Can avoid jumping pose estimates in large open spaces when using laser
-        scanners with limited range (e.g. 5m). Scores go up to 600+,
-        try 50 for example when experiencing jumping estimate issues.--> 
-        <param name="minimumScore" value="50" />
-        
-        <!-- Let the particle cloud cover a wider sample of pose angles
-        (if I'm interpreting this correctly). -->
-        <!--
-        <param name="lasamplerange" value="0.02" />
-        <param name="lasamplestep" value="0.02" />
-        -->
-        
-        <!-- Let's say our odometry is pretty crappy. -->
-        <param name="srr" value=".2" />
-        <param name="srt" value=".4" />
-        <param name="str" value=".2" />
-        <param name="stt" value=".4" />
-        
-        <!-- Don't look at all the beams in the scan. -->
-        <param name="lskip" value="0" />
-        
-        <!-- Don't look at all scans. -->
-        <param name="throttle_scans" value="2" />
-        
-        <param name="maxUrange" value="6" />
-        <param name="maxRange" value="4" />
-        
-        <param name="map_update_interval" value="2.5" />
-        
-        <!-- Resolution of the map (default 0.05)-->
-        <param name="delta" value="0.05" />
-    </node>
-    
+    <!-- <node pkg="gunnar" name="cameraPublisher" type="cameraPublisher" /> --> 
 
 </launch>
