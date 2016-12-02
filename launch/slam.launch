@@ -5,7 +5,7 @@
     <node pkg="gmapping" name="slam_gmapping" type="slam_gmapping">
         <param name="temporalUpdate" value=".5" />
         <!--<param name="linearUpdate" value="0.1" />-->
-        <!--<param name="particles" value="24" />-->
+        <param name="particles" value="64" />
         <!--<param name="iterations" value="8" />-->
         
         <!-- Minimum score for considering the outcome of the scan matching good.

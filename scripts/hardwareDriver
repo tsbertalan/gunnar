@@ -76,7 +76,7 @@ class Gunnar(object):
 
     @property
     def scalingFactor(self):
-        return float(rospy.get_param('speedScalingFactor', 2.0))
+        return float(rospy.get_param('speedScalingFactor', .1))
     
     def spinOnce(self):
         self.updateLidarAngleTf()

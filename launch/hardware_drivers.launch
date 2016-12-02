@@ -6,6 +6,7 @@
     <node name="hardwareDriver_sh" pkg="gunnar" type="hardwareDriver.sh">
         <param name="lidarAngle" value="3.14159" />
         <param name="rate" value="10" />
+        <param name="speedScalingFactor" value="0.1" />
     </node>
     <node name="twistToMotors" pkg="gunnar" type="twistToMotors">
     <!--   <remap from="/cmd_vel" to="/smooth_cmd_vel" /> -->
@@ -14,8 +15,8 @@
     
     <!-- Driver which publishes wheel encoder odometry. -->
     <node name="wheelOdometry" pkg="gunnar" type="wheelOdometry">
-        <param name="RIGHT_CLICKS_PER_M" value="4500" />
-        <param name="LEFT_CLICKS_PER_M" value="4500" />
+        <param name="RIGHT_CLICKS_PER_M" value="4674.5" />
+        <param name="LEFT_CLICKS_PER_M" value="4674.5" />
         <param name="WHEEL_BASE_M" value="0.272" />
         <param name="odometryRate" value="10" />
     </node>
