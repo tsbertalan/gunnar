@@ -1,23 +1,27 @@
 controller_frequency: 10
-#recovery_behaviors
+recovery_behavior_enabled: false
+clearing_rotation_allowed: false
+planner_frequency: 0.5
 sim_granularity: .07
-meter_scoring: true
 
 TrajectoryPlannerROS:
+  meter_scoring: true
   max_vel_x: 1.25
-  max_vel_y: 0.0
+  max_vel_y: 1.0
   max_vel_theta: 0.2
   
-  min_vel_x: 0.7
+  min_vel_x: 1.0
   min_vel_y: 0.0
-  min_vel_theta: 0.07
-  min_in_place_vel_theta: 0.07
+  min_vel_theta: 0.16
+  min_in_place_vel_theta: 0.16
 
-  acc_lim_x: 8.0
-  acc_lim_y: 0.0
-  acc_lim_theta: 1.0
+  acc_lim_x: 9.8
+  acc_lim_y: 1.0
+  acc_lim_theta: 4.0
 
   holonomic_robot: false
   
-  max_rotational_vel: 0.04
-  min_in_place_rotational_vel: 0.01
+  max_rotational_vel: 0.2
+  min_in_place_rotational_vel: 0.16
+
+  dwa: false
