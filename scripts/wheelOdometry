@@ -45,15 +45,15 @@ class Odometer(object):
     
     @property
     def RIGHT_CLICKS_PER_M(self):
-        return float(rospy.get_param("RIGHT_CLICKS_PER_M", self.CLICKS_PER_M_DEFAULT))
+        return float(rospy.get_param("~RIGHT_CLICKS_PER_M", self.CLICKS_PER_M_DEFAULT))
     
     @property
     def LEFT_CLICKS_PER_M(self):
-        return float(rospy.get_param("LEFT_CLICKS_PER_M", self.CLICKS_PER_M_DEFAULT))
+        return float(rospy.get_param("~LEFT_CLICKS_PER_M", self.CLICKS_PER_M_DEFAULT))
     
     @property
     def WHEEL_BASE_M(self):
-        return float(rospy.get_param("WHEEL_BASE_M", 0.3177))
+        return float(rospy.get_param("~WHEEL_BASE_M", 0.3177))
       
     def publish_odom(self, xyz, thxyz, vxyz, vthxyz):
         
@@ -163,7 +163,7 @@ class Odometer(object):
         self.update()
     
     def spin(self):
-        r = rospy.Rate(rospy.get_param("odometryRate", 10))
+        r = rospy.Rate(rospy.get_param("~odometryRate", 10))
         while not rospy.is_shutdown():
             self.spinOnce()
             r.sleep()

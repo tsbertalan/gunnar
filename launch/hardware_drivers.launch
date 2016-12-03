@@ -3,13 +3,18 @@
 
 
     <!-- Driver which publishes sensor data and responds to commands about motors and other devices.-->
-    <node name="hardwareDriver_sh" pkg="gunnar" type="hardwareDriver.sh">
+    <node name="hardwareDriver" pkg="gunnar" type="hardwareDriver" launch-prefix="sudo -E PYTHONPATH=/home/pi/catkin_ws/devel/lib/python2.7/dist-packages:/opt/ros/indigo/lib/python2.7/dist-packages
+ LD_LIBRARY_PATH=/home/pi/catkin_ws/devel/lib:/opt/ros/indigo/lib ">
         <param name="lidarAngle" value="3.14159" />
         <param name="rate" value="10" />
-        <param name="speedScalingFactor" value="0.1" />
     </node>
+    
+    <!-- Script which translates velocity commands in m/s and rad/s to motor fractions. -->
     <node name="twistToMotors" pkg="gunnar" type="twistToMotors">
     <!--   <remap from="/cmd_vel" to="/smooth_cmd_vel" /> -->
+        <param name="scaleFactor" value="2.5" />
+        <param name="radFactor" value="1.5" />
+        <param name="base_width" value="0.272" />
     </node>
     
     
@@ -32,6 +37,6 @@
     
     
     <!-- Publish camera iamges. -->
-    <!-- <node pkg="gunnar" name="cameraPublisher" type="cameraPublisher" /> --> 
+    <node pkg="gunnar" name="cameraPublisher" type="cameraPublisher" /> 
 
 </launch>

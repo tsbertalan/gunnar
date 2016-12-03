@@ -3,6 +3,8 @@
     
     <!-- Gmapping -->
     <node pkg="gmapping" name="slam_gmapping" type="slam_gmapping">
+        <!-- This doesn't work becuase of https://github.com/ros-perception/slam_gmapping/issues/42 : -->
+        <env name="ROSCONSOLE_MIN_SEVERITY" value="ROSCONSOLE_SEVERITY_FATAL" />
         <param name="temporalUpdate" value=".5" />
         <!--<param name="linearUpdate" value="0.1" />-->
         <param name="particles" value="64" />

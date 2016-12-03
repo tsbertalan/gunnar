@@ -29,12 +29,11 @@ class Gunnar(object):
         self._spds = [0, 0]
         
         self.robotSpeedsStr = ''
-        self.speedSetRate = ResettableRate(rospy.get_param("rate", 10))
+        self.speedSetRate = ResettableRate(rospy.get_param("~rate", 10))
         self.motors = [
                        Motor(35, 33, 31),
                        Motor(19, 23, 21),
                        ]
-        rospy.loginfo('Set speedSet rate limiter at %s Hz.' % (1./self.speedSetRate.sleep_dur.to_sec(),))
         
     def stop(self):
         self.spds = [0, 0]
@@ -51,7 +50,7 @@ class Gunnar(object):
             changed = False
             for i in 0, 1:
                 if twoList[i] != self.spds[i]:
-                    self._spds[i] = twoList[i] * self.scalingFactor
+                    self._spds[i] = twoList[i]
                     changed = True
             if changed:
                 self.speedSetRate.reset()
@@ -72,12 +71,8 @@ class Gunnar(object):
         
     @property
     def lidarAngle(self):
-        return float(rospy.get_param('lidarAngle', np.pi))
+        return float(rospy.get_param('~lidarAngle', np.pi))
 
-    @property
-    def scalingFactor(self):
-        return float(rospy.get_param('speedScalingFactor', .1))
-    
     def spinOnce(self):
         self.updateLidarAngleTf()
         
@@ -94,14 +89,14 @@ class VtargetListener(Gunnar):
         
     def lwheelCallback(self, data):
         self.spds = [data.data, self.spds[1]]
-        self.motors[0].setFrac(data.data * self.scalingFactor)
+        self.motors[0].setFrac(data.data)
         
     def rwheelCallback(self, data):
         self.spds = [self.spds[0], data.data]
-        self.motors[1].setFrac(data.data * self.scalingFactor)
+        self.motors[1].setFrac(data.data)
         
     def spin(self):
-        r = rospy.Rate(rospy.get_param("rate", 10))
+        r = rospy.Rate(rospy.get_param("~rate", 10))
         while not rospy.is_shutdown():
             # Time per loop iteration will be max(ts, tr, ti), where ts, tr,
             # and ti are the duration of the spin code, rate period, and idle
