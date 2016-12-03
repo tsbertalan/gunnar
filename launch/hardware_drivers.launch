@@ -15,6 +15,8 @@
         <param name="scaleFactor" value="2.5" />
         <param name="radFactor" value="1.5" />
         <param name="base_width" value="0.272" />
+        <param name="motor_tune_left" value="1.2" />
+        <param name="motor_tune_right" value="0.85" />
     </node>
     
     

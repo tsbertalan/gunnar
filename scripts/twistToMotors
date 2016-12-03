@@ -64,8 +64,11 @@ class TwistToMotors():
             
         scaleFactor = rospy.get_param('~scaleFactor')
         radFactor = rospy.get_param('~radFactor')
-        self.right = scaleFactor * (self.dx + self.dr * self.w / 2 * radFactor)
-        self.left  = scaleFactor * (self.dx - self.dr * self.w / 2 * radFactor)
+        motor_tune_left = rospy.get_param('~motor_tune_left')
+        motor_tune_right = rospy.get_param('~motor_tune_right')
+        
+        self.left  = scaleFactor * (self.dx - self.dr * self.w / 2 * radFactor) * motor_tune_left
+        self.right = scaleFactor * (self.dx + self.dr * self.w / 2 * radFactor) * motor_tune_right
         rospy.logdebug("dx=%s, dr=%s. publishing: (%s, %s)", self.dx, self.dr, self.left, self.right) 
                 
         self.pub_lmotor.publish(self.left)

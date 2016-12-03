@@ -6,5 +6,6 @@
         <rosparam file="$(find gunnar)/param/local_costmap_params.yaml" command="load" />
         <rosparam file="$(find gunnar)/param/global_costmap_params.yaml" command="load" />
         <rosparam file="$(find gunnar)/param/base_local_planner_params.yaml" command="load" />
+        <rosparam file="$(find gunnar)/param/move_base_params.yaml" command="load" />
      </node>
 </launch>

@@ -1,20 +1,13 @@
-controller_frequency: 3
-controller_patience: 3.0
-planner_frequency: 1.0
-sim_granularity: .07
-recovery_behavior_enabled: true
-clearing_rotation_allowed: true
-
 TrajectoryPlannerROS:
   meter_scoring: true
-  max_vel_x: 0.16
+  max_vel_x: 0.25
   max_vel_y: 0
-  max_vel_theta: 0.57
+  max_vel_theta: 0.6
   
-  min_vel_x: 0.05
+  min_vel_x: 0.12
   min_vel_y: 0.0
-  min_vel_theta: 0.32
-  min_in_place_vel_theta: 0.32
+  min_vel_theta: 0.5
+  min_in_place_vel_theta: 0.5
 
   acc_lim_x: 1.0
   acc_lim_y: 1.0
@@ -23,6 +16,20 @@ TrajectoryPlannerROS:
   holonomic_robot: false
   
   max_rotational_vel: 0.57
-  min_in_place_rotational_vel: 0.32
-
-  dwa: false
+  min_in_place_rotational_vel: 0.5
+  
+  #escape_vel: -0.1
+  
+  dwa: true
+  
+  #The weighting for how much the controller should stay close to the path it was given 
+  #~<name>/pdist_scale (double, default: 0.6)
+  pdist_scale: 0.6
+   
+  #The weighting for how much the controller should attempt to reach its local goal, also controls speed 
+  #~<name>/gdist_scale (double, default: 0.8)
+  gdist_scale: 0.8
+   
+  #The weighting for how much the controller should attempt to avoid obstacles
+  #~<name>/pdist_scale (double, default: 0.6)
+  occdist_scale: 0.03
