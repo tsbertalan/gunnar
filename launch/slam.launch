@@ -37,8 +37,8 @@
         <!-- Don't look at all scans. -->
         <!--<param name="throttle_scans" value="2" />-->
         
-        <param name="maxUrange" value="3" />
-        <param name="maxRange" value="2.5" />
+        <param name="maxUrange" value="4.5" />
+        <param name="maxRange" value="4.0" />
         
         <param name="map_update_interval" value="2.5" />
         
