@@ -1,6 +1,5 @@
 import RPi.GPIO as GPIO
 GPIO.setwarnings(False)
-import rospy
 import numpy as np
 import time
 from collections import deque

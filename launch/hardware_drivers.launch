@@ -14,17 +14,19 @@
     <!--   <remap from="/cmd_vel" to="/smooth_cmd_vel" /> -->
         <param name="scaleFactor" value="2.5" />
         <param name="radFactor" value="1.5" />
-        <param name="base_width" value="0.272" />
-        <param name="motor_tune_left" value="1.2" />
-        <param name="motor_tune_right" value="0.85" />
+        <param name="base_width" value="0.24" />
+        <param name="motor_tune_left" value="1.0" />
+        <param name="motor_tune_right" value="1.0" />
     </node>
     
     
     <!-- Driver which publishes wheel encoder odometry. -->
     <node name="wheelOdometry" pkg="gunnar" type="wheelOdometry">
-        <param name="RIGHT_CLICKS_PER_M" value="4674.5" />
-        <param name="LEFT_CLICKS_PER_M" value="4674.5" />
-        <param name="WHEEL_BASE_M" value="0.272" />
+    
+    	<!--  cpr=48/4 * gearRatio=172 / (pi * diameter=.1) = 6569.916 -->
+        <param name="RIGHT_CLICKS_PER_M" value="6570" />
+        <param name="LEFT_CLICKS_PER_M" value="6570" />
+        <param name="WHEEL_BASE_M" value="0.24" />
         <param name="odometryRate" value="10" />
     </node>
     
