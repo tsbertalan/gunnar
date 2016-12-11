@@ -34,7 +34,12 @@ unzipDiskImage:
 	sync
 	
 # Load config file.
-include makeconfig.mk
+# This file should look something like this:
+#IMGPATH = /home/tsbertalan/workspace/gunnar/2016-05-27-raspbian-jessie.img
+#MNTPOINT = /mnt/img
+#USER = pi
+#SDX = /dev/sdc
+include param/makeconfig.mk
 
 # Modify image file.
 mountAndAlterSD:

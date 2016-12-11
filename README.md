@@ -1,6 +1,8 @@
-# GUNNAR IS A ROBOT
+# Gunnar
 
-## To make the SD card:
+Gunnar is a differential-drive rover with LIDAR as its primary sense. 
+
+### To make the SD card:
 
 1. Download and extract Raspbian Jessie image (e.g.
    `2016-05-27-raspbian-jessie.img`, which I torrented from raspberrypi.org;
