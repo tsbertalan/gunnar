@@ -1,0 +1,11 @@
+<!-- Run drivers to publish sensor data and respond to actuation requests. -->
+<launch>
+
+	<!-- Launch the hardware drivers. -->
+	<include file="$(find gunnar)/launch/hardware_drivers.launch" />
+	
+	<!-- Launch run-once node which does ISR timing test and prints output to console. -->
+	<node name="isrSpeedTest" pkg="gunnar" type="isrSpeedTest.py">
+	</node>
+
+</launch>

@@ -113,12 +113,7 @@ class Encoder(object):
         return sum(self.dtHist) / len(self.dtHist)
             
     def interruptCallback(self, data):
-        aNow, bNow = GPIO.input(self.wavePins[0]), GPIO.input(self.wavePins[1])
-        if aNow == bNow:
-            direc = self.reverser
-        else:
-            direc = -self.reverser
-        self.pos += direc
+        self.pos += self.reverser
         
         
 if __name__ == '__main__':
