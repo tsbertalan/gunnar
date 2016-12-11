@@ -12,7 +12,7 @@ def record(fname='data.npz', nsteps=256, rate=2.0):
     publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
     rospy.init_node('encoderCountsOverTime')
     
-    rospy.loginfo('Running in %s.', getcwd())
+    rospy.logwarn('Running in %s.', getcwd())
     
     twist = Twist()
     
@@ -24,15 +24,15 @@ def record(fname='data.npz', nsteps=256, rate=2.0):
     
     times = []
     ticks = []
-    rospy.loginfo('Iterating at %s Hz for %s steps.', rate, nsteps)
+    rospy.logwarn('Iterating at %s Hz for %s steps.', rate, nsteps)
     for i in range(nsteps):
         if not i % rate:
-            rospy.loginfo('Step i = %d.', i)
+            rospy.logwarn('Step i = %d.', i)
         times.append(time())
         ticks.append(getTicks())
         sleep(1./rate)
         
-    rospy.loginfo('Saving %s.', fname)
+    rospy.logwarn('Saving %s.', fname)
     np.savez(fname, times=times, ticks=ticks)
     return fname
 
