@@ -5,14 +5,14 @@ import numpy as np
 from os import getcwd
 
 
-def record(fname='data.npz', nsteps=200, rate=10.0):
+def record(fname='data.npz', nsteps=256, rate=2.0):
     from geometry_msgs.msg import Twist
     from std_msgs.msg import Int32
     import rospy
     publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
     rospy.init_node('encoderCountsOverTime')
     
-    rospy.logerr('Running in %s.', getcwd())
+    rospy.loginfo('Running in %s.', getcwd())
     
     twist = Twist()
     
@@ -24,19 +24,21 @@ def record(fname='data.npz', nsteps=200, rate=10.0):
     
     times = []
     ticks = []
-    rospy.logerr('Iterating at %s Hz for %s steps.', rate, nsteps)
+    rospy.loginfo('Iterating at %s Hz for %s steps.', rate, nsteps)
     for i in range(nsteps):
+        if not i % rate:
+            rospy.loginfo('Step i = %d.', i)
         times.append(time())
         ticks.append(getTicks())
         sleep(1./rate)
         
-    rospy.logerr('Saving %s.', fname)
+    rospy.loginfo('Saving %s.', fname)
     np.savez(fname, times=times, ticks=ticks)
     return fname
 
 
-def goalTimes(nsecs=2):
-    freqs = 1, 2, 10, 100, 1000, 5000, 10000, 20000
+def goalTimes(nsecs=8):
+    freqs = 31, 100, 1000, 5000, 10000, 20000, 40000, 60000
     t = 0.0
     gtimes = [t]
     gfreqs = []
@@ -64,22 +66,14 @@ def plot(fname='data.npz'):
     avTimePerTick = elapsedTime / elapsedTicks
     freqs = 1.0 / avTimePerTick
     
-    fig, axes = plt.subplots(ncols=3, figsize=(24, 6))
+    fig, axes = plt.subplots(ncols=2, figsize=(24, 8))
     
     ax = axes[0]
     ax.plot(times, ticks, 'ko')
     ax.set_xlabel('time')
     ax.set_ylabel('encoder distance')
     
-    
     ax = axes[1]
-    y = np.diff(ticks)
-    ax.plot(times[:-1], np.abs(y), 'ko')
-    ax.set_yscale('log')
-    ax.set_xlabel('time')
-    ax.set_ylabel('$|$ $\Delta$ encoder distance$|$')
-    
-    ax = axes[2]
     y = freqs 
     ax.plot(times[:-1], y, 'ko', label='measured')
     
@@ -100,7 +94,10 @@ def plot(fname='data.npz'):
 
     
 if __name__ == '__main__':
-#     plot(record())
-    plot()
-    plt.show()
+    import socket
+    if socket.gethostname().lower() == 'raspberrypi':
+        record()
+    else:
+        plot()
+        plt.show()
     
