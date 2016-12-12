@@ -1,8 +1,7 @@
 <!--Run a TUI to drive the robot with a keyboard.-->
 <launch>
-	<node pkg="gunnar" type="keyboarTeleop" name="keyboardTeleop">
-	   <!--TODO: This probably requires adding yujin_ocs as a (run?) dependency, or at least cmd_vel_mux.-->
-    	<!-- <remap from="keyboardTeleop/cmd_vel" to="cmd_vel_mux/input/teleop"></remap> -->
+	<node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard">
+	    <!--TODO: This probably requires adding yujin_ocs as a (run?) dependency, or at least cmd_vel_mux.-->
+        <!-- <remap from="keyboardTeleop/cmd_vel" to="cmd_vel_mux/input/teleop"></remap> -->
 	</node>
-	<include file="$(find gunnar)/launch/hardware_drivers.launch" />
 </launch>

@@ -1,4 +1,0 @@
-<!--Run a TUI or GUI for providing high-level objectives for the autonomous path planner.-->
-<launch>
-	<node pkg="gunnar" name="objectiveDirectorUi" type="objectiveDirectorUi"></node>
-</launch>

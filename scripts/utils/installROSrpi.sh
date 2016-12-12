@@ -78,6 +78,12 @@ done
 # This might not be necessary with catkin_make called later, but this is what worked for me.
 $su rosdep install vision_opencv
 
+
+# Download ros_arduino_bridge
+cd $CATKIN_WS/src
+git clone https://github.com/hbrobotics/ros_arduino_bridge.git
+
+
 # Some non-ros packages (see https://github.com/uzh-rpg/rpg_svo/wiki/Installation:-ROS):
 cmakeWorkspace=$userhome/cmakeWorkspace/
 $su mkdir -p $cmakeWorkspace
@@ -103,8 +109,11 @@ $su make
 
 
 	
-# Install some non-ROS packages.
-aptinst python-pip arduino ipython git python-matplotlib network-manager
+# Install some non-ROS packages
+aptinst python-pip arduino ipython git python-matplotlib network-manager python-serial
+
+# Add the pi user to the dialout group, to allow access to Arduino via USB.
+sudo usermod -a -G dialout pi
 
 # Install xbox controller drivers.
 sudo apt-get install --yes --force-yes --install-recommends jstest* joystick xboxdrv
