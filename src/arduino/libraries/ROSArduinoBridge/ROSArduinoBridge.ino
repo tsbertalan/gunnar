@@ -345,3 +345,237 @@ void loop() {
 #endif
 }
 
+
+
+
+
+/* *************************************************************
+   Encoder definitions
+   
+   Add an "#ifdef" block to this file to include support for
+   a particular encoder board or library. Then add the appropriate
+   #define near the top of the main ROSArduinoBridge.ino file.
+   
+   ************************************************************ */
+   
+#ifdef USE_BASE
+
+#ifdef ROBOGAIA
+  /* The Robogaia Mega Encoder shield */
+  #include "MegaEncoderCounter.h"
+
+  /* Create the encoder shield object */
+  MegaEncoderCounter encoders = MegaEncoderCounter(4); // Initializes the Mega Encoder Counter in the 4X Count mode
+  
+  /* Wrap the encoder reading function */
+  long readEncoder(int i) {
+    if (i == LEFT) return encoders.YAxisGetCount();
+    else return encoders.XAxisGetCount();
+  }
+
+  /* Wrap the encoder reset function */
+  void resetEncoder(int i) {
+    if (i == LEFT) return encoders.YAxisReset();
+    else return encoders.XAxisReset();
+  }
+#elif defined(ARDUINO_ENC_COUNTER)
+  volatile long left_enc_pos = 0L;
+  volatile long right_enc_pos = 0L;
+  static const int8_t ENC_STATES [] = {0,1,-1,0,-1,0,0,1,1,0,0,-1,0,-1,1,0};  //encoder lookup table
+    
+  /* Interrupt routine for LEFT encoder, taking care of actual counting */
+  ISR (PCINT2_vect){
+  	static uint8_t enc_last=0;
+        
+	enc_last <<=2; //shift previous state two places
+	enc_last |= (PIND & (3 << 2)) >> 2; //read the current state into lowest 2 bits
+  
+  	left_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+  }
+  
+  /* Interrupt routine for RIGHT encoder, taking care of actual counting */
+  ISR (PCINT1_vect){
+        static uint8_t enc_last=0;
+          	
+	enc_last <<=2; //shift previous state two places
+	enc_last |= (PINC & (3 << 4)) >> 4; //read the current state into lowest 2 bits
+  
+  	right_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+  }
+  
+  /* Wrap the encoder reading function */
+  long readEncoder(int i) {
+    if (i == LEFT) return left_enc_pos;
+    else return right_enc_pos;
+  }
+
+  /* Wrap the encoder reset function */
+  void resetEncoder(int i) {
+    if (i == LEFT){
+      left_enc_pos=0L;
+      return;
+    } else { 
+      right_enc_pos=0L;
+      return;
+    }
+  }
+#else
+  #error A encoder driver must be selected!
+#endif
+
+/* Wrap the encoder reset function */
+void resetEncoders() {
+  resetEncoder(LEFT);
+  resetEncoder(RIGHT);
+}
+
+#endif
+
+
+
+
+
+/***************************************************************
+   Motor driver definitions
+   
+   Add a "#elif defined" block to this file to include support
+   for a particular motor driver.  Then add the appropriate
+   #define near the top of the main ROSArduinoBridge.ino file.
+   
+   *************************************************************/
+
+#ifdef USE_BASE
+   
+#ifdef POLOLU_VNH5019
+  /* Include the Pololu library */
+  #include "DualVNH5019MotorShield.h"
+
+  /* Create the motor driver object */
+  DualVNH5019MotorShield drive;
+  
+  /* Wrap the motor driver initialization */
+  void initMotorController() {
+    drive.init();
+  }
+
+  /* Wrap the drive motor set speed function */
+  void setMotorSpeed(int i, int spd) {
+    if (i == LEFT) drive.setM1Speed(spd);
+    else drive.setM2Speed(spd);
+  }
+
+  // A convenience function for setting both motor speeds
+  void setMotorSpeeds(int leftSpeed, int rightSpeed) {
+    setMotorSpeed(LEFT, leftSpeed);
+    setMotorSpeed(RIGHT, rightSpeed);
+  }
+#elif defined POLOLU_MC33926
+  /* Include the Pololu library */
+  #include "DualMC33926MotorShield.h"
+
+  /* Create the motor driver object */
+  DualMC33926MotorShield drive;
+  
+  /* Wrap the motor driver initialization */
+  void initMotorController() {
+    drive.init();
+  }
+
+  /* Wrap the drive motor set speed function */
+  void setMotorSpeed(int i, int spd) {
+    if (i == LEFT) drive.setM1Speed(spd);
+    else drive.setM2Speed(spd);
+  }
+
+  // A convenience function for setting both motor speeds
+  void setMotorSpeeds(int leftSpeed, int rightSpeed) {
+    setMotorSpeed(LEFT, leftSpeed);
+    setMotorSpeed(RIGHT, rightSpeed);
+  }
+#else
+  #error A motor driver must be selected!
+#endif
+
+#endif
+
+  
+  
+  
+/***************************************************************
+     Servo Sweep - by Nathaniel Gallinger
+
+     Sweep servos one degree step at a time with a user defined
+     delay in between steps.  Supports changing direction 
+     mid-sweep.  Important for applications such as robotic arms
+     where the stock servo speed is too fast for the strength
+     of your system.
+
+   *************************************************************/
+
+  #ifdef USE_SERVOS
+
+
+  // Constructor
+  SweepServo::SweepServo()
+  {
+    this->currentPositionDegrees = 0;
+    this->targetPositionDegrees = 0;
+    this->lastSweepCommand = 0;
+  }
+
+
+  // Init
+  void SweepServo::initServo(
+      int servoPin,
+      int stepDelayMs,
+      int initPosition)
+  {
+    this->servo.attach(servoPin);
+    this->stepDelayMs = stepDelayMs;
+    this->currentPositionDegrees = initPosition;
+    this->targetPositionDegrees = initPosition;
+    this->lastSweepCommand = millis();
+  }
+
+
+  // Perform Sweep
+  void SweepServo::doSweep()
+  {
+
+    // Get ellapsed time
+    int delta = millis() - this->lastSweepCommand;
+
+    // Check if time for a step
+    if (delta > this->stepDelayMs) {
+      // Check step direction
+      if (this->targetPositionDegrees > this->currentPositionDegrees) {
+        this->currentPositionDegrees++;
+        this->servo.write(this->currentPositionDegrees);
+      }
+      else if (this->targetPositionDegrees < this->currentPositionDegrees) {
+        this->currentPositionDegrees--;
+        this->servo.write(this->currentPositionDegrees);
+      }
+      // if target == current position, do nothing
+
+      // reset timer
+      this->lastSweepCommand = millis();
+    }
+  }
+
+
+  // Set a new target position
+  void SweepServo::setTargetPosition(int position)
+  {
+    this->targetPositionDegrees = position;
+  }
+
+
+  // Accessor for servo object
+  Servo SweepServo::getServo()
+  {
+    return this->servo;
+  }
+
+
+  #endif
