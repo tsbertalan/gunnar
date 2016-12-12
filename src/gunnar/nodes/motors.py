@@ -1,7 +1,9 @@
-#!/usr/bin/env python
+'''
+Created on Dec 11, 2016
 
+@author: tsbertalan
+'''
 import rospy
-
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Point, Quaternion, TransformStamped
 import tf
@@ -10,6 +12,7 @@ import numpy as np
 
 from gunnar.motor import Motor
 
+from __init__ import ROSNode
 
 
 class ResettableRate(rospy.Rate):
@@ -77,7 +80,7 @@ class Gunnar(object):
         self.updateLidarAngleTf()
         
         
-class VtargetListener(Gunnar):
+class VtargetListener(Gunnar, ROSNode):
     
     def __init__(self):
         super(VtargetListener, self).__init__()
@@ -95,7 +98,7 @@ class VtargetListener(Gunnar):
         self.spds = [self.spds[0], data.data]
         self.motors[1].setFrac(data.data)
         
-    def spin(self):
+    def main(self):
         r = rospy.Rate(rospy.get_param("~rate", 10))
         while not rospy.is_shutdown():
             # Time per loop iteration will be max(ts, tr, ti), where ts, tr,
@@ -108,10 +111,3 @@ class VtargetListener(Gunnar):
             # a slower rate.
             self.spinOnce()
             r.sleep()
-
-
-if __name__ == "__main__":
-    rospy.init_node('hardware_driver', log_level=rospy.DEBUG)
-    listener = VtargetListener()
-    listener.spin()
-

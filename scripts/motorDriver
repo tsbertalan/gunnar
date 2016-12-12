@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+import rospy
+from gunnar.nodes.motors import VtargetListener as Node
+rospy.init_node('hardware_driver')
+node = Node()
+node.main()
+

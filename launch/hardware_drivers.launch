@@ -3,7 +3,7 @@
 
 
     <!-- Driver which publishes sensor data and responds to commands about motors and other devices.-->
-    <node name="hardwareDriver" pkg="gunnar" type="hardwareDriver">
+    <node name="motorDriver" pkg="gunnar" type="motorDriver">
         <param name="lidarAngle" value="3.14159" />
         <param name="rate" value="10" />
     </node>

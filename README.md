@@ -1,6 +1,9 @@
 # Gunnar
 
-Gunnar is a differential-drive rover with LIDAR as its primary sense. 
+Gunnar is a differential-drive rover with LIDAR as its primary sense.
+It uses Robot Operating System (ROS) to provide messaging between components,
+and important algorithms such as particle filter
+simultaneous localization and mapping (SLAM). 
 
 ### To make the SD card:
 

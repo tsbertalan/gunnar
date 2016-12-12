@@ -1,5 +1,11 @@
 # Log data from Neato LIDAR via socket server
+'''
+Created on Dec 29, 2015
 
+@author: tsbertalan
+
+Read serial data from the Neato LIDAR sensor, and pack it into a topic.
+'''
 import logging
 from threading import Thread
 from time import sleep
@@ -14,8 +20,9 @@ from std_msgs.msg import Float32
 
 from gunnar.lidar import LidarParser, LidarSerialConnection
 
+from __init__ import ROSNode
 
-class LidarPublisher(object):
+class LidarPublisher(ROSNode):
     def __init__(self):
         self.connection = LidarSerialConnection()
         self.parser = LidarParser(self.connection)
@@ -30,7 +37,6 @@ class LidarPublisher(object):
         
         self.publisherScan = rospy.Publisher('/scan', LaserScan, queue_size=20)
         self.publisherRPM = rospy.Publisher('/lidar_rpm', Float32, queue_size=20)
-        
         
     def main(self):
         for scan, rpm in self.parser.parse():
