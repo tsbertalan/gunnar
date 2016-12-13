@@ -1,0 +1,5 @@
+<launch>
+   <node name="ros_arduino_bridge" pkg="gunnar" type="ros_arduino_bridge.py" output="screen">
+      <rosparam file="$(find gunnar)/param/ros_arduino_bridge.yaml" command="load" />
+   </node>
+</launch>

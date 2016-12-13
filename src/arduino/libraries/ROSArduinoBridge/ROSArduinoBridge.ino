@@ -45,26 +45,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-//#define USE_BASE      // Enable the base controller code
-#undef USE_BASE     // Disable the base controller code
+#define USE_BASE      // Enable the base controller code
+//#undef USE_BASE     // Disable the base controller code
 
 /* Define the motor controller and encoder library you are using */
 #ifdef USE_BASE
    /* The Pololu VNH5019 dual motor driver shield */
-   #define POLOLU_VNH5019
-
+   //#define POLOLU_VNH5019
    /* The Pololu MC33926 dual motor driver shield */
    //#define POLOLU_MC33926
+   /* The Dagu Rover 5 motor board */
+   #define DAGU_ROVER5
 
    /* The RoboGaia encoder shield */
-   #define ROBOGAIA
-   
+   //#define ROBOGAIA
    /* Encoders directly attached to Arduino board */
-   //#define ARDUINO_ENC_COUNTER
+   #define ARDUINO_ENC_COUNTER
+
 #endif
 
-#define USE_SERVOS  // Enable use of PWM servos as defined in servos.h
-//#undef USE_SERVOS     // Disable use of PWM servos
+//#define USE_SERVOS  // Enable use of PWM servos as defined in servos.h
+#undef USE_SERVOS     // Disable use of PWM servos
 
 /* Serial port baud rate */
 #define BAUDRATE     57600
@@ -475,6 +476,29 @@ void resetEncoders() {
 
   /* Create the motor driver object */
   DualMC33926MotorShield drive;
+  
+  /* Wrap the motor driver initialization */
+  void initMotorController() {
+    drive.init();
+  }
+
+  /* Wrap the drive motor set speed function */
+  void setMotorSpeed(int i, int spd) {
+    if (i == LEFT) drive.setM1Speed(spd);
+    else drive.setM2Speed(spd);
+  }
+
+  // A convenience function for setting both motor speeds
+  void setMotorSpeeds(int leftSpeed, int rightSpeed) {
+    setMotorSpeed(LEFT, leftSpeed);
+    setMotorSpeed(RIGHT, rightSpeed);
+  }
+#elif defined DAGU_ROVER5
+  /* Include the Dagu Rover 5 library */
+  #include "DaguRover5MotorDriver.h"
+
+  /* Create the motor driver object */
+  DaguRover5MotorDriver drive;
   
   /* Wrap the motor driver initialization */
   void initMotorController() {
