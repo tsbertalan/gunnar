@@ -1,0 +1,6 @@
+{
+"project name": "Gunnar",
+"blurb": "A differential-drive robot with LIDAR as its primary sense..",
+"hero image": "doc/map.png",
+"description": "see README.md"
+}
