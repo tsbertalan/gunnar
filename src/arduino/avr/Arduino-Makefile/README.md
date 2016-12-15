@@ -122,17 +122,29 @@ sudo port install py27-serial
 
 On Windows:
 
-You need to install Cygwin and its packages for Make, Perl and the following Serial library
-or you can install it using the [pre-built package installer](https://pypi.python.org/pypi/pyserial)
+You need to install Cygwin and its packages for Make, Perl and the following Serial library.
+
+Assuming you included Python in your Cygwin installation:
+
+1. download PySerial source package from [https://pypi.python.org/pypi/pyserial](https://pypi.python.org/pypi/pyserial)
+2. extract downloaded package running
+```tar xvzf dowloaded_package_name.tar.gz```
+3. navigate to extracted package folder
+4. build and install Python module: 
+ 
+```
+python setup.py build
+python setup.py install
+```
 
 ## Usage
 
-You can also find more [detailed instructions in this guide](http://hardwarefun.com/tutorials/compiling-arduino-sketches-using-makefile).
+Download a copy of this repo somewhere to your system or install it through a package by following the above installation instruction.
 
-You can also checkout the sample makefiles inside the `examples/` directory, e.g. [Makefile-example](examples/MakefileExample/Makefile-example.mk) demonstrates some of the more advanced options,
+Sample makefiles are provided in the `examples/` directory.  E.g. [Makefile-example](examples/MakefileExample/Makefile-example.mk) demonstrates some of the more advanced options,
 whilst [Blink](examples/Blink/Makefile) demonstrates the minimal settings required for various boards like the Uno, Nano, Mega, Teensy, ATtiny etc.
 
-Download a copy of this repo some where in your system or install it through a package.
+MAC:
 
 On the Mac with IDE 1.0 you might want to set:
 
@@ -149,13 +161,30 @@ On the Mac with IDE 1.5+ it's like above but with
 ```
     ARDUINO_DIR   = /Applications/Arduino.app/Contents/Java
 ```
+LINUX:
 
-On Linux (if you have installed through package), you shouldn't need to set anything other than your board type and port:
+You can either declare following variables in your project's makefile or set them as environmental variables.
+
+    ARDUINO_DIR – Directory where Arduino is installed
+    ARDMK_DIR – Directory where you have copied the makefile
+    AVR_TOOLS_DIR – Directory where avr tools are installed
+
+Keep in mind, that Arduino 1.5.x+ comes with it's own copy of avr tools which you can leverage in your build process here.
+
+Example of  ~/.bashrc file:
+
+	export ARDUINO_DIR=/home/sudar/apps/arduino-1.0.5
+	export ARDMK_DIR=/home/sudar/Dropbox/code/Arduino-Makefile
+	export AVR_TOOLS_DIR=/usr/include
+
+Example of the project's make file:
 
 ```make
     BOARD_TAG     = mega2560
     MONITOR_PORT  = /dev/ttyACM0
 ```
+
+WINDOWS:
 
 On Windows (using cygwin), you might want to set:
 
@@ -205,6 +234,10 @@ Instead of:
     ARDUINO_DIR=../../../../../Program\ Files\ \(x86\)/Arduino
 ```
 
+Usefull Variables:
+
+The list of all variables that can be overridden is available at [arduino-mk-vars.md](arduino-mk-vars.md) file.
+
 - `BOARD_TAG` - Type of board, for a list see boards.txt or `make show_boards`
 - `MONITOR_PORT` - The port where your Arduino is plugged in, usually `/dev/ttyACM0` or `/dev/ttyUSB0` in Linux or Mac OS X and `com3`, `com4`, etc. in Windows.
 - `ARDUINO_DIR` - Path to Arduino installation. In Cygwin in Windows this path must be
@@ -212,17 +245,17 @@ Instead of:
 - `ARDMK_DIR`   - Path where the `*.mk` are present. If you installed the package, then it is usually `/usr/share/arduino`
 - `AVR_TOOLS_DIR` - Path where the avr tools chain binaries are present. If you are going to use the binaries that came with Arduino installation, then you don't have to set it. Otherwise set it realtive and not absolute.
 
-The list of all variables that can be overridden is available at [arduino-mk-vars.md](arduino-mk-vars.md) file.
+
 
 ## Including Libraries
 
-You can specify space separated list of libraries that are needed for your sketch to the variable `ARDUINO_LIBS`.
+You can specify space separated list of libraries that are needed for your sketch in the variable `ARDUINO_LIBS`.
 
 ```make
 	ARDUINO_LIBS = Wire SoftwareSerial
 ```
 
-The libraries will be searched in the following places in the following order.
+The libraries will be searched for in the following places in the following order.
 
 - `/libraries` directory inside your sketchbook directory. Sketchbook directory will be auto detected from your Arduino preference file. You can also manually set it through `ARDUINO_SKETCHBOOK`.
 - `/libraries` directory inside your Arduino directory, which is read from `ARDUINO_DIR`.
@@ -248,7 +281,7 @@ See examples/BlinkTeensy for example usage.
 
 ## Versioning
 
-The current version of the makefile is `1.5`. You can find the full history in the [HISTORY.md](HISTORY.md) file
+The current version of the makefile is `1.5.1`. You can find the full history in the [HISTORY.md](HISTORY.md) file
 
 This project adheres to Semantic [Versioning 2.0](http://semver.org/).
 

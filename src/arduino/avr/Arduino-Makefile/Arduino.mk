@@ -19,7 +19,7 @@
 #
 # Original Arduino adaptation by mellis, eighthave, oli.keller
 #
-# Current version: 1.5
+# Current version: 1.5.1
 #
 # Refer to HISTORY.md file for complete history of changes
 #
@@ -27,18 +27,18 @@
 #
 # PATHS YOU NEED TO SET UP
 #
-# We need to worry about three different sorts of file:
+# We need to worry about three different sorts of files:
 #
 # 1. The directory where the *.mk files are stored
 #    => ARDMK_DIR
 #
 # 2. Things which are always in the Arduino distribution e.g.
-#    boards.txt, libraries, &c.
+#    boards.txt, libraries, etc.
 #    => ARDUINO_DIR
 #
 # 3. Things which might be bundled with the Arduino distribution, but
 #    might come from the system. Most of the toolchain is like this:
-#    on Linux it's supplied by the system.
+#    on Linux it is supplied by the system.
 #    => AVR_TOOLS_DIR
 #
 # Having set these three variables, we can work out the rest assuming
@@ -91,8 +91,8 @@
 #
 # DEPENDENCIES
 #
-# The Perl programs need a couple of libraries:
-#    Device::SerialPort
+#  to reset a board the (python)  pySerial program is used.
+#  please install it prior to continue.
 #
 ########################################################################
 #
@@ -280,10 +280,10 @@ endif
 # Arduino version number
 
 ifndef ARDUINO_VERSION
-    # Remove all the decimals, and right-pad with zeros, and finally grab the first 3 bytes.
-    # Works for 1.0 and 1.0.1
+    # Remove all the decimals, remove anything before/including ":", remove anything after/including "+" and finally grab the last 5 bytes.
+    # Works for 1.0 and 1.0.1 and 1.6.10 and debian-style 2:1.0.5+dfsg2-4
     VERSION_FILE := $(ARDUINO_DIR)/lib/version.txt
-    AUTO_ARDUINO_VERSION := $(shell [ -e $(VERSION_FILE) ] && cat $(VERSION_FILE) | sed -e 's/^[0-9]://g' -e 's/[.]//g' -e 's/$$/0000/' | head -c3)
+    AUTO_ARDUINO_VERSION := $(shell [ -e $(VERSION_FILE) ] && cat $(VERSION_FILE) | sed -e 's/^[0-9]://g' -e 's/[.]//g' -e 's/\+.*//g' | head -c5)
     ifdef AUTO_ARDUINO_VERSION
         ARDUINO_VERSION = $(AUTO_ARDUINO_VERSION)
         $(call show_config_variable,ARDUINO_VERSION,[AUTODETECTED])
@@ -392,10 +392,6 @@ ifndef OBJDUMP_NAME
 OBJDUMP_NAME = avr-objdump
 endif
 
-ifndef AR_NAME
-AR_NAME      = avr-ar
-endif
-
 ifndef SIZE_NAME
 SIZE_NAME    = avr-size
 endif
@@ -472,8 +468,12 @@ ifndef AVR_TOOLS_PATH
     AVR_TOOLS_PATH    = $(AVR_TOOLS_DIR)/bin
 endif
 
-ARDUINO_LIB_PATH  = $(ARDUINO_DIR)/libraries
-$(call show_config_variable,ARDUINO_LIB_PATH,[COMPUTED],(from ARDUINO_DIR))
+ifndef ARDUINO_LIB_PATH
+    ARDUINO_LIB_PATH = $(ARDUINO_DIR)/libraries
+    $(call show_config_variable,ARDUINO_LIB_PATH,[COMPUTED],(from ARDUINO_DIR))
+else
+    $(call show_config_variable,ARDUINO_LIB_PATH,[USER])
+endif
 
 # 1.5.x platform dependent libs path
 ifndef ARDUINO_PLATFORM_LIB_PATH
@@ -568,7 +568,7 @@ endif
 
 ifndef PARSE_BOARD
     # result = $(call READ_BOARD_TXT, 'boardname', 'parameter')
-    PARSE_BOARD = $(shell grep -v '^\#' $(BOARDS_TXT) | grep $(1).$(2)= | cut -d = -f 2 )
+    PARSE_BOARD = $(shell grep -Ev '^\#' $(BOARDS_TXT) | grep -E "^[ \t]*$(1).$(2)=" | cut -d = -f 2 | cut -d : -f 2)
 endif
 
 # If NO_CORE is set, then we don't have to parse boards.txt file
@@ -579,7 +579,7 @@ ifeq ($(strip $(NO_CORE)),)
     # 'robot', but can also hold 'tiny', for example, if using
     # https://code.google.com/p/arduino-tiny alternate core.
     ifndef CORE
-        CORE = $(shell echo $(call PARSE_BOARD,$(BOARD_TAG),build.core) | cut -d : -f 2)
+        CORE = $(call PARSE_BOARD,$(BOARD_TAG),build.core)
         $(call show_config_variable,CORE,[COMPUTED],(from build.core))
     else
         $(call show_config_variable,CORE,[USER])
@@ -587,7 +587,7 @@ ifeq ($(strip $(NO_CORE)),)
 
     # Which variant ? This affects the include path
     ifndef VARIANT
-        VARIANT := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).build.variant)
+        VARIANT := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).build.variant)
         ifndef VARIANT
             VARIANT := $(call PARSE_BOARD,$(BOARD_TAG),build.variant)
         endif
@@ -597,7 +597,7 @@ ifeq ($(strip $(NO_CORE)),)
     endif
 
     # see if we are a caterina device like leonardo or micro
-    CATERINA := $(findstring caterina,$(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).bootloader.file))
+    CATERINA := $(findstring caterina,$(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).bootloader.file))
     ifndef CATERINA
         # 1.5+ method if not a submenu
         CATERINA := $(findstring caterina,$(call PARSE_BOARD,$(BOARD_TAG),bootloader.file))
@@ -609,14 +609,14 @@ ifeq ($(strip $(NO_CORE)),)
 
     # processor stuff
     ifndef MCU
-        MCU := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).build.mcu)
+        MCU := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).build.mcu)
         ifndef MCU
             MCU := $(call PARSE_BOARD,$(BOARD_TAG),build.mcu)
         endif
     endif
 
     ifndef F_CPU
-        F_CPU := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).build.f_cpu)
+        F_CPU := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).build.f_cpu)
         ifndef F_CPU
             F_CPU := $(call PARSE_BOARD,$(BOARD_TAG),build.f_cpu)
         endif
@@ -635,14 +635,14 @@ ifeq ($(strip $(NO_CORE)),)
 
     # normal programming info
     ifndef AVRDUDE_ARD_PROGRAMMER
-        AVRDUDE_ARD_PROGRAMMER := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).upload.protocol)
+        AVRDUDE_ARD_PROGRAMMER := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).upload.protocol)
         ifndef AVRDUDE_ARD_PROGRAMMER
             AVRDUDE_ARD_PROGRAMMER := $(call PARSE_BOARD,$(BOARD_TAG),upload.protocol)
         endif
     endif
 
     ifndef AVRDUDE_ARD_BAUDRATE
-        AVRDUDE_ARD_BAUDRATE := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).upload.speed)
+        AVRDUDE_ARD_BAUDRATE := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).upload.speed)
         ifndef AVRDUDE_ARD_BAUDRATE
             AVRDUDE_ARD_BAUDRATE := $(call PARSE_BOARD,$(BOARD_TAG),upload.speed)
         endif
@@ -654,21 +654,21 @@ ifeq ($(strip $(NO_CORE)),)
     endif
 
     ifndef ISP_HIGH_FUSE
-        ISP_HIGH_FUSE := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).bootloader.high_fuses)
+        ISP_HIGH_FUSE := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).bootloader.high_fuses)
         ifndef ISP_HIGH_FUSE
             ISP_HIGH_FUSE := $(call PARSE_BOARD,$(BOARD_TAG),bootloader.high_fuses)
         endif
     endif
 
     ifndef ISP_LOW_FUSE
-        ISP_LOW_FUSE := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).bootloader.low_fuses)
+        ISP_LOW_FUSE := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).bootloader.low_fuses)
         ifndef ISP_LOW_FUSE
             ISP_LOW_FUSE := $(call PARSE_BOARD,$(BOARD_TAG),bootloader.low_fuses)
         endif
     endif
 
     ifndef ISP_EXT_FUSE
-        ISP_EXT_FUSE := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).bootloader.extended_fuses)
+        ISP_EXT_FUSE := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).bootloader.extended_fuses)
         ifndef ISP_EXT_FUSE
             ISP_EXT_FUSE := $(call PARSE_BOARD,$(BOARD_TAG),bootloader.extended_fuses)
         endif
@@ -679,7 +679,7 @@ ifeq ($(strip $(NO_CORE)),)
     endif
 
     ifndef BOOTLOADER_FILE
-        BOOTLOADER_FILE := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).bootloader.file)
+        BOOTLOADER_FILE := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).bootloader.file)
         ifndef BOOTLOADER_FILE
             BOOTLOADER_FILE := $(call PARSE_BOARD,$(BOARD_TAG),bootloader.file)
         endif
@@ -690,7 +690,7 @@ ifeq ($(strip $(NO_CORE)),)
     endif
 
     ifndef HEX_MAXIMUM_SIZE
-        HEX_MAXIMUM_SIZE := $(call PARSE_BOARD,$(BOARD_TAG),menu.cpu.$(BOARD_SUB).upload.maximum_size)
+        HEX_MAXIMUM_SIZE := $(call PARSE_BOARD,$(BOARD_TAG),menu.(chip|cpu).$(BOARD_SUB).upload.maximum_size)
         ifndef HEX_MAXIMUM_SIZE
             HEX_MAXIMUM_SIZE := $(call PARSE_BOARD,$(BOARD_TAG),upload.maximum_size)
         endif
@@ -1027,24 +1027,50 @@ ifneq ($(CATERINA),)
     CPPFLAGS += -DUSB_VID=$(USB_VID) -DUSB_PID=$(USB_PID)
 endif
 
+# avr-gcc version that we can do maths on
+CC_VERNUM = $(shell $(CC) -dumpversion | sed 's/\.//g')
+
+# moved from above so we can find version-dependant ar
+ifndef AR_NAME
+    ifeq ($(shell expr $(CC_VERNUM) '>' 490), 1)
+        AR_NAME      = avr-gcc-ar
+    else
+        AR_NAME      = avr-ar
+    endif
+endif
+
 ifndef CFLAGS_STD
-    CFLAGS_STD        =
+    ifeq ($(shell expr $(CC_VERNUM) '>' 490), 1)
+        CFLAGS_STD      = -std=gnu11 -flto -fno-fat-lto-objects
+    else
+        CFLAGS_STD        =
+    endif
     $(call show_config_variable,CFLAGS_STD,[DEFAULT])
 else
     $(call show_config_variable,CFLAGS_STD,[USER])
 endif
 
 ifndef CXXFLAGS_STD
-    CXXFLAGS_STD      =
+    ifeq ($(shell expr $(CC_VERNUM) '>' 490), 1)
+        CXXFLAGS_STD      = -std=gnu++11 -fno-threadsafe-statics -flto
+    else
+        CXXFLAGS_STD      =
+    endif
     $(call show_config_variable,CXXFLAGS_STD,[DEFAULT])
 else
     $(call show_config_variable,CXXFLAGS_STD,[USER])
 endif
 
 CFLAGS        += $(CFLAGS_STD)
-CXXFLAGS      += -fno-exceptions $(CXXFLAGS_STD)
+CXXFLAGS      += -fpermissive -fno-exceptions $(CXXFLAGS_STD)
 ASFLAGS       += -x assembler-with-cpp
+ifeq ($(shell expr $(CC_VERNUM) '>' 490), 1)
+    ASFLAGS += -flto
+endif
 LDFLAGS       += -$(MCU_FLAG_NAME)=$(MCU) -Wl,--gc-sections -O$(OPTIMIZATION_LEVEL)
+ifeq ($(shell expr $(CC_VERNUM) '>' 490), 1)
+    LDFLAGS += -flto -fuse-linker-plugin
+endif
 SIZEFLAGS     ?= --mcu=$(MCU) -C
 
 # for backwards compatibility, grab ARDUINO_PORT if the user has it set
@@ -1267,7 +1293,7 @@ endif
 $(OBJDIR)/%.eep: $(OBJDIR)/%.elf $(COMMON_DEPS)
 	@$(MKDIR) $(dir $@)
 	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom='alloc,load' \
-		--change-section-lma .eeprom=0 -O ihex $< $@
+		--no-change-warnings --change-section-lma .eeprom=0 -O ihex $< $@
 
 $(OBJDIR)/%.lss: $(OBJDIR)/%.elf $(COMMON_DEPS)
 	@$(MKDIR) $(dir $@)
@@ -1358,10 +1384,8 @@ endif
 
 # Bootloader file settings
 ifndef AVRDUDE_ISP_BURN_BOOTLOADER
-    ifneq ($(strip $(BOOTLOADER_PATH)),)
-        ifneq ($(strip $(BOOTLOADER_FILE)),)
-            AVRDUDE_ISP_BURN_BOOTLOADER += -U flash:w:$(BOOTLOADER_PARENT)/$(BOOTLOADER_PATH)/$(BOOTLOADER_FILE):i
-        endif
+    ifneq ($(strip $(BOOTLOADER_FILE)),)
+        AVRDUDE_ISP_BURN_BOOTLOADER += -U flash:w:$(BOOTLOADER_PARENT)/$(BOOTLOADER_PATH)/$(BOOTLOADER_FILE):i
     endif
 endif
 
@@ -1415,7 +1439,7 @@ pre-build:
 		$(call runscript_if_exists,$(PRE_BUILD_HOOK))
 
 $(TARGET_ELF): 	$(LOCAL_OBJS) $(CORE_LIB) $(OTHER_OBJS)
-		$(CC) $(LDFLAGS) -o $@ $(LOCAL_OBJS) $(CORE_LIB) $(OTHER_OBJS) -lc -lm $(LINKER_SCRIPTS)
+		$(CC) $(LDFLAGS) -o $@ $(LOCAL_OBJS) $(CORE_LIB) $(OTHER_OBJS) $(OTHER_LIBS) -lc -lm $(LINKER_SCRIPTS)
 
 $(CORE_LIB):	$(CORE_OBJS) $(LIB_OBJS) $(PLATFORM_LIB_OBJS) $(USER_LIB_OBJS)
 		$(AR) rcs $@ $(CORE_OBJS) $(LIB_OBJS) $(PLATFORM_LIB_OBJS) $(USER_LIB_OBJS)
@@ -1495,7 +1519,10 @@ size:	$(TARGET_HEX)
 		$(call avr_size,$(TARGET_ELF),$(TARGET_HEX))
 
 show_boards:
-		@$(CAT) $(BOARDS_TXT) | grep -E '^[a-zA-Z0-9_]+.name' | sort -uf | sed 's/.name=/:/' | column -s: -t
+		@$(CAT) $(BOARDS_TXT) | grep -E '^[a-zA-Z0-9_\-]+.name' | sort -uf | sed 's/.name=/:/' | column -s: -t
+
+show_submenu:
+	@$(CAT) $(BOARDS_TXT) | grep -E '[a-zA-Z0-9_\-]+.menu.(cpu|chip).[a-zA-Z0-9_\-]+=' | sort -uf | sed 's/.menu.(cpu|chip)./:/' | sed 's/=/:/' | column -s: -t
 
 monitor:
 ifeq ($(MONITOR_CMD), 'putty')
@@ -1507,7 +1534,7 @@ ifeq ($(MONITOR_CMD), 'putty')
 else ifeq ($(MONITOR_CMD), picocom)
 		$(MONITOR_CMD) -b $(MONITOR_BAUDRATE) $(MONITOR_PARAMS) $(call get_monitor_port)
 else
-		$(MONITOR_CMD) -L $(call get_monitor_port) $(MONITOR_BAUDRATE)
+		$(MONITOR_CMD) $(call get_monitor_port) $(MONITOR_BAUDRATE)
 endif
 
 disasm: $(OBJDIR)/$(TARGET).lss
@@ -1545,6 +1572,7 @@ help:
   make reset             - reset the Arduino by tickling DTR or changing baud\n\
                            rate on the serial port.\n\
   make show_boards       - list all the boards defined in boards.txt\n\
+  make show_submenu      - list all board submenus defined in boards.txt\n\
   make monitor           - connect to the Arduino's serial port\n\
   make size              - show the size of the compiled output (relative to\n\
                            resources, if you have a patched avr-size).\n\
