@@ -2,20 +2,22 @@
 
 class Encoder {
 public:
-    volatile int ticks;
+    volatile long ticks;
     char pina;
     char pinb;
     volatile int last;
     volatile int lastLast;
+    boolean fullRes;
 
     void init(int a, int b) {
         pina = a;
         pinb = b;
         pinMode(a, INPUT_PULLUP);
         pinMode(b, INPUT_PULLUP);
+        fullRes = false;
     }
 
-    void isr() {
+    void fullResISR() {
         int aval = digitalRead(pina);
         int bval = digitalRead(pinb);
 
@@ -56,6 +58,26 @@ public:
         lastLast = last;
         last = now;
     }
+
+    void partialResISR() {
+        int aval = digitalRead(pina);
+        int bval = digitalRead(pinb);
+
+        if(aval == bval) {
+            ticks--;
+        } else {
+            ticks++;
+        }
+    }
+
+    void isr() {
+        if(fullRes) {
+            fullResISR();
+        } else {
+            partialResISR();
+        }
+    }
+
 };
 
 Encoder encoderl;
@@ -67,8 +89,19 @@ void encoderlIsr() {
 void setup() {
     Serial.begin(BAUDRATE);
     encoderl.init(2, 3);
+
+//    // Full resolution:
+//    encoderl.fullRes = true;
+//    attachInterrupt(digitalPinToInterrupt(encoderl.pina), encoderlIsr, CHANGE);
+//    attachInterrupt(digitalPinToInterrupt(encoderl.pinb), encoderlIsr, CHANGE);
+  
+    // Half resolution:
+    encoderl.fullRes = false;
     attachInterrupt(digitalPinToInterrupt(encoderl.pina), encoderlIsr, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(encoderl.pinb), encoderlIsr, CHANGE);
+
+//    // Quarter resolution:
+//    encoderl.fullRes = false;
+//    attachInterrupt(digitalPinToInterrupt(encoderl.pina), encoderlIsr, RISING);
 }
 
 void loop() {
@@ -76,8 +109,12 @@ void loop() {
     Serial.print(encoderl.ticks);
     Serial.print(" ");
     Serial.print(encoderl.lastLast);
-    Serial.print(" ");
+    Serial.print(" -> ");
     Serial.print(encoderl.last);
+    Serial.print(" = ");
+    Serial.print(digitalRead(encoderl.pina));
+    Serial.print(" + 2*");
+    Serial.print(digitalRead(encoderl.pinb));
     Serial.println();
     
 }
