@@ -11,10 +11,10 @@ void encoderrIsr() {
 
 void setup() {
     Serial.begin(57600);
-    encoderl.init(2, 3);
+    encoderl.init(19, 18);
     attachInterrupt(digitalPinToInterrupt(encoderl.pin_a), encoderlIsr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(encoderl.pin_b), encoderlIsr, CHANGE);
-    encoderr.init(20, 21);
+    encoderr.init(2, 3);
     attachInterrupt(digitalPinToInterrupt(encoderr.pin_a), encoderrIsr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(encoderr.pin_b), encoderrIsr, CHANGE);
 }
