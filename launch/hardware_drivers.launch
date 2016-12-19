@@ -35,6 +35,7 @@
     
     
     <!--Driver which publishes lidar scans.-->
+    <node pkg="gunnar" name="lidarMotorSwitch" type="lidarMotorSwitch" args="on stopOnExit" />
     <node pkg="gunnar" name="lidarDriver" type="lidarDriver"></node>
       
       
