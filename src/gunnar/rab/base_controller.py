@@ -20,7 +20,6 @@
     
     http://www.gnu.org/licenses
 """
-import roslib; roslib.load_manifest('ros_arduino_python')
 import rospy
 import os
 
@@ -240,9 +239,3 @@ class BaseController:
         self.v_des_left = int(left * self.ticks_per_meter / self.arduino.PID_RATE)
         self.v_des_right = int(right * self.ticks_per_meter / self.arduino.PID_RATE)
         
-
-        
-
-    
-
-    

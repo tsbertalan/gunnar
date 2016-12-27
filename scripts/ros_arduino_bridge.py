@@ -19,15 +19,17 @@
     http://www.gnu.org/licenses/gpl.html
 """
 
-import rospy
-from ros_arduino_python.arduino_driver import Arduino
-from ros_arduino_python.arduino_sensors import *
-from ros_arduino_msgs.srv import *
-from ros_arduino_python.base_controller import BaseController
-from geometry_msgs.msg import Twist
 import os, time
 import thread
 from serial.serialutil import SerialException
+
+import rospy
+from ros_arduino_msgs.srv import *
+from geometry_msgs.msg import Twist
+
+from gunnar.rab.arduino_driver import Arduino
+from gunnar.rab.arduino_sensors import *
+from gunnar.rab.base_controller import BaseController
 
 class ArduinoROS():
     def __init__(self):
