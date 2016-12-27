@@ -16,7 +16,7 @@ AVRDUDE          = /opt/arduino-1.6.3/hardware/tools/avr/bin/avrdude
 BOARD_TAG = uno
 #BOARD_SUB = atmega2560
 
-MONITOR_BAUDRATE = 57600
+MONITOR_BAUDRATE = 38400
 MONITOR_PORT = /dev/ttyUSB*
 
 # Set the C standard to be used during compilation. Documentation (https://github.com/WeAreLeka/Arduino-Makefile/blob/std-flags/arduino-mk-vars.md#cflags_std)

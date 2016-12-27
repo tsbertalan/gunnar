@@ -3,8 +3,8 @@
 # For a wireless connection like XBee, the port is typically
 # /dev/ttyUSB# where # is a number such as 0, 1, 2, etc.
 
-port: /dev/ttyUSB1
-baud: 57600
+port: /dev/ttyUSB0
+baud: 38400
 timeout: 0.1
 
 rate: 50
@@ -19,15 +19,15 @@ base_frame: base_link
 # === Robot drivetrain parameters
 wheel_diameter: 0.100
 wheel_track: 0.24
-encoder_resolution: 8256 # from Pololu 48 cpr for 172:1 motors
-#gear_reduction: 1.0
+encoder_resolution: 8256 # ros_arduino_bridge does the gear reduction calculation wierdly.
+gear_reduction: 1.0
 #motors_reversed: True
 
 # === PID parameters
-Kp: 10
-Kd: 12
+Kp: 10  # 10
+Kd: 12  # 12
 Ki: 0
-Ko: 50
+Ko: 50  # 50
 accel_limit: 1.0
 
 # === Sensor definitions.  Examples only - edit for your robot.

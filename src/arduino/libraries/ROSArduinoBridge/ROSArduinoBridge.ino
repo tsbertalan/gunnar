@@ -68,7 +68,7 @@
 #undef USE_SERVOS     // Disable use of PWM servos
 
 /* Serial port baud rate */
-#define BAUDRATE     57600
+#define BAUDRATE     38400
 
 /* Maximum PWM signal */
 #define MAX_PWM        255
@@ -228,6 +228,21 @@ int runCommand() {
     Ko = pid_args[3];
     Serial.println("OK");
     break;
+  case DEBUGINFO:
+      Serial.print(leftPID.TargetTicksPerFrame);
+      Serial.print(",");
+      Serial.print(rightPID.TargetTicksPerFrame);
+      Serial.print(" ");
+      Serial.print(leftPID.PrevInput);
+      Serial.print(",");
+      Serial.print(rightPID.PrevInput);
+      Serial.print(" ");
+      Serial.print(leftPID.output);
+      Serial.print(",");
+      Serial.print(rightPID.output);
+      Serial.print(" ");
+      Serial.println();
+      break;
 #endif
   default:
     Serial.println("Invalid Command");
@@ -238,7 +253,7 @@ int runCommand() {
 /* Setup function--runs once at startup. */
 void setup() {
   Serial.begin(BAUDRATE);
-
+  
 // Initialize the motor controller if used */
 #ifdef USE_BASE
   #ifdef ARDUINO_ENC_COUNTER
@@ -385,23 +400,24 @@ void loop() {
   static const int8_t ENC_STATES [] = {0,1,-1,0,-1,0,0,1,1,0,0,-1,0,-1,1,0};  //encoder lookup table
     
   /* Interrupt routine for LEFT encoder, taking care of actual counting */
+static uint8_t enc_lastl=0;
   ISR (PCINT2_vect){
-  	static uint8_t enc_last=0;
         
-	enc_last <<=2; //shift previous state two places
-	enc_last |= (PIND & (3 << 2)) >> 2; //read the current state into lowest 2 bits
+      enc_lastl <<=2; //shift previous state two places
+      enc_lastl |= (PIND & (3 << 2)) >> 2; //read the current state into lowest 2 bits
   
-  	left_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+  	left_enc_pos += ENC_STATES[(enc_lastl & 0x0f)];
   }
   
   /* Interrupt routine for RIGHT encoder, taking care of actual counting */
+  static uint8_t enc_lastr=0;
   ISR (PCINT1_vect){
-        static uint8_t enc_last=0;
+//    static uint8_t enc_last=0;
           	
-	enc_last <<=2; //shift previous state two places
-	enc_last |= (PINC & (3 << 4)) >> 4; //read the current state into lowest 2 bits
+      enc_lastr <<=2; //shift previous state two places
+      enc_lastr |= (PINC & (3 << 4)) >> 4; //read the current state into lowest 2 bits
   
-  	right_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+  	right_enc_pos += ENC_STATES[(enc_lastr & 0x0f)];
   }
   
   /* Wrap the encoder reading function */

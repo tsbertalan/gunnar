@@ -18,6 +18,7 @@
 #define UPDATE_PID     'u'
 #define DIGITAL_WRITE  'w'
 #define ANALOG_WRITE   'x'
+#define DEBUGINFO      'g'
 #define LEFT            0
 #define RIGHT           1
 
