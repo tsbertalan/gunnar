@@ -23,8 +23,8 @@ from gunnar.lidar import LidarParser, LidarSerialConnection
 from __init__ import ROSNode
 
 class LidarPublisher(ROSNode):
-    def __init__(self):
-        self.connection = LidarSerialConnection()
+    def __init__(self, device='/dev/ttyUSB0', baudrate=115200):
+        self.connection = LidarSerialConnection(com_port=device, baudrate=baudrate)
         self.parser = LidarParser(self.connection)
         
         self.messageScan = LaserScan()

@@ -36,7 +36,9 @@
     
     <!--Driver which publishes lidar scans.-->
     <node pkg="gunnar" name="lidarMotorSwitch" type="lidarMotorSwitch" args="on stopOnExit" />
-    <node pkg="gunnar" name="lidarDriver" type="lidarDriver"></node>
+    <node pkg="gunnar" name="lidarDriver" type="lidarDriver">
+    	<param name="lidarDevice" value="/dev/ttyUSB1" />
+    </node>
       
       
     <!--Establish static TF transforms-->

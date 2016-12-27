@@ -2,5 +2,5 @@
 import rospy
 from gunnar.nodes.lidar import LidarPublisher as Node
 rospy.init_node('lidar')
-node = Node()
+node = Node(device=rospy.get_param('~lidarDevice', '/dev/ttyUSB0"'))
 node.main()
