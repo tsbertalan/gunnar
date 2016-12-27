@@ -1,13 +1,18 @@
 TrajectoryPlannerROS:
-  meter_scoring: true
-  max_vel_x: 0.16
+  
+  #meter_scoring: true
+  #heading_scoring: true
+  
+  max_vel_x: 0.12
   max_vel_y: 0
   max_vel_theta: 0.4
   
-  min_vel_x: 0.10
+  min_vel_x: -0.10
   min_vel_y: 0.0
-  min_vel_theta: 0.3
-  min_in_place_vel_theta: 0.3
+  min_vel_theta: -0.4
+  min_in_place_vel_theta: 0.2
+
+  #oscillation_reset_dist: 0.01
 
   acc_lim_x: 1.0
   acc_lim_y: 1.0
@@ -16,20 +21,32 @@ TrajectoryPlannerROS:
   holonomic_robot: false
   
   max_rotational_vel: 0.45
-  min_in_place_rotational_vel: 0.3
+  min_in_place_rotational_vel: 0.2
+  
+  publish_cost_grid_pc: true
+  
+  #prune_plan: true
+  #sim_granularity: .02
+  #sim_time: 3.0
+  #heading_lookahead: 0.5 # default 0.325
+  
+  #xy_goal_tolerance: .3  # default .1
+  
+  # default 32.0
+  #path_distance_bias: 64.0
   
   #escape_vel: -0.1
   
-  dwa: true
+  dwa: false
   
   #The weighting for how much the controller should stay close to the path it was given 
   #~<name>/pdist_scale (double, default: 0.6)
-  pdist_scale: 0.6
+  pdist_scale: 3.25
    
   #The weighting for how much the controller should attempt to reach its local goal, also controls speed 
   #~<name>/gdist_scale (double, default: 0.8)
-  gdist_scale: 0.8
+  gdist_scale: 1.1
    
   #The weighting for how much the controller should attempt to avoid obstacles
-  #~<name>/pdist_scale (double, default: 0.6)
-  occdist_scale: 0.03
+  #~<name>/occdist_scale (double, default: 0.01)
+  #occdist_scale: 0.005

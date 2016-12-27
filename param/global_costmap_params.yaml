@@ -1,9 +1,9 @@
 global_costmap:
   global_frame: map
   robot_base_frame: base_link
-  update_frequency: 0.15
-  publish_frequency: 0.15
+  update_frequency: 2.0
+  publish_frequency: 2.0
   static_map: true
   rolling_window: false
-  resolution: 0.2
+  resolution: 0.04
   transform_tolerance: 4.0
