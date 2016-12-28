@@ -1,0 +1,39 @@
+
+        
+        temporalUpdate: .5
+        # linearUpdate: 0.1-->
+        particles: 64
+        # iterations: 8-->
+        
+        #  Minimum score for considering the outcome of the scan matching good.
+        # Can avoid jumping pose estimates in large open spaces when using laser
+        # scanners with limited range (e.g. 5m). Scores go up to 600+,
+        # try 50 for example when experiencing jumping estimate issues.--> 
+        minimumScore: 50
+        
+        #  Let the particle cloud cover a wider sample of pose angles
+        #(if I'm interpreting this correctly).
+        #lasamplerange: 0.02
+        #lasamplestep: 0.02
+        
+        
+        #  Let's say our odometry is pretty crappy.
+        #srr: .2
+        #srt: .4
+        #str: .2
+        #stt: .4
+       
+        
+        #  Don't look at all the beams in the scan.
+        lskip: 0
+        
+        #  Don't look at all scans.
+        # throttle_scans: 2-->
+        
+        maxUrange: 4.5
+        maxRange: 4.0
+        
+        map_update_interval: 2.5
+        
+        #  Resolution of the map (default 0.05)-->
+        delta: 0.025
