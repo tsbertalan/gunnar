@@ -19,7 +19,7 @@ base_frame: base_link
 # === Robot drivetrain parameters
 wheel_diameter: 0.100
 wheel_track: 0.24
-encoder_resolution: 8256 # ros_arduino_bridge does the gear reduction calculation wierdly.
+encoder_resolution: 10884.47 # ros_arduino_bridge does the gear reduction calculation wierdly.
 gear_reduction: 1.0
 #motors_reversed: True
 

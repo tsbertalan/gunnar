@@ -44,10 +44,10 @@ class Odometer(ROSNode):
         self.child_frame_id = '/base_link'
 
     # CLICKS_PER_M_DEFAULT = (
-    #     48 * 171.79  # encoder CPR * gear ratio = ticks per wheel revolution
+    #     48 * 171.79 * 226.76/171.79 # encoder CPR * gear ratio = ticks per wheel revolution
     #      / (60. * 2 * np.pi / 1000)  # / meters per revolution
     #     )
-    CLICKS_PER_M_DEFAULT = 16610.  # experimental
+    CLICKS_PER_M_DEFAULT = 21924.9  # experimental
     
     @property
     def RIGHT_CLICKS_PER_M(self):
