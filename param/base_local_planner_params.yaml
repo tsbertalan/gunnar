@@ -3,11 +3,11 @@ TrajectoryPlannerROS:
   #meter_scoring: true
   #heading_scoring: true
   
-  max_vel_x: 0.12
+  max_vel_x: 0.1
   max_vel_y: 0
   max_vel_theta: 0.4
   
-  min_vel_x: -0.10
+  min_vel_x: 0.05
   min_vel_y: 0.0
   min_vel_theta: -0.4
   min_in_place_vel_theta: 0.2
@@ -35,13 +35,13 @@ TrajectoryPlannerROS:
   # default 32.0
   #path_distance_bias: 64.0
   
-  #escape_vel: -0.1
+  escape_vel: -0.05
   
   dwa: false
   
   #The weighting for how much the controller should stay close to the path it was given 
   #~<name>/pdist_scale (double, default: 0.6)
-  pdist_scale: 3.25
+  pdist_scale: 4.5
    
   #The weighting for how much the controller should attempt to reach its local goal, also controls speed 
   #~<name>/gdist_scale (double, default: 0.8)
