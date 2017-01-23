@@ -306,6 +306,22 @@ ssid=puvisitor
 EOF
 
 
+## Make UDEV rules file for Neato LIDAR.
+echo "Make UDEV rules file for Neato LIDAR."
+mkdir -p $bp/etc/udev/rules.d/
+cat << EOF > $bp/etc/udev/rules.d/90-neatolidar.rules
+SUBSYSTEM=="tty", ATTRS{idProduct}=="6001", ATTRS{idVendor}=="0403", ATTRS{serial}=="AL01OTZS", MODE="0666", OWNER="pi", GROUP="pi", SYMLINK+="neatolidar"
+EOF
+
+
+## Make UDEV rules file for Arduino Uno.
+echo "Make UDEV rules file for Arduino Uno."
+mkdir -p $bp/etc/udev/rules.d/
+cat << EOF > $bp/etc/udev/rules.d/80-arduinouno.rules
+SUBSYSTEM=="tty", ATTRS{idProduct}=="7523", ATTRS{idVendor}=="1a86", MODE="0666", OWNER="pi", GROUP="pi", SYMLINK+="arduinouno"
+EOF
+
+
 ## Modify .bashrc
 export bashrc=$bp/home/$user/.bashrc
 echo "export LC_ALL=\"C\"" >> $bashrc
