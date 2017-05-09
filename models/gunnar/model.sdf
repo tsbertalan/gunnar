@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version="1.4">
+    <model name="gunnar">
+        <static>false</static>
+
+
+        <!-- ============= BODY ======= -->
+        <link name="chassis">
+            <pose>0 0 .17416 0 0 0</pose>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                        <size>.3048 .1742 .1742</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                        <size>.3048 .1742 .1742</size>
+                    </box>
+                </geometry>
+            </visual>
+
+
+<!--             <collision name="caster_collision">
+                <pose>-0.15 0 -0.05 0 0 0</pose>
+                <geometry>
+                    <sphere>
+                        <radius>.05</radius>
+                    </sphere>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0</mu>
+                            <mu2>0</mu2>
+                            <slip1>1.0</slip1>
+                            <slip2>1.0</slip2>
+                        </ode>
+                    </friction>
+                </surface>
+            </collision>
+            <visual name="caster_visual">
+                <pose>-0.15 0 -0.05 0 0 0</pose>
+                <geometry>
+                    <sphere>
+                        <radius>.05</radius>
+                    </sphere>
+                </geometry>
+            </visual> -->
+
+
+
+        <!-- ============ CASTER BRACKET/ARM ====== -->
+        <collision name="caster bracket_collision">
+            <pose>-.1959 0 0 0 0 0</pose>
+            <geometry>
+                <box>
+                    <size>.08708 .04354 .0254</size>
+                </box>
+            </geometry>
+        </collision>
+        <visual name="caster_bracket_visual">
+            <pose>-.1959 0 0 0 0 0</pose>
+            <geometry>
+                <box>
+                    <size>.08708 .04354 .0254</size>
+                </box>
+            </geometry>
+            <material>
+              <ambient>.5 .5 .5 1</ambient>
+              <diffuse>0 0 0 1</diffuse>
+              <specular>0.1 0.1 0.1 1</specular>
+              <emissive>0 0 0 0</emissive>
+            </material>
+        </visual>
+
+        
+
+      </link>  <!-- chassis -->
+
+      <link name="caster_arm">
+        <pose>0 0 .17416 0 0 0</pose>
+        <collision name="caster_yawjoint_collision">
+          <pose>-0.23947 0 0 0 0 0</pose>
+            <geometry>
+                <cylinder>
+                    <radius>0.02</radius>
+                    <length>.02</length>
+                </cylinder>
+            </geometry>
+        </collision>
+        <visual name="caster_yawjoint_visual">
+          <pose>-0.23947 0 0 0 0 0</pose>
+            <geometry>
+                <cylinder>
+                    <radius>0.02</radius>
+                    <length>.02</length>
+                </cylinder>
+            </geometry>
+        </visual>
+
+        <collision name="caster arm_collision">
+            <pose>-.28 0.025 -.06 0 -1 0</pose>
+            <geometry>
+                <box>
+                    <size>.14 .01 .04</size>
+                </box>
+            </geometry>
+        </collision>
+        <visual name="caster_arm_visual">
+            <pose>-.28 0.025 -.06 0 -1 0</pose>
+            <geometry>
+                <box>
+                    <size>.14 .01 .04</size>
+                </box>
+            </geometry>
+
+            <material>
+              <ambient>.5 .5 .5 1</ambient>
+              <diffuse>0 0 0 1</diffuse>
+              <specular>0.1 0.1 0.1 1</specular>
+              <emissive>0 0 0 0</emissive>
+            </material>
+
+        </visual>
+      </link> <!-- caster_arm -->
+
+
+
+      <!-- =========== WHEELS ============= -->
+        <link name="left_wheel">
+            <pose>0.0 0.13 0.06531 0 1.5707 1.5707</pose>
+            <collision name="collision">
+                <geometry>
+                    <cylinder>
+                        <radius>0.06531</radius>
+                        <length>.05</length>
+                    </cylinder>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <cylinder>
+                        <radius>0.06531</radius>
+                        <length>.05</length>
+                    </cylinder>
+                </geometry>
+                  <material>
+                    <ambient>0 0 0 1</ambient>
+                  </material>
+            </visual>
+        </link> <!-- left_wheel -->
+
+
+        <link name="right_wheel">
+            <pose>0.0 -0.13 0.06531 0 1.5707 1.5707</pose>
+            <collision name="collision">
+                <geometry>
+                    <cylinder>
+                        <radius>0.06531</radius>
+                        <length>.05</length>
+                    </cylinder>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <cylinder>
+                        <radius>0.06531</radius>
+                        <length>.05</length>
+                    </cylinder>
+                </geometry>
+                <material>
+                    <ambient>0 0 0 1</ambient>
+                  </material>
+            </visual>
+        </link> <!-- right_wheel -->
+
+
+        <link name="caster_wheel">
+            <pose>-0.3 0 0.06531 0 1.5707 1.5707</pose>
+            <collision name="collision">
+                <geometry>
+                    <cylinder>
+                        <radius>0.06531</radius>
+                        <length>.05</length>
+                    </cylinder>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <cylinder>
+                        <radius>0.06531</radius>
+                        <length>.05</length>
+                    </cylinder>
+                </geometry>
+                  <material>
+                    <ambient>0 0 0 1</ambient>
+                  </material>
+            </visual>
+        </link> <!-- caster_wheel -->
+
+
+        <!-- =[===== LIDAR ====== -->
+        <link name="lidar_disk">
+            <pose>0 0 0.3 0 0 0</pose>
+            <collision name="collision">
+                <geometry>
+                    <cylinder>
+                        <radius>0.06531</radius>
+                        <length>.05</length>
+                    </cylinder>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <cylinder>
+                        <radius>0.06531</radius>
+                        <length>.05</length>
+                    </cylinder>
+                </geometry>
+                  <material>
+                    <ambient>0 0 0 1</ambient>
+                  </material>
+            </visual>
+        </link> <!-- caster_wheel -->
+
+        <!-- ============= JOINTS ============== -->
+        <joint type="revolute" name="left_wheel_hinge">
+            <pose>0 0 -0.03 0 0 0</pose>
+            <parent>chassis</parent>
+            <child>left_wheel</child>
+            <axis>
+                <xyz>0 1 0</xyz>
+            </axis>
+        </joint>
+
+
+        <joint type="revolute" name="right_wheel_hinge">
+            <pose>0 0 0.03 0 0 0</pose>
+            <parent>chassis</parent>
+            <child>right_wheel</child>
+            <axis>
+                <xyz>0 1 0</xyz>
+            </axis>
+        </joint>
+
+        <joint type="revolute" name="caster_yaw">
+            <pose>-0.23947 0 0 0 0 0</pose>
+            <parent>chassis</parent>
+            <child>caster_arm</child>
+            <axis>
+                <xyz>0 0 1</xyz>
+            </axis>
+        </joint>
+
+        <joint type="revolute" name="caster_wheel_hinge">
+            <pose>0 0 0.03 0 0 0</pose>
+            <parent>caster_arm</parent>
+            <child>caster_wheel</child>
+            <axis>
+                <xyz>0 1 0</xyz>
+            </axis>
+        </joint>
+
+          <joint type="revolute" name="lidar_hinge">
+            <pose>0 0 0.03 0 0 0</pose>
+            <parent>chassis</parent>
+            <child>lidar_disk</child>
+            <axis>
+                <xyz>0 1 0</xyz>
+                <dynamics>
+                  <friction>.001</friction>
+                  <damping>0.001</damping>
+                </dynamics>
+            </axis>
+        </joint>
+
+
+
+
+    </model>
+</sdf>
