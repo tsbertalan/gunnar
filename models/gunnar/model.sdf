@@ -1,11 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sdf version="1.4">
     <model name="gunnar">
+        <plugin name="p3d" filename="libgazebo_ros_p3d.so">
+          <alwaysOn>true</alwaysOn>
+          <bodyName>chassis</bodyName>
+          <topicName>ground_truth_p3d</topicName>
+          <serviceName>p3d_service</serviceName>
+          <gaussianNoise>0.0</gaussianNoise>
+          <updateRate>20.0</updateRate>
+        </plugin>
+
+          <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>20</updateRate>
+            <rosDebugLevel>info</rosDebugLevel>
+            <publishWheelTF>true</publishWheelTF>
+            <publishTf>true</publishTf>
+            <publishWheelJointState>true</publishWheelJointState>
+            <legacyMode>false</legacyMode>
+            <commandTopic>cmd_vel</commandTopic>
+
+            <leftJoint>left_wheel_hinge</leftJoint>
+            <rightJoint>right_wheel_hinge</rightJoint>
+            <wheelSeparation>0.2242</wheelSeparation>
+            <wheelDiameter>.06531</wheelDiameter>
+            <wheelTorque>.6</wheelTorque>
+            <wheelAcceleration>1</wheelAcceleration>
+
+            <odometryTopic>odom</odometryTopic>
+            <odometryFrame>odom</odometryFrame>
+            <odometrySource>world</odometrySource>
+
+            <robotBaseFrame>base_footprint</robotBaseFrame>
+          </plugin>
+
         <static>false</static>
 
 
         <!-- ============= BODY ======= -->
         <link name="chassis">
+
             <pose>0 0 .17416 0 0 0</pose>
             <inertial>          
                 <mass>1</mass>
@@ -285,9 +319,9 @@
 
 
 
-        <!-- =[===== LIDAR ====== -->
+        <!-- ====== LIDAR ====== -->
         <link name="lidar_disk">
-            <pose>0 0 0.3 0 0 0</pose>
+            <pose>0 0 0.31 0 0 0</pose>
             <inertial>          
                 <mass>.1</mass>
                 <inertia>
@@ -389,7 +423,6 @@
                 </dynamics>
             </axis>
         </joint>
-
 
 
 
