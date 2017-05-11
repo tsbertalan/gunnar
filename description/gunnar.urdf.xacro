@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot name="gunnar" xmlns:xacro="http://ros.org/wiki/xacro">
+
+       <xacro:macro name="inertialEye" params="ma mo">
+            <inertial>
+                <mass value="${ma}" />
+                <inertia ixx="${mo}" iyy="${mo}" izz="${mo}" ixy="0" ixz="0" iyz="0" />
+            </inertial>
+        </xacro:macro>
+
+        <xacro:macro name="macbox" params="size name *origin *material">
+            <collision name="${name}_collision">
+                <xacro:insert_block name="origin" />
+                <geometry>
+                    <box size="${size}" />
+                </geometry>
+            </collision>
+            <visual name="${name}_visual">
+                <xacro:insert_block name="origin" />
+                <geometry>
+                    <box size="${size}" />
+                </geometry>
+                <xacro:insert_block name="material" />
+            </visual>
+        </xacro:macro>
+
+        <xacro:macro name="maccyl" params="radius length name *origin *material *surface">
+            <collision name="${name}_collision">
+              <xacro:insert_block name="origin" />
+                <geometry>
+                    <cylinder radius="${radius}" length="${length}" />
+                </geometry>
+                <xacro:insert_block name="surface"/>
+            </collision>
+            <visual name="${name}_visual">
+              <xacro:insert_block name="origin" />
+                <geometry>
+                    <cylinder radius="${radius}" length="${length}" />
+                </geometry>
+                <xacro:insert_block name="material"/>
+            </visual>
+        </xacro:macro>
+
+
+    <!-- ============= BODY ======= -->
+    <link name="chassis">
+        <origin xyz="0 0 .17416"/>
+        <xacro:inertialEye ma="1" mo=".005" />
+        <xacro:macbox size=".3048 .1742 .1742" name="chassis">
+            <origin xyz="0 0 0"/>
+            <material name="plastic"/>
+        </xacro:macbox>
+
+        <xacro:macbox size=".08708 .04354 .0254" name="caster_bracket">
+            <origin xyz="-.1959 0 0" />
+            <material name="steel">
+              <ambient>.5 .5 .5 1"</ambient>
+              <diffuse>0 0 0 1</diffuse>
+              <specular>0.1 0.1 0.1 1</specular>
+              <emissive>0 0 0 0</emissive>
+            </material>
+        </xacro:macbox>
+    </link>
+
+
+
+
+      <!-- ============= CASTER ARM =============== -->
+      <link name="caster_arm">
+        <origin />
+        <xacro:inertialEye ma=".1" mo=".005" />
+        <xacro:maccyl radius=".02" length=".02" name="caster_yawjoint">
+          <origin xyz="0 0 0" />
+          <material  name="steel"/>
+          <surface />
+        </xacro:maccyl>
+        <xacro:macbox size=".14 .01 .04" name="caster_arm_l">
+            <origin xyz="-0.04053 -.03 -.06" rpy="0 -1 0" />
+            <material name="steel">
+              <ambient>.5 .5 .5 1</ambient>
+              <diffuse>0 0 0 1</diffuse>
+              <specular>0.1 0.1 0.1 1</specular>
+              <emissive>0 0 0 0</emissive>
+            </material>
+        </xacro:macbox>
+        <xacro:macbox size=".14 .01 .04" name="caster_arm_l">
+            <origin xyz="-0.04053 .03 -.06" rpy="0 -1 0" />
+            <material name="steel">
+              <ambient>.5 .5 .5 1</ambient>
+              <diffuse>0 0 0 1</diffuse>
+              <specular>0.1 0.1 0.1 1</specular>
+              <emissive>0 0 0 0</emissive>
+            </material>
+        </xacro:macbox>
+      </link>
+
+
+
+
+      <!-- =========== WHEELS ============= -->
+        <link name="left_wheel">
+            <origin />
+            <xacro:inertialEye ma=".1" mo=".005" />
+            <xacro:maccyl radius=".06531" length=".05" name="left_wheel">
+                <origin />
+                  <material name="rubber">
+                    <ambient>0 0 0 1</ambient>
+                  </material>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>.9</mu>
+                            <mu2>.9</mu2>
+                            <slip1>.1</slip1>
+                            <slip2>.1</slip2>
+                        </ode>
+                    </friction>
+                </surface>
+            </xacro:maccyl>
+        </link>
+
+
+
+        <link name="right_wheel">
+            <origin />
+            <xacro:inertialEye ma=".1" mo=".005" />
+            <xacro:maccyl radius=".06531" length=".05" name="right_wheel">
+                <origin />
+                  <material name="rubber">
+                    <ambient>0 0 0 1</ambient>
+                  </material>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>.9</mu>
+                            <mu2>.9</mu2>
+                            <slip1>.1</slip1>
+                            <slip2>.1</slip2>
+                        </ode>
+                    </friction>
+                </surface>
+            </xacro:maccyl>
+        </link>
+
+
+
+        <link name="caster_wheel">
+            <origin />
+            <xacro:inertialEye ma=".1" mo=".005" />
+            <xacro:maccyl radius=".06531" length=".05" name="caster_wheel">
+                <origin />
+                  <material name="rubber">
+                    <ambient>0 0 0 1</ambient>
+                  </material>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>.9</mu>
+                            <mu2>.9</mu2>
+                            <slip1>.1</slip1>
+                            <slip2>.1</slip2>
+                        </ode>
+                    </friction>
+                </surface>
+            </xacro:maccyl>
+        </link>
+
+
+
+
+        <link name="lidar_disk">
+            <origin />
+            <xacro:inertialEye ma=".1" mo=".005" />
+            <xacro:maccyl radius=".06531" length=".05" name="lidar_disk">
+                <origin />
+                  <material name="rubber">
+                    <ambient>0 0 0 1</ambient>
+                  </material>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>.9</mu>
+                            <mu2>.9</mu2>
+                            <slip1>.1</slip1>
+                            <slip2>.1</slip2>
+                        </ode>
+                    </friction>
+                </surface>
+            </xacro:maccyl>
+        </link>
+
+        
+        <!-- ============= JOINTS ============== -->
+        <xacro:property name="M_PI" value="3.1415926535897931" /> 
+        <xacro:macro name="continuousJoint" params="name posexyz poserpy parent child xyz friction damping">
+            <joint type="continuous" name="${name}_continuous_joint">
+                <origin xyz="${posexyz}" rpy="${poserpy}"/>
+                <parent link="${parent}" />
+                <child link="${child}" />
+                <axis xyz="${xyz}" />
+                <joint_properties damping="${damping}" friction="${friction}"/>
+            </joint>
+        </xacro:macro>
+
+        <xacro:macro name="revoluteJoint" params="name posexyz poserpy parent child xyz friction damping lower upper effort velocity">
+            <joint type="continuous" name="${name}_revolute_joint">
+                <origin xyz="${posexyz}" rpy="${poserpy}"/>
+                <parent link="${parent}" />
+                <child link="${child}" />
+                <limit lower="${lower}" upper="${upper}" effort="${effort}" velocity="${velocity}"/>
+                <axis xyz="${xyz}" />
+                <joint_properties damping="${damping}" friction="${friction}"/>
+            </joint>
+        </xacro:macro>
+
+        <xacro:property name="wheelFriction" value="0.5" />
+        <xacro:property name="wheelDamping" value="0.5" />
+
+        <xacro:continuousJoint name="left_wheel"
+            posexyz="0 -.12 -.11" poserpy="-${M_PI / 2} 0 0"
+            parent="chassis" child="left_wheel" xyz="0 0 1"
+            friction="${wheelFriction}" damping="${wheelDamping}" />
+
+        <xacro:continuousJoint name="right_wheel" 
+            posexyz="0 .12 -.11" poserpy="-${M_PI / 2} 0 0"
+            parent="chassis" child="right_wheel" xyz="0 0 1"
+            friction="${wheelFriction}" damping="${wheelDamping}" />
+
+        <xacro:continuousJoint name="caster_wheel" 
+            posexyz="-.05 0 -.11" poserpy="${M_PI / 2} 0 0"
+            parent="caster_arm" child="caster_wheel" xyz="0 0 1"
+            friction="${wheelFriction}" damping="${wheelDamping}" />
+
+        <xacro:continuousJoint name="lidar_disk"
+            posexyz="0 0 .12" poserpy="0 0 0"
+            parent="chassis" child="lidar_disk" xyz="0 0 1"
+            friction=".001" damping=".001" />
+
+        <xacro:revoluteJoint name="caster_yaw"
+            posexyz="-.23947 0 0"  poserpy="0 0 0"
+            parent="chassis" child="caster_arm" xyz="0 0 1"
+            friction=".1" damping=".1"
+            lower="-${M_PI/8}" upper="${M_PI/8}"
+            effort="1000" velocity="1000" />
+
+    <gazebo>    
+        <plugin name="p3d" filename="libgazebo_ros_p3d.so">
+          <alwaysOn>true</alwaysOn>
+          <bodyName>chassis</bodyName>
+          <topicName>ground_truth_p3d</topicName>
+          <serviceName>p3d_service</serviceName>
+          <gaussianNoise>0.0</gaussianNoise>
+          <updateRate>20.0</updateRate>
+        </plugin>
+
+          <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>20</updateRate>
+            <rosDebugLevel>info</rosDebugLevel>
+            <publishWheelTF>true</publishWheelTF>
+            <publishTf>true</publishTf>
+            <publishWheelJointState>true</publishWheelJointState>
+            <legacyMode>true</legacyMode>
+            <commandTopic>cmd_vel</commandTopic>
+
+            <leftJoint>left_wheel_continuous_joint</leftJoint>
+            <rightJoint>right_wheel_continuous_joint</rightJoint>
+            <wheelSeparation>0.2242</wheelSeparation>
+            <wheelDiameter>.06531</wheelDiameter>
+            <wheelTorque>.02</wheelTorque>
+            <wheelAcceleration>.1</wheelAcceleration>
+
+            <odometryTopic>odom</odometryTopic>
+            <odometryFrame>odom</odometryFrame>
+            <odometrySource>world</odometrySource>
+
+            <robotBaseFrame>base_footprint</robotBaseFrame>
+          </plugin>
+
+        <static>false</static>
+    </gazebo>
+
+</robot>
