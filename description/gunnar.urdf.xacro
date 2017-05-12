@@ -55,14 +55,22 @@
     <xacro:property name="CASTERARMLENGTH" value=".085" />
     <xacro:property name="SHEETMETALTHICKNESS" value=".003" />
 
+    <xacro:property name="WHEELRADIUS" value=".05" />
+    <xacro:property name="WHEELLENGTH" value=".025" />    
 
     <xacro:property name="SIDEWHEELMASS" value=".165" />
     <xacro:property name="CASTERMASS" value=".695" />
     <xacro:property name="LIDARMASS" value=".1" />
     <xacro:property name="CHASSISMASS" value="${4.922 - 2*SIDEWHEELMASS - CASTERMASS - LIDARMASS}" />
 
-    <xacro:property name="wheelFriction" value="0.5" />
-    <xacro:property name="wheelDamping" value="0.5" />
+    <xacro:property name="WHEELJOINTFRICTION" value="0.5" />
+    <xacro:property name="WHEELJOINTDAMPING" value="0.5" />
+    <xacro:property name="WHEELSURFACEFRICTION" value=".9" />
+    <xacro:property name="WHEELSURFACESLIP" value="0.1" />
+    <xacro:property name="WHEELTORQUE" value=".2" />
+    <xacro:property name="WHEELACCEL" value=".2" />
+    <xacro:property name="CASTERJOINTDAMPING" value=".1" />
+    <xacro:property name="CASTERJOINTFRICTION" value=".1" />
 
     <xacro:property name="M_PI" value="3.1415926535897931" /> 
 
@@ -100,8 +108,11 @@
           <material  name="steel"/>
           <surface />
         </xacro:maccyl>
+        <xacro:property name="CASTERARMX" value="-.04053" />
+        <xacro:property name="CASTERARMYabs" value=".02" />
+        <xacro:property name="CASTERARMZ" value="-.04" />
         <xacro:macbox size="${CASTERARMLENGTH} ${SHEETMETALTHICKNESS} .04" name="caster_arm_l">
-            <origin xyz="-0.04053 -.02 -.04" rpy="0 -1 0" />
+            <origin xyz="${CASTERARMX} -${CASTERARMYabs} ${CASTERARMZ}" rpy="0 -1 0" />
             <material name="steel">
               <ambient>.5 .5 .5 1</ambient>
               <diffuse>0 0 0 1</diffuse>
@@ -110,7 +121,7 @@
             </material>
         </xacro:macbox>
         <xacro:macbox size="${CASTERARMLENGTH} ${SHEETMETALTHICKNESS} .04" name="caster_arm_l">
-            <origin xyz="-0.04053 .02 -.04" rpy="0 -1 0" />
+            <origin xyz="${CASTERARMX} ${CASTERARMYabs} ${CASTERARMZ}" rpy="0 -1 0" />
             <material name="steel">
               <ambient>.5 .5 .5 1</ambient>
               <diffuse>0 0 0 1</diffuse>
@@ -122,12 +133,11 @@
 
 
 
-
       <!-- =========== WHEELS ============= -->
         <link name="left_wheel">
             <origin />
             <xacro:inertialEye ma="${SIDEWHEELMASS}" mo="${SIDEWHEELMASS*.04*.04}" />
-            <xacro:maccyl radius=".05" length=".025" name="left_wheel">
+            <xacro:maccyl radius="${WHEELRADIUS}" length="${WHEELLENGTH}" name="left_wheel">
                 <origin />
                   <material name="rubber">
                     <ambient>0 0 0 1</ambient>
@@ -135,10 +145,10 @@
                 <surface>
                     <friction>
                         <ode>
-                            <mu>.9</mu>
-                            <mu2>.9</mu2>
-                            <slip1>.1</slip1>
-                            <slip2>.1</slip2>
+                            <mu>${WHEELSURFACEFRICTION}</mu>
+                            <mu2>${WHEELSURFACEFRICTION}</mu2>
+                            <slip1>${WHEELSURFACESLIP}</slip1>
+                            <slip2>${WHEELSURFACESLIP}</slip2>
                         </ode>
                     </friction>
                 </surface>
@@ -150,7 +160,7 @@
         <link name="right_wheel">
             <origin />
             <xacro:inertialEye ma="${SIDEWHEELMASS}" mo="${SIDEWHEELMASS*.04*.04}" />
-            <xacro:maccyl radius=".05" length=".025" name="right_wheel">
+            <xacro:maccyl radius="${WHEELRADIUS}" length="${WHEELLENGTH}" name="right_wheel">
                 <origin />
                   <material name="rubber">
                     <ambient>0 0 0 1</ambient>
@@ -158,10 +168,10 @@
                 <surface>
                     <friction>
                         <ode>
-                            <mu>.9</mu>
-                            <mu2>.9</mu2>
-                            <slip1>.1</slip1>
-                            <slip2>.1</slip2>
+                            <mu>${WHEELSURFACEFRICTION}</mu>
+                            <mu2>${WHEELSURFACEFRICTION}</mu2>
+                            <slip1>${WHEELSURFACESLIP}</slip1>
+                            <slip2>${WHEELSURFACESLIP}</slip2>
                         </ode>
                     </friction>
                 </surface>
@@ -173,7 +183,7 @@
         <link name="caster_wheel">
             <origin />
             <xacro:inertialEye ma="${CASTERMASS}" mo="${.695*.04*.04}" />
-            <xacro:maccyl radius=".05" length=".025" name="caster_wheel">
+            <xacro:maccyl radius="${WHEELRADIUS}" length="${WHEELLENGTH}" name="caster_wheel">
                 <origin />
                   <material name="rubber">
                     <ambient>0 0 0 1</ambient>
@@ -181,10 +191,10 @@
                 <surface>
                     <friction>
                         <ode>
-                            <mu>.9</mu>
-                            <mu2>.9</mu2>
-                            <slip1>.1</slip1>
-                            <slip2>.1</slip2>
+                            <mu>${WHEELSURFACEFRICTION}</mu>
+                            <mu2>${WHEELSURFACEFRICTION}</mu2>
+                            <slip1>${WHEELSURFACESLIP}</slip1>
+                            <slip2>${WHEELSURFACESLIP}</slip2>
                         </ode>
                     </friction>
                 </surface>
@@ -243,17 +253,17 @@
         <xacro:continuousJoint name="left_wheel"
             posexyz="0 -.12 -.11" poserpy="-${M_PI / 2} 0 0"
             parent="chassis" child="left_wheel" xyz="0 0 1"
-            friction="${wheelFriction}" damping="${wheelDamping}" />
+            friction="${WHEELJOINTFRICTION}" damping="${WHEELJOINTDAMPING}" />
 
         <xacro:continuousJoint name="right_wheel" 
             posexyz="0 .12 -.11" poserpy="-${M_PI / 2} 0 0"
             parent="chassis" child="right_wheel" xyz="0 0 1"
-            friction="${wheelFriction}" damping="${wheelDamping}" />
+            friction="${WHEELJOINTFRICTION}" damping="${WHEELJOINTDAMPING}" />
 
         <xacro:continuousJoint name="caster_wheel" 
             posexyz="-.04 0 -.085" poserpy="${M_PI / 2} 0 0"
             parent="caster_arm" child="caster_wheel" xyz="0 0 1"
-            friction="${wheelFriction}" damping="${wheelDamping}" />
+            friction="${WHEELJOINTFRICTION}" damping="${WHEELJOINTDAMPING}" />
 
         <xacro:continuousJoint name="lidar_disk"
             posexyz="0 0 .12" poserpy="0 0 0"
@@ -263,7 +273,7 @@
         <xacro:revoluteJoint name="caster_yaw"
             posexyz="-.23947 0 ${CASTERBRACKETHEIGHT}"  poserpy="0 0 0"
             parent="chassis" child="caster_arm" xyz="0 0 1"
-            friction=".1" damping=".1"
+            friction="${CASTERJOINTFRICTION}" damping="${CASTERJOINTDAMPING}"
             lower="-${M_PI}" upper="${M_PI}"
             effort="1000" velocity="1000" />
 
@@ -293,10 +303,12 @@
 
             <leftJoint>left_wheel_continuous_joint</leftJoint>
             <rightJoint>right_wheel_continuous_joint</rightJoint>
-            <wheelSeparation>0.2242</wheelSeparation>
-            <wheelDiameter>.06531</wheelDiameter>
-            <wheelTorque>.02</wheelTorque>
-            <wheelAcceleration>.1</wheelAcceleration>
+            <!-- <wheelSeparation>0.2242</wheelSeparation> -->
+            <!-- <wheelDiameter>.06531</wheelDiameter> -->
+            <wheelSeparation>${CHASSISWIDTH+WHEELLENGTH}</wheelSeparation>
+            <wheelDiameter>${2*WHEELRADIUS}</wheelDiameter>
+            <wheelTorque>${WHEELTORQUE}</wheelTorque>
+            <wheelAcceleration>${WHEELACCEL}</wheelAcceleration>
 
             <odometryTopic>odom</odometryTopic>
             <odometryFrame>odom</odometryFrame>
