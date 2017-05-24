@@ -61,14 +61,13 @@
     <xacro:property name="CASTERMASS" value=".695" />
     <xacro:property name="LIDARMASS" value=".1" />
     <xacro:property name="CHASSISMASS" value="${4.922 - 2*SIDEWHEELMASS - CASTERMASS - LIDARMASS}" />
-    <xacro:property name="WHEELJOINTFRICTION" value="0.5" />
-    <xacro:property name="WHEELJOINTDAMPING" value="0.5" />
+    <xacro:property name="WHEELJOINTFRICTION" value="0.005" />
+    <xacro:property name="WHEELJOINTDAMPING" value="0.005" />
     <xacro:property name="WHEELSURFACEFRICTION" value=".9" />
-    <xacro:property name="WHEELSURFACESLIP" value="0.1" />
     <xacro:property name="WHEELTORQUE" value=".2" />
     <xacro:property name="WHEELACCEL" value=".2" />
-    <xacro:property name="CASTERJOINTDAMPING" value=".1" />
-    <xacro:property name="CASTERJOINTFRICTION" value=".1" />
+    <xacro:property name="CASTERJOINTDAMPING" value=".0025" />
+    <xacro:property name="CASTERJOINTFRICTION" value=".0025" />
     <xacro:property name="M_PI" value="3.1415926535897931" />
     <!-- ============= BODY ======= -->
     <link name="chassis">
@@ -218,7 +217,7 @@
     <xacro:continuousJoint name="lidar_disk"
             posexyz="0 0 .12" poserpy="0 0 0"
             parent="chassis" child="lidar_disk" xyz="0 0 1"
-            friction=".001" damping=".001" />
+            friction=".0001" damping=".0001" />
     <xacro:revoluteJoint name="caster_yaw"
             posexyz="-.23947 0 ${CASTERBRACKETHEIGHT}"  poserpy="0 0 0"
             parent="chassis" child="caster_arm" xyz="0 0 1"
