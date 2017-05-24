@@ -190,7 +190,7 @@
             <parent link="${parent}" />
             <child link="${child}" />
             <axis xyz="${xyz}" />
-            <joint_properties damping="${damping}" friction="${friction}"/>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
     </xacro:macro>
     <xacro:macro name="revoluteJoint" params="name posexyz poserpy parent child xyz friction damping lower upper effort velocity">
@@ -200,7 +200,7 @@
             <child link="${child}" />
             <limit lower="${lower}" upper="${upper}" effort="${effort}" velocity="${velocity}"/>
             <axis xyz="${xyz}" />
-            <joint_properties damping="${damping}" friction="${friction}"/>
+            <dynamics damping="${damping}" friction="${friction}"/>
         </joint>
     </xacro:macro>
     <xacro:continuousJoint name="left_wheel"
