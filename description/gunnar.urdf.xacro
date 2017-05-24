@@ -27,13 +27,12 @@
             <xacro:insert_block name="material" />
         </visual>
     </xacro:macro>
-    <xacro:macro name="maccyl" params="radius length name *origin *material *surface">
+    <xacro:macro name="maccyl" params="radius length name *origin *material">
         <collision name="${name}_collision">
             <xacro:insert_block name="origin" />
             <geometry>
                 <cylinder radius="${radius}" length="${length}" />
             </geometry>
-            <xacro:insert_block name="surface"/>
         </collision>
         <visual name="${name}_visual">
             <xacro:insert_block name="origin" />
@@ -100,7 +99,6 @@
         <xacro:maccyl radius=".02" length=".02" name="caster_yawjoint">
             <origin xyz="0 0 0" />
             <material  name="steel"/>
-            <surface />
         </xacro:maccyl>
         <xacro:property name="CASTERARMX" value="-.04053" />
         <xacro:property name="CASTERARMYabs" value=".02" />
@@ -137,18 +135,12 @@
             <material name="rubber">
                 <ambient>0 0 0 1</ambient>
             </material>
-            <surface>
-                <friction>
-                    <ode>
-                        <mu>${WHEELSURFACEFRICTION}</mu>
-                        <mu2>${WHEELSURFACEFRICTION}</mu2>
-                        <slip1>${WHEELSURFACESLIP}</slip1>
-                        <slip2>${WHEELSURFACESLIP}</slip2>
-                    </ode>
-                </friction>
-            </surface>
         </xacro:maccyl>
     </link>
+    <gazebo reference="left_wheel">
+        <mu1>${WHEELSURFACEFRICTION}</mu1>
+        <mu2>${WHEELSURFACEFRICTION}</mu2>
+    </gazebo>
     <link name="right_wheel">
         <origin />
         <xacro:inertialEye ma="${SIDEWHEELMASS}" mo="${SIDEWHEELMASS*.04*.04}" />
@@ -157,18 +149,12 @@
             <material name="rubber">
                 <ambient>0 0 0 1</ambient>
             </material>
-            <surface>
-                <friction>
-                    <ode>
-                        <mu>${WHEELSURFACEFRICTION}</mu>
-                        <mu2>${WHEELSURFACEFRICTION}</mu2>
-                        <slip1>${WHEELSURFACESLIP}</slip1>
-                        <slip2>${WHEELSURFACESLIP}</slip2>
-                    </ode>
-                </friction>
-            </surface>
         </xacro:maccyl>
     </link>
+     <gazebo reference="right_wheel">
+        <mu1>${WHEELSURFACEFRICTION}</mu1>
+        <mu2>${WHEELSURFACEFRICTION}</mu2>
+    </gazebo>
     <link name="caster_wheel">
         <origin />
         <xacro:inertialEye ma="${CASTERMASS}" mo="${.695*.04*.04}" />
@@ -177,18 +163,12 @@
             <material name="rubber">
                 <ambient>0 0 0 1</ambient>
             </material>
-            <surface>
-                <friction>
-                    <ode>
-                        <mu>${WHEELSURFACEFRICTION}</mu>
-                        <mu2>${WHEELSURFACEFRICTION}</mu2>
-                        <slip1>${WHEELSURFACESLIP}</slip1>
-                        <slip2>${WHEELSURFACESLIP}</slip2>
-                    </ode>
-                </friction>
-            </surface>
         </xacro:maccyl>
     </link>
+    <gazebo reference="caster_wheel">
+        <mu1>${WHEELSURFACEFRICTION}</mu1>
+        <mu2>${WHEELSURFACEFRICTION}</mu2>
+    </gazebo>
     <link name="lidar_disk">
         <origin />
         <xacro:inertialEye ma="${LIDARMASS}" mo="${LIDARMASS*.04*.04}" />
@@ -197,16 +177,6 @@
             <material name="rubber">
                 <ambient>0 0 0 1</ambient>
             </material>
-            <surface>
-                <friction>
-                    <ode>
-                        <mu>.9</mu>
-                        <mu2>.9</mu2>
-                        <slip1>.1</slip1>
-                        <slip2>.1</slip2>
-                    </ode>
-                </friction>
-            </surface>
         </xacro:maccyl>
     </link>
 
