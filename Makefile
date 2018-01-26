@@ -2,7 +2,7 @@
 .PHONY: .Force
 
 .FORCE:
-GUNNAR_MAKE = cd src/arduino/sketches/gunnar && make
+GUNNAR_MAKE = cd src/arduino/libraries/ROSArduinoBridge && make
 
 all:
 	$(GUNNAR_MAKE)
