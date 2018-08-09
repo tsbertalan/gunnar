@@ -1,5 +1,17 @@
 # Gunnar
 
+
+<p align="center">
+  <img src="doc/headshot.png" width=45% />
+  <img src="doc/map.png" width=45% />
+</p>
+<p align="center">
+  <em>
+    Gunnar and a sample map generated with Gmapping.
+  </em>
+</p>
+
+
 Gunnar is a differential-drive rover with LIDAR as its primary sense.
 It uses Robot Operating System (ROS) to provide messaging between components,
 and important algorithms such as particle filter
